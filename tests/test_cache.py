@@ -212,3 +212,35 @@ def test_file_not_found_race_conditions(tmp_path):
     # Calling get() now should not raise FileNotFoundError, and should just return None
     assert cache.get("expired_key") is None
 
+
+def test_cache_decorator_with_class_instance(tmp_path):
+    """Test that cache decorator generates deterministic keys even for instance methods where 'self' has dynamic memory address."""
+    import crew_custom_tools.config.cache as cache_module
+    original_manager = cache_module._cache_manager
+    
+    try:
+        cache_module._cache_manager = CacheManager(cache_dir=tmp_path / "instance_cache")
+        
+        class MyClass:
+            def __init__(self, val):
+                self.val = val
+                
+            @cache_api_call(key="instance_test", ttl=10)
+            def compute(self, x):
+                return self.val + x
+                
+        # Two different instances with identical values (different self address, e.g. <MyClass object at 0x...>)
+        obj1 = MyClass(10)
+        obj2 = MyClass(10)
+        
+        # Call compute on obj1 (creates cache)
+        assert obj1.compute(5) == 15
+        
+        # Verify that obj2.compute(5) hits the cache instead of computing, because it's deterministic
+        # To verify it hit the cache, let's change obj2's self.val to 20. If it hits the cache, it'll return 15!
+        obj2.val = 20
+        assert obj2.compute(5) == 15  # Cached result of 15 is returned!
+        
+    finally:
+        cache_module._cache_manager = original_manager
+

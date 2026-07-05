@@ -77,5 +77,4 @@ class YahooFinanceNewsTool(BaseTool):
             return result
         except Exception as e:
             result = json.dumps({"error": f"Error retrieving news for {ticker}: {str(e)}"})
-            cache.set(cache_key, result)
             return result

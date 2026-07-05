@@ -177,7 +177,13 @@ def cache_api_call(key: str, ttl: int = 3600):
             cache = get_cache_manager()
 
             # Create a unique cache key based on function name and arguments
-            serialized = f"{args}_{sorted(kwargs.items())}"
+            # Handle instance/class methods cleanly by ignoring the dynamic memory address of 'self' (args[0])
+            args_to_serialize = args
+            if args and hasattr(args[0], "__class__") and not isinstance(args[0], (str, int, float, dict, list, set, tuple)):
+                # If first arg is a custom object instance, replace it with its class name for deterministic keys
+                args_to_serialize = (args[0].__class__.__name__,) + args[1:]
+
+            serialized = f"{args_to_serialize}_{sorted(kwargs.items())}"
             args_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
             cache_key = f"{key}_{func.__name__}_{args_hash}"
 

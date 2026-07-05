@@ -588,11 +588,13 @@ dependencies = [
     { name = "beautifulsoup4" },
     { name = "crewai" },
     { name = "pydantic" },
-    { name = "pytest-mock" },
     { name = "requests" },
 ]
 
 [package.optional-dependencies]
+dev = [
+    { name = "pytest-mock" },
+]
 finance = [
     { name = "yfinance" },
 ]
@@ -602,11 +604,11 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12.0" },
     { name = "crewai", specifier = ">=0.100.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "pytest-mock", specifier = ">=3.15.1" },
+    { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.15.1" },
     { name = "requests", specifier = ">=2.31.0" },
     { name = "yfinance", marker = "extra == 'finance'", specifier = ">=0.2.38" },
 ]
-provides-extras = ["finance"]
+provides-extras = ["finance", "dev"]
 
 [[package]]
 name = "crewai"

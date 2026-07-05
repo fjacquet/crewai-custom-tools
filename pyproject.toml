@@ -14,12 +14,14 @@ dependencies = [
     "requests>=2.31.0",
     "pydantic>=2.0.0",
     "beautifulsoup4>=4.12.0",
-    "pytest-mock>=3.15.1",
 ]
 
 [project.optional-dependencies]
 finance = [
     "yfinance>=0.2.38",
+]
+dev = [
+    "pytest-mock>=3.15.1",
 ]
 
 [tool.hatch.build.targets.wheel]
