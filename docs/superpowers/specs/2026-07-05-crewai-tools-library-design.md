@@ -1,4 +1,4 @@
-# Design Specification: Centralized CrewAI Tools Library (`crewai-tools`)
+# Design Specification: Centralized CrewAI Tools Library (`crew-custom-tools`)
 
 **Date**: 2026-07-05
 **Status**: APPROVED / PENDING IMPLEMENTATION PLAN
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-This document specifies the design for a centralized, reusable CrewAI tools library (`crewai-tools`). The library consolidates overlapping, duplicated tools currently spread across three repositories:
+This document specifies the design for a centralized, reusable CrewAI tools library (`crew-custom-tools`). The library consolidates overlapping, duplicated tools currently spread across three repositories:
 
 1. `/Users/fjacquet/Projects/crews/epic_news`
 2. `/Users/fjacquet/Projects/finwiz`
@@ -24,7 +24,7 @@ We will package the library as a standard, modular Python package using `uv`. To
 
 ### 2.1 `pyproject.toml` Structure
 
-The package is named `crewai-tools` (or imports as `crewai_tools`).
+The package is named `crew-custom-tools` (or imports as `crew_custom_tools`).
 
 ```toml
 [build-system]
@@ -32,7 +32,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "crewai-tools"
+name = "crew-custom-tools"
 version = "0.1.0"
 description = "Centralized, resilient tools for CrewAI multi-agent systems"
 readme = "README.md"
@@ -64,24 +64,24 @@ During development, the library can be linked locally in "editable" mode for imm
 
 ```bash
 # Inside any of the three consumer repositories
-uv add --editable /Users/fjacquet/Projects/crewai-tools
+uv add --editable /Users/fjacquet/Projects/crew-custom-tools
 ```
 
 For production deployment or remote team access, the consumer projects can declare a direct dependency pointing to the GitHub repository:
 
 ```toml
 # Inside pyproject.toml of epic_news, finwiz, or osint_tools
-crewai-tools = { git = "https://github.com/fjacquet/crewai-tools.git", tag = "v0.1.0" }
+crew-custom-tools = { git = "https://github.com/fjacquet/crew-custom-tools.git", tag = "v0.1.0" }
 ```
 
 To install specific extras:
 
 ```bash
 # For finwiz
-uv add "crewai-tools[finance] @ git+https://github.com/fjacquet/crewai-tools.git"
+uv add "crew-custom-tools[finance] @ git+https://github.com/fjacquet/crew-custom-tools.git"
 
 # For osint_tools
-uv add "crewai-tools[osint] @ git+https://github.com/fjacquet/crewai-tools.git"
+uv add "crew-custom-tools[osint] @ git+https://github.com/fjacquet/crew-custom-tools.git"
 ```
 
 ---
@@ -89,11 +89,11 @@ uv add "crewai-tools[osint] @ git+https://github.com/fjacquet/crewai-tools.git"
 ## 3. Library Directory Structure
 
 ```text
-crewai-tools/
+crew-custom-tools/
 ├── pyproject.toml                 # Package definition and dependencies
 ├── README.md                      # Usage documentation
 ├── src/
-│   └── crewai_tools/
+│   └── crew_custom_tools/
 │       ├── __init__.py            # Clean exports of unified tools
 │       ├── core/                  # Core abstractions and decorators
 │       │   ├── __init__.py
@@ -233,7 +233,7 @@ Consolidates yfinance news lookup.
 ## 6. Verification and Testing Strategy
 
 1. **Test Porting**:
-   We will port existing unit tests from `/Users/fjacquet/Projects/crews/epic_news/tests/tools` and `/Users/fjacquet/Projects/finwiz/src/finwiz/tests` into the `crewai-tools/tests` directory.
+   We will port existing unit tests from `/Users/fjacquet/Projects/crews/epic_news/tests/tools` and `/Users/fjacquet/Projects/finwiz/src/finwiz/tests` into the `crew-custom-tools/tests` directory.
 2. **Environment Simulation**:
    Tests will mock API calls (Perplexity, yfinance, GitHub) using `pytest-mock` or standard unit test patch decorators to ensure deterministic, token-free test execution.
 3. **Execution**:
@@ -246,11 +246,11 @@ Consolidates yfinance news lookup.
 Once the library is completed and verified:
 
 1. **Repository Dependency Setup**:
-   Add `crewai_tools` to consumer repositories (`epic_news`, `finwiz`, `osint_tools`) with standard or extra dependency flags.
+   Add `crew_custom_tools` to consumer repositories (`epic_news`, `finwiz`, `osint_tools`) with standard or extra dependency flags.
 2. **Import Modification**:
    Replace local imports like:
    `from epic_news.tools.perplexity_search_tool import PerplexitySearchTool`
    with:
-   `from crewai_tools import PerplexitySearchTool`
+   `from crew_custom_tools import PerplexitySearchTool`
 3. **Remove Old Code**:
    Safely delete duplicate Python files from local repository `/tools` folders.
