@@ -12,4 +12,4 @@ This ledger tracks the progress of the `crewai-tools` centralized library migrat
 
 ## SDD Progress
 - Task 1: complete (commits 87116fd..7f97d70, review clean)
-- Task 2: complete (commits 7f97d70..1a4b5ba, review clean)
+- Task 2: complete (commits 7f97d70..85237a6, review clean)
