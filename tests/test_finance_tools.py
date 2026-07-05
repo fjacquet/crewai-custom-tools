@@ -2,6 +2,7 @@
 
 import json
 import os
+import base64
 import pytest
 import requests
 import pandas as pd
@@ -208,3 +209,84 @@ def test_exchange_rates_success(mocker):
     assert "Exchange rates based on USD" in result
     assert "EUR" in result
     assert "0.92" in result
+
+
+# ==============================================================================
+# 5. Missing Tools Mock Tests (History, Kraken Balance, Alpha Vantage)
+# ==============================================================================
+
+def test_yfinance_history_success(mocker):
+    """Test Yahoo Finance Ticker History retrieval and statistics formatting."""
+    mock_ticker = mocker.MagicMock()
+    
+    # Mocking pandas DataFrame for historical prices
+    history_df = pd.DataFrame([
+        {"Open": 100.0, "High": 105.0, "Low": 99.0, "Close": 104.0, "Volume": 1000000},
+        {"Open": 104.0, "High": 108.0, "Low": 103.0, "Close": 107.0, "Volume": 1500000}
+    ], index=[pd.Timestamp("2026-07-01"), pd.Timestamp("2026-07-02")])
+    
+    mock_ticker.history.return_value = history_df
+    mocker.patch("yfinance.Ticker", return_value=mock_ticker)
+
+    tool = YahooFinanceHistoryTool()
+    result_str = tool._run(ticker="AAPL")
+    result = json.loads(result_str)
+    
+    assert result["summary"]["symbol"] == "AAPL"
+    assert result["summary"]["start_date"] == "2026-07-01"
+    assert result["summary"]["price_change"] == 3.0
+    assert len(result["history"]) == 2
+
+
+def test_kraken_asset_list_success(mocker):
+    """Test private account balance asset listing using Kraken private REST mock."""
+    mocker.patch.dict(os.environ, {
+        "KRAKEN_API_KEY": "test_key",
+        "KRAKEN_API_SECRET": base64.b64encode(b"test_secret").decode()
+    })
+    
+    mock_response = mocker.MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "result": {
+            "ZUSD": "1000.50",
+            "XXBT": "0.15000"
+        }
+    }
+    mocker.patch("requests.post", return_value=mock_response)
+
+    tool = KrakenAssetListTool()
+    result_str = tool._run(asset_class="currency")
+    result = json.loads(result_str)
+    
+    assert len(result) == 2
+    assert result[0]["asset"] == "ZUSD"
+    assert result[0]["quantity"] == 1000.50
+
+
+def test_alphavantage_overview_success(mocker):
+    """Test fundamental company data retrieval from Alpha Vantage."""
+    mocker.patch.dict(os.environ, {"ALPHA_VANTAGE_API_KEY": "test_av_key"})
+    
+    mock_response = mocker.MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "Symbol": "MSFT",
+        "Name": "Microsoft Corporation",
+        "ReturnOnEquityTTM": "0.385",
+        "DebtToEquityRatio": "0.45",
+        "QuarterlyRevenueGrowthYOY": "0.12",
+        "ProfitMargin": "0.26",
+        "PERatio": "35.2"
+    }
+    mocker.patch("requests.get", return_value=mock_response)
+
+    tool = AlphaVantageOverviewTool()
+    result_str = tool._run(ticker="MSFT")
+    result = json.loads(result_str)
+    
+    assert result["symbol"] == "MSFT"
+    assert result["name"] == "Microsoft Corporation"
+    assert result["return_on_equity_ttm"] == 0.385
+    assert result["debt_to_equity_ratio"] == 0.45
+

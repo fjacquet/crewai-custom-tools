@@ -16,20 +16,7 @@ from crew_custom_tools.core.decorators import api_tool
 logger = logging.getLogger(__name__)
 
 
-# Standard input schemas
-class CoinInfoInput(BaseModel):
-    """Input schema for getting cryptocurrency information."""
-    symbol: str = Field(..., description="The cryptocurrency symbol/ticker (e.g., 'BTC', 'ETH').")
-
-
-class KrakenTickerInfoInput(BaseModel):
-    """Input schema for the KrakenTickerInfoTool."""
-    pair: str = Field(..., description="The cryptocurrency pair to get ticker information for (e.g., 'XXBTZUSD').")
-
-
-class KrakenAssetListInput(BaseModel):
-    """Input schema for the KrakenAssetListTool."""
-    asset_class: str = Field(default="currency", description="Asset class (e.g., 'currency').")
+from crew_custom_tools.models import CoinInfoInput, KrakenTickerInfoInput, KrakenAssetListInput
 
 
 class CoinMarketCapInfoTool(BaseTool):
