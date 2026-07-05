@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "crewai-tools"
+version = "0.1.0"
+description = "Centralized, resilient tools for CrewAI multi-agent systems"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "crewai>=0.100.0",
+    "requests>=2.31.0",
+    "pydantic>=2.0.0",
+    "beautifulsoup4>=4.12.0",
+]
+
+[project.optional-dependencies]
+finance = [
+    "yfinance>=0.2.38",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/crewai_tools"]
