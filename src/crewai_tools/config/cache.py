@@ -5,6 +5,8 @@ This module provides a simple file-based caching system for API calls
 to avoid repeated requests and respect rate limits.
 """
 
+from functools import wraps
+import hashlib
 import json
 import logging
 from datetime import datetime, timedelta
@@ -32,9 +34,10 @@ class CacheManager:
 
     def _get_cache_path(self, key: str) -> Path:
         """Get the cache file path for a given key."""
-        # Create a safe filename from the key
-        safe_key = "".join(c for c in key if c.isalnum() or c in ("-", "_", ".")).rstrip()
-        return self.cache_dir / f"{safe_key}.json"
+        # Create a safe filename from the key, appending its MD5 hash to prevent collisions and OS limits
+        key_hash = hashlib.md5(key.encode("utf-8")).hexdigest()
+        safe_key = "".join(c for c in key[:50] if c.isalnum() or c in ("-", "_", ".")).rstrip()
+        return self.cache_dir / f"{safe_key}_{key_hash}.json"
 
     def get(self, key: str, ttl: int | None = None) -> Any | None:
         """
@@ -62,11 +65,16 @@ class CacheManager:
 
             if datetime.now() - cached_time > timedelta(seconds=ttl_seconds):
                 # Cache expired, remove file
-                cache_path.unlink()
+                try:
+                    cache_path.unlink()
+                except FileNotFoundError:
+                    pass
                 return None
 
             return cache_data["data"]
 
+        except FileNotFoundError:
+            return None
         except (json.JSONDecodeError, KeyError, ValueError):
             # Invalid cache file, remove it
             try:
@@ -123,9 +131,14 @@ class CacheManager:
                 cached_time = datetime.fromisoformat(cache_data["timestamp"])
 
                 if datetime.now() - cached_time > timedelta(seconds=ttl_seconds):
-                    cache_file.unlink()
+                    try:
+                        cache_file.unlink()
+                    except FileNotFoundError:
+                        pass
                     removed_count += 1
 
+            except FileNotFoundError:
+                pass
             except (json.JSONDecodeError, KeyError, ValueError):
                 # Invalid cache file, remove it
                 try:
@@ -159,11 +172,14 @@ def cache_api_call(key: str, ttl: int = 3600):
     """
 
     def decorator(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             cache = get_cache_manager()
 
             # Create a unique cache key based on function name and arguments
-            cache_key = f"{key}_{func.__name__}_{hash(str(args) + str(sorted(kwargs.items())))}"
+            serialized = f"{args}_{sorted(kwargs.items())}"
+            args_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+            cache_key = f"{key}_{func.__name__}_{args_hash}"
 
             # Try to get from cache first
             cached_result = cache.get(cache_key, ttl)

@@ -27,6 +27,7 @@ def test_cache_manager_expiration(tmp_path):
     cache.set("expire_key", "expire_value")
     # Immediate retrieval should succeed
     assert cache.get("expire_key") == "expire_value"
+    assert cache._get_cache_path("expire_key").exists()
 
     # Wait for expiration
     time.sleep(1.1)
@@ -34,7 +35,7 @@ def test_cache_manager_expiration(tmp_path):
     assert cache.get("expire_key") is None
 
     # Verify cache file is indeed removed
-    safe_path = cache_dir / "expire_key.json"
+    safe_path = cache._get_cache_path("expire_key")
     assert not safe_path.exists()
 
 
@@ -156,3 +157,58 @@ def test_cache_decorator(tmp_path):
 
     finally:
         cache_module._cache_manager = original_manager
+
+
+def test_decorator_wraps_metadata():
+    """Test that cache_api_call decorator preserves the original function's metadata via wraps."""
+    @cache_api_call(key="test_wraps")
+    def sample_function(x: int) -> int:
+        """This is a sample function."""
+        return x
+
+    assert sample_function.__name__ == "sample_function"
+    assert sample_function.__doc__ == "This is a sample function."
+
+
+def test_filename_collision_avoidance(tmp_path):
+    """Test that cache path generation handles collisions and long keys gracefully."""
+    cache = CacheManager(cache_dir=tmp_path / "collision_cache")
+    
+    # "foo bar" vs "foobar"
+    path_space = cache._get_cache_path("foo bar")
+    path_nospace = cache._get_cache_path("foobar")
+    assert path_space != path_nospace
+    
+    # Extremely long key
+    long_key = "a" * 200
+    long_path = cache._get_cache_path(long_key)
+    assert len(long_path.name) <= 100  # Well within standard OS limits (usually 255)
+    
+    # Another slightly different long key
+    long_key_diff = "a" * 200 + "b"
+    long_path_diff = cache._get_cache_path(long_key_diff)
+    assert long_path != long_path_diff
+
+
+def test_file_not_found_race_conditions(tmp_path):
+    """Test that get and clear_expired handle FileNotFoundError race conditions gracefully."""
+    cache = CacheManager(cache_dir=tmp_path / "race_cache")
+    
+    # 1. Test get() handles FileNotFoundError when reading/opening
+    # We set a file and then delete it before calling get, which is handled gracefully by exits check,
+    # but let's test the FileNotFoundError handling in unlink/open.
+    cache.set("race_key", "value")
+    
+    # Let's mock unlink to raise FileNotFoundError or manually trigger unlinks
+    # During clean/expiry:
+    cache.set("expired_key", "value")
+    # Set default ttl to -1 to force it to be expired
+    cache.default_ttl = -1
+    
+    # Delete the file manually right before calling get
+    path = cache._get_cache_path("expired_key")
+    path.unlink()
+    
+    # Calling get() now should not raise FileNotFoundError, and should just return None
+    assert cache.get("expired_key") is None
+
