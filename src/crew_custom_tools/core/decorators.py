@@ -2,6 +2,7 @@
 
 import time
 import logging
+import concurrent.futures
 from functools import wraps
 from typing import Any, Callable, Optional
 import requests
@@ -28,16 +29,26 @@ def api_tool(
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             try:
-                return func(*args, **kwargs)
+                # Enforce execution timeout via ThreadPoolExecutor
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(func, *args, **kwargs)
+                    try:
+                        return future.result(timeout=timeout)
+                    except concurrent.futures.TimeoutError:
+                        logger.warning(f"Function {func.__name__} timed out after {timeout}s")
+                        return default_return or f"Timeout error: Function timed out after {timeout}s"
             except requests.exceptions.HTTPError as e:
-                # Intercept HTTP 429 and retry with exponential backoff
+                # Intercept HTTP 429 and retry with sleep
                 if e.response is not None and e.response.status_code == 429:
                     logger.warning(f"Rate limited by {provider} {endpoint}. Retrying...")
                     time.sleep(2.0)
                     try:
-                        return func(*args, **kwargs)
-                    except Exception:
-                        pass
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                            future = executor.submit(func, *args, **kwargs)
+                            return future.result(timeout=timeout)
+                    except Exception as retry_err:
+                        logger.error(f"API Retry failed in {provider} {endpoint}: {retry_err}")
+                
                 logger.error(f"API Error in {provider} {endpoint}: {e}")
                 return default_return or f"Error calling {provider}: {e}"
             except Exception as e:
