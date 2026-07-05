@@ -4,7 +4,7 @@ This ledger tracks the progress of the `crewai-tools` centralized library migrat
 
 ## Tasks
 - [x] Task 1: Scaffolding & Packaging Setup
-- [ ] Task 2: Migrate and Centralize the Caching Layer
+- [x] Task 2: Migrate and Centralize the Caching Layer
 - [ ] Task 3: Migrate and Standardize the `PerplexitySearchTool`
 - [ ] Task 4: Migrate and Standardize Yahoo Finance News Tool
 - [ ] Task 5: Migrate and Standardize Yahoo Finance Ticker Info Tool
@@ -12,3 +12,4 @@ This ledger tracks the progress of the `crewai-tools` centralized library migrat
 
 ## SDD Progress
 - Task 1: complete (commits 87116fd..7f97d70, review clean)
+- Task 2: complete (commits 7f97d70..1a4b5ba, review clean)
