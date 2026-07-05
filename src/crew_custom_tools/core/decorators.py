@@ -28,31 +28,37 @@ def api_tool(
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
             try:
-                # Enforce execution timeout via ThreadPoolExecutor
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(func, *args, **kwargs)
-                    try:
-                        return future.result(timeout=timeout)
-                    except concurrent.futures.TimeoutError:
-                        logger.warning(f"Function {func.__name__} timed out after {timeout}s")
-                        return default_return or f"Timeout error: Function timed out after {timeout}s"
+                future = executor.submit(func, *args, **kwargs)
+                try:
+                    return future.result(timeout=timeout)
+                except concurrent.futures.TimeoutError:
+                    logger.warning(f"Function {func.__name__} timed out after {timeout}s")
+                    return default_return or f"Timeout error: Function timed out after {timeout}s"
             except requests.exceptions.HTTPError as e:
                 # Intercept HTTP 429 and retry with sleep
                 if e.response is not None and e.response.status_code == 429:
                     logger.warning(f"Rate limited by {provider} {endpoint}. Retrying...")
                     time.sleep(2.0)
+                    retry_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
                     try:
-                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                            future = executor.submit(func, *args, **kwargs)
-                            return future.result(timeout=timeout)
+                        retry_future = retry_executor.submit(func, *args, **kwargs)
+                        return retry_future.result(timeout=timeout)
+                    except concurrent.futures.TimeoutError:
+                        logger.warning(f"Function {func.__name__} retry timed out after {timeout}s")
+                        return default_return or f"Timeout error: Function timed out after {timeout}s"
                     except Exception as retry_err:
                         logger.error(f"API Retry failed in {provider} {endpoint}: {retry_err}")
+                    finally:
+                        retry_executor.shutdown(wait=False)
                 
                 logger.error(f"API Error in {provider} {endpoint}: {e}")
                 return default_return or f"Error calling {provider}: {e}"
             except Exception as e:
                 logger.error(f"Execution failed in {provider} {endpoint}: {e}")
                 return default_return or f"Unexpected failure: {e}"
+            finally:
+                executor.shutdown(wait=False)
         return wrapper
     return decorator
