@@ -581,6 +581,34 @@ wheels = [
 ]
 
 [[package]]
+name = "crew-custom-tools"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "crewai" },
+    { name = "pydantic" },
+    { name = "pytest-mock" },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+finance = [
+    { name = "yfinance" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.12.0" },
+    { name = "crewai", specifier = ">=0.100.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pytest-mock", specifier = ">=3.15.1" },
+    { name = "requests", specifier = ">=2.31.0" },
+    { name = "yfinance", marker = "extra == 'finance'", specifier = ">=0.2.38" },
+]
+provides-extras = ["finance"]
+
+[[package]]
 name = "crewai"
 version = "1.15.1"
 source = { registry = "https://pypi.org/simple" }
@@ -671,34 +699,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/04/4d/48644df7cb7696735
 wheels = [
     { url = "https://files.pythonhosted.org/packages/89/52/da8e218ce17133ea85a249335757d8f3978915db1e202017c9110ca7e38d/crewai_core-1.15.1-py3-none-any.whl", hash = "sha256:94695183c9b5903088602240452a8bee502292b458120cbcdfb2792ca5aa178b", size = 31001, upload-time = "2026-06-27T06:51:27.724Z" },
 ]
-
-[[package]]
-name = "crewai-tools"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "beautifulsoup4" },
-    { name = "crewai" },
-    { name = "pydantic" },
-    { name = "pytest-mock" },
-    { name = "requests" },
-]
-
-[package.optional-dependencies]
-finance = [
-    { name = "yfinance" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beautifulsoup4", specifier = ">=4.12.0" },
-    { name = "crewai", specifier = ">=0.100.0" },
-    { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "pytest-mock", specifier = ">=3.15.1" },
-    { name = "requests", specifier = ">=2.31.0" },
-    { name = "yfinance", marker = "extra == 'finance'", specifier = ">=0.2.38" },
-]
-provides-extras = ["finance"]
 
 [[package]]
 name = "cryptography"

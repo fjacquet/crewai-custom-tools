@@ -1,7 +1,7 @@
 import pytest
 import time
 from pathlib import Path
-from crewai_tools.config.cache import CacheManager, get_cache_manager, cache_api_call
+from crew_custom_tools.config.cache import CacheManager, get_cache_manager, cache_api_call
 
 
 def test_cache_manager_basic_get_set(tmp_path):
@@ -128,7 +128,7 @@ def test_global_cache_manager():
 def test_cache_decorator(tmp_path):
     """Test caching decorator on API functions."""
     # Ensure global cache manager uses tmp_path to not pollute production/default cache
-    import crewai_tools.config.cache as cache_module
+    import crew_custom_tools.config.cache as cache_module
     original_manager = cache_module._cache_manager
     
     try:

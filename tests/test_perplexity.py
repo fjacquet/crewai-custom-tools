@@ -6,7 +6,7 @@ import os
 import pytest
 import requests
 
-from crewai_tools.tools.web.perplexity import (
+from crew_custom_tools.tools.web.perplexity import (
     PerplexitySearchInput,
     PerplexitySearchTool,
 )
