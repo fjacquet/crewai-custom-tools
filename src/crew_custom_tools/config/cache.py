@@ -1,152 +1,209 @@
 """
 Cache manager for API results to reduce rate limits and improve performance.
 
-This module provides a simple file-based caching system for API calls
-to avoid repeated requests and respect rate limits.
+This module provides a simple file-based and memory caching system for API calls
+to avoid repeated requests and respect rate limits using SHA-256.
 """
 
 from functools import wraps
 import hashlib
 import json
 import logging
-from datetime import datetime, timedelta
+import os
+import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
-# Configure standard logger
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("crew_custom_tools.cache")
 
 
 class CacheManager:
-    """Simple file-based cache manager for API results."""
+    """Simple file and memory-based cache manager for API results using SHA-256."""
 
-    def __init__(self, cache_dir: str | Path = "cache", default_ttl: int = 3600):
+    def __init__(self, cache_dir: str | Path = ".cache", default_ttl: int = 3600):
         """
         Initialize the cache manager.
 
         Args:
             cache_dir: Directory to store cache files
-            default_ttl: Default time-to-live in seconds (1 hour default)
+            default_ttl: Default time-to-live in seconds
         """
         self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(exist_ok=True, parents=True)
         self.default_ttl = default_ttl
+        self.memory_cache = {}
+        self.cache_dir.mkdir(exist_ok=True, parents=True)
+
+    def _get_filename(self, key: str) -> str:
+        """Secure, modern SHA-256 hashing to map keys into safe file paths without MD5."""
+        hasher = hashlib.sha256(key.encode('utf-8'))
+        return os.path.join(str(self.cache_dir), f"cache_{hasher.hexdigest()[:32]}.json")
 
     def _get_cache_path(self, key: str) -> Path:
-        """Get the cache file path for a given key."""
-        # Create a safe filename from the key, appending its MD5 hash to prevent collisions and OS limits
-        key_hash = hashlib.md5(key.encode("utf-8")).hexdigest()
-        safe_key = "".join(c for c in key[:50] if c.isalnum() or c in ("-", "_", ".")).rstrip()
-        return self.cache_dir / f"{safe_key}_{key_hash}.json"
+        """Get the cache file path as a Path object for a given key."""
+        return Path(self._get_filename(key))
 
-    def get(self, key: str, ttl: int | None = None) -> Any | None:
+    def get(self, key: str, ttl: Optional[int] = None) -> Optional[Any]:
         """
         Get a value from cache if it exists and hasn't expired.
 
-        Args:
-            key: Cache key
-            ttl: Time-to-live in seconds (uses default if None)
-
-        Returns:
-            Cached value if found and valid, None otherwise
+        Checks memory cache first, then falls back to disk.
         """
-        cache_path = self._get_cache_path(key)
-
-        if not cache_path.exists():
-            return None
-
-        try:
-            with open(cache_path) as f:
-                cache_data = json.load(f)
-
-            # Check if cache has expired
-            cached_time = datetime.fromisoformat(cache_data["timestamp"])
-            ttl_seconds = ttl if ttl is not None else self.default_ttl
-
-            if datetime.now() - cached_time > timedelta(seconds=ttl_seconds):
-                # Cache expired, remove file
-                try:
-                    cache_path.unlink()
-                except FileNotFoundError:
-                    pass
+        # Memory check first
+        if key in self.memory_cache:
+            filepath = self._get_cache_path(key)
+            try:
+                mtime = filepath.stat().st_mtime
+                cached_data = self.memory_cache[key]
+                if len(cached_data) == 4 and cached_data[3] != mtime:
+                    # Invalidate memory cache since file has changed on disk
+                    del self.memory_cache[key]
+                else:
+                    val, timestamp, expiry = cached_data[0], cached_data[1], cached_data[2]
+                    
+                    # If get is called with an explicit ttl, use that to determine expiration
+                    if ttl is not None:
+                        if time.time() - timestamp >= ttl:
+                            del self.memory_cache[key]
+                            try:
+                                filepath.unlink()
+                            except OSError:
+                                pass
+                            return None
+                        return val
+                    
+                    # Otherwise, check stored absolute expiry
+                    if expiry is None or expiry > time.time():
+                        return val
+                    else:
+                        del self.memory_cache[key]
+                        try:
+                            filepath.unlink()
+                        except OSError:
+                            pass
+                        return None
+            except OSError:
+                # File deleted or cannot be stat'ed, invalidate memory cache
+                del self.memory_cache[key]
                 return None
 
-            return cache_data["data"]
-
-        except FileNotFoundError:
+        filepath = self._get_cache_path(key)
+        if not filepath.exists():
             return None
-        except (json.JSONDecodeError, KeyError, ValueError):
-            # Invalid cache file, remove it
-            try:
-                cache_path.unlink()
-            except FileNotFoundError:
-                pass
-            return None
-
-    def set(self, key: str, value: Any) -> None:
-        """
-        Store a value in cache.
-
-        Args:
-            key: Cache key
-            value: Value to cache
-        """
-        cache_path = self._get_cache_path(key)
-
-        cache_data = {"timestamp": datetime.now().isoformat(), "data": value}
 
         try:
-            with open(cache_path, "w") as f:
-                json.dump(cache_data, f, indent=2)
-        except Exception as e:
-            # If caching fails, just continue without caching
-            logger.warning(f"Failed to cache data for key {key}: {e}")
+            mtime = filepath.stat().st_mtime
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            val = data.get("value")
+            timestamp = data.get("timestamp")
+            expiry = data.get("expiry")
+            
+            # Ensure defaults if they are missing
+            if timestamp is None:
+                timestamp = time.time()
+
+            if ttl is not None:
+                if time.time() - timestamp >= ttl:
+                    try:
+                        filepath.unlink()
+                    except OSError:
+                        pass
+                    return None
+                self.memory_cache[key] = (val, timestamp, expiry, mtime)
+                return val
+
+            if expiry is None or expiry > time.time():
+                self.memory_cache[key] = (val, timestamp, expiry, mtime)
+                return val
+            else:
+                try:
+                    filepath.unlink()
+                except OSError:
+                    pass
+        except (json.JSONDecodeError, OSError, KeyError, ValueError) as e:
+            logger.warning(f"Purging corrupted cache file {filepath} due to error: {e}")
+            try:
+                filepath.unlink()
+            except OSError:
+                pass
+        return None
+
+    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+        """Store a value in cache with optional TTL."""
+        effective_ttl = ttl if ttl is not None else self.default_ttl
+        timestamp = time.time()
+        expiry = timestamp + effective_ttl if effective_ttl is not None else None
+        
+        filepath = self._get_cache_path(key)
+        try:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump({"value": value, "timestamp": timestamp, "expiry": expiry}, f)
+            mtime = filepath.stat().st_mtime
+            self.memory_cache[key] = (value, timestamp, expiry, mtime)
+        except OSError as e:
+            logger.error(f"Failed to write cache file {filepath}: {e}")
 
     def clear(self) -> None:
         """Clear all cached data."""
-        for cache_file in self.cache_dir.glob("*.json"):
+        self.memory_cache.clear()
+        for filepath in self.cache_dir.glob("*.json"):
             try:
-                cache_file.unlink()
-            except FileNotFoundError:
+                filepath.unlink()
+            except OSError:
                 pass
 
-    def clear_expired(self, ttl: int | None = None) -> int:
-        """
-        Clear expired cache entries.
-
-        Args:
-            ttl: Time-to-live in seconds (uses default if None)
-
-        Returns:
-            Number of expired entries removed
-        """
-        ttl_seconds = ttl if ttl is not None else self.default_ttl
+    def clear_expired(self, ttl: Optional[int] = None) -> int:
+        """Clear expired cache entries from memory and disk."""
         removed_count = 0
+        
+        # Clear memory cache expired entries to keep it clean
+        expired_mem_keys = []
+        for key, cached_data in list(self.memory_cache.items()):
+            val, timestamp, expiry = cached_data[0], cached_data[1], cached_data[2]
+            if ttl is not None:
+                if time.time() - timestamp >= ttl:
+                    expired_mem_keys.append(key)
+            elif expiry is not None and expiry <= time.time():
+                expired_mem_keys.append(key)
+                
+        for key in expired_mem_keys:
+            self.memory_cache.pop(key, None)
 
-        for cache_file in self.cache_dir.glob("*.json"):
+        # Clear expired files from disk
+        for filepath in list(self.cache_dir.glob("*.json")):
             try:
-                with open(cache_file) as f:
-                    cache_data = json.load(f)
-
-                cached_time = datetime.fromisoformat(cache_data["timestamp"])
-
-                if datetime.now() - cached_time > timedelta(seconds=ttl_seconds):
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                timestamp = data.get("timestamp")
+                expiry = data.get("expiry")
+                
+                if timestamp is None:
+                    timestamp = time.time()
+                    
+                is_expired = False
+                if ttl is not None:
+                    if time.time() - timestamp >= ttl:
+                        is_expired = True
+                elif expiry is not None and expiry <= time.time():
+                    is_expired = True
+                elif expiry is None:
+                    effective_ttl = self.default_ttl
+                    if effective_ttl is not None and time.time() - timestamp >= effective_ttl:
+                        is_expired = True
+                        
+                if is_expired:
                     try:
-                        cache_file.unlink()
-                    except FileNotFoundError:
+                        filepath.unlink()
+                    except OSError:
                         pass
                     removed_count += 1
-
-            except FileNotFoundError:
-                pass
-            except (json.JSONDecodeError, KeyError, ValueError):
-                # Invalid cache file, remove it
+            except (json.JSONDecodeError, OSError, KeyError, ValueError):
+                # Invalid or corrupt cache file, remove it
                 try:
-                    cache_file.unlink()
-                except FileNotFoundError:
+                    filepath.unlink()
+                except OSError:
                     pass
                 removed_count += 1
-
         return removed_count
 
 
@@ -194,7 +251,7 @@ def cache_api_call(key: str, ttl: int = 3600):
 
             # Call the function and cache the result
             result = func(*args, **kwargs)
-            cache.set(cache_key, result)
+            cache.set(cache_key, result, ttl=ttl)
 
             return result
 
