@@ -1,10 +1,8 @@
 """Specialized HTML Layout Template Renderers."""
 
 import logging
-from crewai.tools import BaseTool
-from pydantic import BaseModel, Field
-from typing import Any, List, Optional
-from crew_custom_tools.reporting.html_generator import RenderReportTool, RenderReportToolSchema
+from typing import Any, List
+from crew_custom_tools.reporting.html_generator import RenderReportTool
 
 logger = logging.getLogger(__name__)
 

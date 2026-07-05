@@ -1,8 +1,8 @@
 # Design Specification: crew-custom-tools (Universal Monolith Edition)
 
-**Date**: 2026-07-05  
-**Status**: APPROVED / READY FOR IMPLEMENTATION PLAN  
-**Author**: Gemini CLI & Collaborative Engineering Team  
+**Date**: 2026-07-05
+**Status**: APPROVED / READY FOR IMPLEMENTATION PLAN
+**Author**: Gemini CLI & Collaborative Engineering Team
 
 ---
 
@@ -46,17 +46,17 @@ dependencies = [
     "httpx>=0.28.1",
     "beautifulsoup4>=4.12.0",
     "jinja2>=3.1.6",
-    
+
     # Financial & quantitative libraries
     "yfinance>=0.2.38",
     "numpy>=1.24.0",
     "pandas>=2.0.0",
-    
+
     # OSINT & domain tools
     "pygithub>=2.2.0",
     "whodap>=0.1.16",
     "feedparser>=6.0.12",
-    
+
     # Enterprise APIs
     "todoist-api-python>=2.1.3",
 ]
@@ -147,38 +147,39 @@ src/crew_custom_tools/
 
 ### 4.1 Caching Layer (`config/cache.py`)
 
-*   **Design**: Features dual-level in-memory and filesystem storage with automatic time-to-live (TTL) expiration rules.
-*   **Safety**: If a cache file is corrupted or contains incomplete text, it catches `json.JSONDecodeError` or `OSError` dynamically, purges the broken cache file from the disk, logs the warning, and safely behaves as a cache miss instead of crashing.
-*   **Key Security**: Utilizes strong cryptographic hashes (`hashlib.sha256`) instead of weak/broken MD5 algorithms to map dynamic parameters and queries into standardized, 40-character collision-resistant file names.
-*   **Decorators**: Implements `@cache_api_call` to automatically handle parameter serialization, metadata wrapping (`functools.wraps`), and persistence across execution sessions.
+* **Design**: Features dual-level in-memory and filesystem storage with automatic time-to-live (TTL) expiration rules.
+* **Safety**: If a cache file is corrupted or contains incomplete text, it catches `json.JSONDecodeError` or `OSError` dynamically, purges the broken cache file from the disk, logs the warning, and safely behaves as a cache miss instead of crashing.
+* **Key Security**: Utilizes strong cryptographic hashes (`hashlib.sha256`) instead of weak/broken MD5 algorithms to map dynamic parameters and queries into standardized, 40-character collision-resistant file names.
+* **Decorators**: Implements `@cache_api_call` to automatically handle parameter serialization, metadata wrapping (`functools.wraps`), and persistence across execution sessions.
 
 ### 4.2 API Resiliency Decorators (`core/decorators.py`)
 
-*   **Retry Protocols**: Automatically intercepts HTTP rate limits (`429`) and server errors (`5xx`). Executes retry attempts with exponential backoff and randomized jitter to prevent thundering herds.
-*   **Timeout Boundaries**: Enforces strict execution limits on all network requests (default: 30.0s) to keep multi-agent loops moving.
-*   **Unhandled Exceptions Handling**: Wraps execution in safe boundaries. Catches all connection failures, socket errors, or API-specific failures. Instead of raising an exception and crashing the entire agent team, it returns a clean, agent-readable error description so the agent can react, adapt, or output a graceful fallback result.
+* **Retry Protocols**: Automatically intercepts HTTP rate limits (`429`) and server errors (`5xx`). Executes retry attempts with exponential backoff and randomized jitter to prevent thundering herds.
+* **Timeout Boundaries**: Enforces strict execution limits on all network requests (default: 30.0s) to keep multi-agent loops moving.
+* **Unhandled Exceptions Handling**: Wraps execution in safe boundaries. Catches all connection failures, socket errors, or API-specific failures. Instead of raising an exception and crashing the entire agent team, it returns a clean, agent-readable error description so the agent can react, adapt, or output a graceful fallback result.
 
 ---
 
 ## 5. Pydantic Objects Standard
 
-Every tool in the unified suite strictly declares its input parameters using Pydantic schemas (inheriting from `pydantic.BaseModel`). 
-*   **Agent Integration**: The Pydantic model's attribute types, descriptions, and default values are dynamically parsed by the downstream LLM agent to construct valid argument inputs.
-*   **Output Standardization**: Multi-step or data-centric tools validate their JSON outputs against migrated models (like `TavilySearchResult`, `GithubRepoDetails`, `YahooFinanceTickerDetails`), guaranteeing structural consistency.
+Every tool in the unified suite strictly declares its input parameters using Pydantic schemas (inheriting from `pydantic.BaseModel`).
+
+* **Agent Integration**: The Pydantic model's attribute types, descriptions, and default values are dynamically parsed by the downstream LLM agent to construct valid argument inputs.
+* **Output Standardization**: Multi-step or data-centric tools validate their JSON outputs against migrated models (like `TavilySearchResult`, `GithubRepoDetails`, `YahooFinanceTickerDetails`), guaranteeing structural consistency.
 
 ---
 
 ## 6. Testing & Validation Strategy
 
-*   **Porting Existing Assets**: We will port, clean up, and adapt the extensive test suites already written in `epic_news`, `finwiz`, and `osint_tools`. This avoids reinventing tests and saves operational development time.
-*   **Strict pytest Standard**: All tests must follow the modern **pytest** standard utilizing fixtures, parameterization, and `pytest-mock`. **No `unittest` module styles will be used or written.**
-*   **Zero Live Connections**: All ported and new tests must execute 100% offline via mock responses (`pytest-mock`), simulating successes, timeouts, and `429` rate limit returns to verify resilience.
-*   **Performance Constraint**: The complete test suite of 40+ unit and integration tests must run and pass in under 5 seconds.
+* **Porting Existing Assets**: We will port, clean up, and adapt the extensive test suites already written in `epic_news`, `finwiz`, and `osint_tools`. This avoids reinventing tests and saves operational development time.
+* **Strict pytest Standard**: All tests must follow the modern **pytest** standard utilizing fixtures, parameterization, and `pytest-mock`. **No `unittest` module styles will be used or written.**
+* **Zero Live Connections**: All ported and new tests must execute 100% offline via mock responses (`pytest-mock`), simulating successes, timeouts, and `429` rate limit returns to verify resilience.
+* **Performance Constraint**: The complete test suite of 40+ unit and integration tests must run and pass in under 5 seconds.
 
 ---
 
 ## 7. Spec Self-Review Checklist
 
-1.  **Placeholder Scan**: No "TBD", "TODO", or incomplete statements. All imports and directories are fully specified.
-2.  **Internal Consistency**: All modules and files listed in the target layout align with the dependencies and Pydantic object migration strategies.
-3.  **Scope Verification**: Focuses purely on extracting, consolidating, and sanitizing existing functional codebase assets rather than writing new business logic from scratch.
+1. **Placeholder Scan**: No "TBD", "TODO", or incomplete statements. All imports and directories are fully specified.
+2. **Internal Consistency**: All modules and files listed in the target layout align with the dependencies and Pydantic object migration strategies.
+3. **Scope Verification**: Focuses purely on extracting, consolidating, and sanitizing existing functional codebase assets rather than writing new business logic from scratch.

@@ -183,6 +183,36 @@ def test_rss_feed_parser(mocker):
     assert results[0]["published"] == "Sun, 05 Jul 2026 12:00:00 GMT"
 
 
+def test_opml_parser_success(tmp_path):
+    """Test successful parsing of an OPML file to extract feed URLs."""
+    opml_content = """<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+    <head><title>My Feeds</title></head>
+    <body>
+        <outline text="Tech Feeds">
+            <outline text="AI Feed" type="rss" xmlUrl="https://rss.com/ai" htmlUrl="https://rss.com"/>
+            <outline text="Python Feed" type="rss" xmlUrl="https://rss.com/python" htmlUrl="https://rss.com"/>
+        </outline>
+    </body>
+</opml>"""
+    opml_file = tmp_path / "feeds.opml"
+    opml_file.write_text(opml_content)
+
+    tool = OpmlParserTool()
+    urls = tool._run(opml_file_path=str(opml_file))
+    
+    assert isinstance(urls, list)
+    assert "https://rss.com/ai" in urls
+    assert "https://rss.com/python" in urls
+
+
+def test_opml_parser_file_not_found():
+    """Test OPML parser handles file not found errors gracefully."""
+    tool = OpmlParserTool()
+    result = tool._run(opml_file_path="/nonexistent/file.opml")
+    assert "Error: The file was not found" in result
+
+
 # ==============================================================================
 # 5. Google Fact Check Tests
 # ==============================================================================

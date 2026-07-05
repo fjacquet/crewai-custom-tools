@@ -9,6 +9,7 @@
 **Tech Stack:** Python 3.11+, `uv` (workspace package builder), `crewai>=0.100.0`, `requests`, `pydantic>=2.0.0`, `beautifulsoup4`, `yfinance`.
 
 ## Global Constraints
+
 - Do not write tools from scratch; copy them from `/Users/fjacquet/Projects/crews/epic_news/`, `/Users/fjacquet/Projects/finwiz/`, or `/Users/fjacquet/Projects/osint_tools/`.
 - Change local project-level imports (like `from epic_news.utils...` or `from finwiz.infrastructure...`) to use standardized local package imports or standalone helper structures.
 - Standardize on `requests` and resilient decorators.
@@ -18,6 +19,7 @@
 ### Task 1: Scaffolding & Packaging Setup
 
 **Files:**
+
 - Create: `pyproject.toml`
 - Create: `src/crew_custom_tools/__init__.py`
 - Create: `README.md`
@@ -26,6 +28,7 @@
 - [ ] **Step 1: Write pyproject.toml and README.md**
 
 Create `/Users/fjacquet/Projects/crew-custom-tools/pyproject.toml`:
+
 ```toml
 [build-system]
 requires = ["hatchling"]
@@ -55,6 +58,7 @@ packages = ["src/crew_custom_tools"]
 ```
 
 Create `/Users/fjacquet/Projects/crew-custom-tools/README.md`:
+
 ```markdown
 # crew-custom-tools
 Centralized resilient tools for CrewAI.
@@ -63,6 +67,7 @@ Centralized resilient tools for CrewAI.
 - [ ] **Step 2: Create directories and initialize package**
 
 Create directory `src/crew_custom_tools` and write `/Users/fjacquet/Projects/crew-custom-tools/src/crew_custom_tools/__init__.py`:
+
 ```python
 """Centralized CrewAI tools library."""
 
@@ -74,9 +79,11 @@ Create `tests/__init__.py`.
 - [ ] **Step 3: Verify uv can install the package**
 
 Run:
+
 ```bash
 uv pip install -e .
 ```
+
 Expected: Success
 
 - [ ] **Step 4: Commit**
@@ -93,6 +100,7 @@ git commit -m "chore: scaffold project structure"
 We will copy the caching mechanisms from `epic_news` to establish a shared caching layer for the library.
 
 **Files:**
+
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/cache_manager.py` -> `src/crew_custom_tools/config/cache.py`
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/tests/tools/test_cache_manager.py` (if any) or port caching tests.
 
@@ -103,9 +111,11 @@ Copy `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/cache_manager
 - [ ] **Step 2: Port existing cache tests**
 
 Copy and run test suite:
+
 ```bash
 uv run pytest tests/test_cache.py -v
 ```
+
 Expected: PASS
 
 - [ ] **Step 3: Commit**
@@ -120,6 +130,7 @@ git commit -m "feat: migrate and adapt caching layer"
 ### Task 3: Migrate and Standardize the `PerplexitySearchTool`
 
 **Files:**
+
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/perplexity_search_tool.py` -> `src/crew_custom_tools/tools/web/perplexity.py`
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/tests/tools/test_perplexity_search_tool.py` -> `tests/test_perplexity.py`
 
@@ -127,6 +138,7 @@ git commit -m "feat: migrate and adapt caching layer"
 
 Copy file `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/perplexity_search_tool.py` into `src/crew_custom_tools/tools/web/perplexity.py`.
 Modify imports:
+
 - Replace `from epic_news.utils.logger import get_logger` with standard python `logging.getLogger`.
 
 - [ ] **Step 2: Move and adjust tests**
@@ -136,9 +148,11 @@ Copy `/Users/fjacquet/Projects/crews/epic_news/tests/tools/test_perplexity_searc
 - [ ] **Step 3: Run the tests to confirm they pass**
 
 Run:
+
 ```bash
 uv run pytest tests/test_perplexity.py -v
 ```
+
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -153,6 +167,7 @@ git commit -m "feat: migrate and standardize PerplexitySearchTool and tests"
 ### Task 4: Migrate and Standardize Yahoo Finance News Tool
 
 **Files:**
+
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/yahoo_finance_news_tool.py` -> `src/crew_custom_tools/tools/finance/yfinance_news.py`
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/tests/tools/test_yahoo_finance_news_tool.py` -> `tests/test_yfinance_news.py`
 
@@ -160,6 +175,7 @@ git commit -m "feat: migrate and standardize PerplexitySearchTool and tests"
 
 Copy `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/yahoo_finance_news_tool.py` into `src/crew_custom_tools/tools/finance/yfinance_news.py`.
 Modify imports:
+
 - Replace `from epic_news.tools.cache_manager import get_cache_manager` with `from crew_custom_tools.config.cache import get_cache_manager` (or your mapped caching module).
 - Replace `from epic_news.models.finance_models import GetTickerNewsInput` with a local Pydantic schema declaration within `yfinance_news.py` to keep it standalone and simple (KISS/DRY).
 
@@ -170,9 +186,11 @@ Copy `/Users/fjacquet/Projects/crews/epic_news/tests/tools/test_yahoo_finance_ne
 - [ ] **Step 3: Run tests to confirm they pass**
 
 Run:
+
 ```bash
 uv run pytest tests/test_yfinance_news.py -v
 ```
+
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -187,6 +205,7 @@ git commit -m "feat: migrate and standardize YahooFinanceNewsTool and tests"
 ### Task 5: Migrate and Standardize Yahoo Finance Ticker Info Tool
 
 **Files:**
+
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/yahoo_finance_ticker_info_tool.py` -> `src/crew_custom_tools/tools/finance/yfinance_ticker.py`
 - Copy: `/Users/fjacquet/Projects/crews/epic_news/tests/tools/test_yahoo_finance_ticker_info_tool.py` -> `tests/test_yfinance_ticker.py`
 
@@ -194,6 +213,7 @@ git commit -m "feat: migrate and standardize YahooFinanceNewsTool and tests"
 
 Copy `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/tools/yahoo_finance_ticker_info_tool.py` into `src/crew_custom_tools/tools/finance/yfinance_ticker.py`.
 Modify imports:
+
 - Replace cache manager imports with `crew_custom_tools.config.cache`.
 - Inline the local `GetTickerInfoInput` Pydantic model directly into `yfinance_ticker.py` to keep it completely self-contained.
 
@@ -204,9 +224,11 @@ Copy `/Users/fjacquet/Projects/crews/epic_news/tests/tools/test_yahoo_finance_ti
 - [ ] **Step 3: Run tests to confirm they pass**
 
 Run:
+
 ```bash
 uv run pytest tests/test_yfinance_ticker.py -v
 ```
+
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -221,12 +243,14 @@ git commit -m "feat: migrate and standardize YahooFinanceTickerInfoTool and test
 ### Task 6: Expose Imports at Package Root
 
 **Files:**
+
 - Modify: `src/crew_custom_tools/__init__.py`
 - Create: `tests/test_exports.py`
 
 - [ ] **Step 1: Expose top-level exports**
 
 Modify `src/crew_custom_tools/__init__.py` to export the migrated tools so users can import them directly from `crew_custom_tools`:
+
 ```python
 """Centralized CrewAI tools library."""
 
@@ -246,6 +270,7 @@ __all__ = [
 - [ ] **Step 2: Create a top-level smoke test**
 
 Create `tests/test_exports.py` to verify exports:
+
 ```python
 def test_exports():
     from crew_custom_tools import PerplexitySearchTool, YahooFinanceTickerInfoTool, YahooFinanceNewsTool
@@ -257,9 +282,11 @@ def test_exports():
 - [ ] **Step 3: Run full suite to ensure 100% success**
 
 Run:
+
 ```bash
 uv run pytest -v
 ```
+
 Expected: 100% tests PASSing
 
 - [ ] **Step 4: Commit**
