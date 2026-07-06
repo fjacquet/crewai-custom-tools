@@ -1,5 +1,7 @@
 # Subagent-Driven Development Progress Ledger
 
+## Phase 1: Core Toolkit Consolidation (Completed)
+
 | Task | Component | Status | Commits | Review | Notes |
 |---|---|---|---|---|---|
 | Task 1 | Package Dependencies & Setup | Complete | 9ea1d2a..e7c3962 | Clean | All core dependencies configured & lockfile successfully compiled |
@@ -10,3 +12,12 @@
 | Task 6 | Unified OSINT & Cyber Recon | Complete | 9e00c67..a6d2d6e | Clean | Consolidated GitHub, email intelligence, Username check, crt.sh subdomains, RDAP WHOIS, and French corporate registers tools |
 | Task 7 | Rich Document/Report Generators | Complete | a6d2d6e..c2c628e | Clean | Migrated HTML report layout renders, structural validators, dynamic PDF compiler, and Pestel/Financial builders |
 | Task 8 | Enterprise APIs & Main Exports | Complete | c2c628e..7ea2714 | Clean | Consolidated Todoist, Airtable, Accuweather, and RAG tools, and exposed public API namespace |
+
+## Phase 2: OSINTFR Curated Tools Integration (Roadmap Expansion)
+
+| Task | Component | Status | Commits | Review | Notes |
+|---|---|---|---|---|---|
+| Task 1 | Setup Dependencies & Schemas | Complete | d7b7bef..c99c73b | Clean | Configured holehe dependency and added centralized Epieos, Holehe, and OpenCorporates schemas |
+| Task 2 | Epieos & Holehe Email Tools | Complete | c99c73b..70ea350 | Clean | Implemented EpieosLookupTool and Holehe platform scanning tools with mock-based unit tests |
+| Task 3 | OpenCorporates Global Search | Complete | 70ea350..ba18f86 | Clean | Implemented OpenCorporatesSearchTool with hybrid keyless fallbacks and mock-based unit tests |
+| Task 4 | Public Exports & Verification | Complete | ba18f86..76d9ab2 | Clean | Exposed Epieos, Holehe, and OpenCorporates at package root with complete smoke tests |
