@@ -1,160 +1,192 @@
-# `crew-custom-tools` User Guide
+# `crew-custom-tools` User Guide (Universal Monolith Edition)
 
-Welcome to the **`crew-custom-tools`** library! This guide outlines how to install the package, import and configure unified tools, leverage our persistent caching layer, and migrate your existing projects (`epic_news`, `finwiz`, and `osint_tools`) cleanly.
+Welcome to the **`crew-custom-tools`** library! This guide outlines how to install the package, import and configure our consolidated, premium superpower tools, utilize the persistent caching layer and resiliency decorators, and write custom multi-agent scripts out of the box.
 
 ---
 
-## 1. Installation
+## 1. Installation & Environment Setup
 
-The package is built to use `uv` for lightning-fast environment setup. Choose the installation method that fits your project.
+`crew-custom-tools` is packaged as an **exclusive Universal Monolith (Approach A)**. All third-party libraries and requirements are fully integrated and available out of the box with zero external dependency fragmentation.
 
 ### 1.1 Local Development (Editable Mode)
-To work on `crew-custom-tools` and have your changes instantly reflected in your agent project, use `uv` editable mode:
+To use `crew-custom-tools` in your other multi-agent projects (such as `epic_news`, `finwiz`, or `osint_tools`) in editable mode:
 ```bash
-# Inside epic_news, finwiz, or osint_tools
-uv add --editable /Users/fjacquet/Projects/crewai-tools
+# Navigate to your agent project (e.g., epic_news)
+uv add --editable /Users/fjacquet/Projects/crew_custom_tools
 ```
 
-### 1.2 Installing Modular Extras
-To keep dependencies lightweight, we utilize Python's Package Extras.
-
-- **For general web/search tools only (like `osint_tools`)**:
-  ```bash
-  uv add "crew-custom-tools @ file:///Users/fjacquet/Projects/crewai-tools"
-  ```
-- **For financial tools (like `finwiz`)** (installs `yfinance`):
-  ```bash
-  uv add "crew-custom-tools[finance] @ file:///Users/fjacquet/Projects/crewai-tools"
-  ```
-- **For development/testing dependencies** (installs `pytest-mock`):
-  ```bash
-  uv add "crew-custom-tools[dev] @ file:///Users/fjacquet/Projects/crewai-tools"
-  ```
+### 1.2 Development and C-Library Fallbacks
+Our financial and macroeconomic scoring systems contain robust **pure-Python fallback calculations** using standard `numpy` and `pandas` arrays. This guarantees that you can install and execute all tools on macOS, Linux, or Windows without being blocked by compiling complex system C libraries (like `ta-lib` or `quantlib`).
 
 ---
 
-## 2. Exposing the Unified Tools
+## 2. Namespace & Exposing the Tools
 
-All core tools can be imported directly from the top-level namespace:
+To maximize convenience for multi-agent LLM systems, **all 30+ custom tools and decorators are exposed directly from the package-level root namespace**:
+
 ```python
+# Import anything cleanly from the root namespace!
 from crew_custom_tools import (
+    # Web & Search
     PerplexitySearchTool,
+    SerperSearchTool,
+    UnifiedScraperTool,
+    WikipediaSearchTool,
+    WikipediaArticleTool,
+    RssFeedParserTool,
+    OpmlParserTool,
+    GoogleFactCheckTool,
+    
+    # Stocks & Financial
     YahooFinanceTickerInfoTool,
-    YahooFinanceNewsTool
+    YahooFinanceNewsTool,
+    YahooFinanceCompanyInfoTool,
+    YahooFinanceETFHoldingsTool,
+    YahooFinanceHistoryTool,
+    CoinMarketCapInfoTool,
+    KrakenTickerInfoTool,
+    KrakenAssetListTool,
+    FREDMacroTool,
+    AlphaVantageOverviewTool,
+    FearGreedTool,
+    ExchangeRateTool,
+    
+    # OSINT & Cyber Recon
+    GitHubSearchTool,
+    GitHubOrgSearchTool,
+    HunterIOTool,
+    SerperEmailSearchTool,
+    UsernameSearchTool,
+    CrtShTool,
+    RDAPDomainTool,
+    FrenchRegistryTool,
+    
+    # Reporting & Formatting
+    RenderReportTool,
+    PestelReportRenderer,
+    FinancialReportRenderer,
+    HtmlToPdfTool,
+    validate_html,
+    
+    # Workspace & Enterprise
+    TodoistTool,
+    AirtableReaderTool,
+    AirtableTool,
+    AccuWeatherTool,
+    SaveToRagTool
 )
 ```
 
-### 2.1 `PerplexitySearchTool`
-Use this tool to run resilient web-grounded AI-synthesized queries with citation extraction.
+---
+
+## 3. Tool Usage Examples
+
+### 3.1 Web Search: `UnifiedScraperTool` (Resilient Crawler with fallbacks)
+This tool scrapes raw HTML/text from any URL. It defaults to a fast standard BeautifulSoup scraper, but **automatically escalates and routes requests through ScrapeNinja or Firecrawl proxy APIs** if Cloudflare or Javascript rendering blocks the request.
 
 ```python
 import os
-from crew_custom_tools import PerplexitySearchTool
+from crew_custom_tools import UnifiedScraperTool
 
-# Ensure PPLX_API_KEY or PERPLEXITY_API_KEY is in your environment
-os.environ["PERPLEXITY_API_KEY"] = "your_key_here"
+# Optionally set keys in your environment for automatic proxy escalations
+os.environ["RAPIDAPI_KEY"] = "your_scrapeninja_rapidapi_key"
+os.environ["FIRECRAWL_API_KEY"] = "your_firecrawl_api_key"
 
-# Configure to output JSON or Markdown
-tool = PerplexitySearchTool(output_format="markdown", model="sonar-pro")
+tool = UnifiedScraperTool()
 
-# Run search query
-result = tool._run(query="Latest developments in fusion energy July 2026", focus="news", recency="week")
-print(result)
+# 1. Standard BeautifulSoup scraper runs (fast, zero key required)
+result_json = tool._run(url="https://news.ycombinator.com")
+
+# 2. Force ScrapeNinja proxy scraper
+scrapeninja_result = tool._run(url="https://js-rendered-protected-site.com", provider="scrapeninja")
 ```
 
-### 2.2 `YahooFinanceNewsTool`
-Fetches a list of recent news for any ticker symbol, automatically integrated with caching to avoid rate limits.
+### 3.2 Finance: `YahooFinanceETFHoldingsTool` & `FREDMacroTool`
+Retrieve ETF breakdowns and Federal Reserve macroeconomic data (FED funds rate, unemployment, CPI inflation) cleanly.
 
 ```python
-from crew_custom_tools import YahooFinanceNewsTool
+import os
+from crew_custom_tools import YahooFinanceETFHoldingsTool, FREDMacroTool
 
-# Instantiates tool with a 15-minute caching TTL
-tool = YahooFinanceNewsTool(caching=True, ttl=900)
+# 1. Fetch Vanguard S&P 500 ETF (VOO) holdings
+etf_tool = YahooFinanceETFHoldingsTool()
+holdings_json = etf_tool._run(ticker="VOO")
+print(holdings_json)
 
-news_json = tool._run(ticker="AAPL", limit=3)
-print(news_json)
+# 2. Fetch latest FED Interest Rate directly from FRED API
+os.environ["FRED_API_KEY"] = "your_fred_api_key"
+fred_tool = FREDMacroTool()
+fed_rate_json = fred_tool._run(indicator="fed_rate")
+print(fed_rate_json)
 ```
 
-### 2.3 `YahooFinanceTickerInfoTool`
-Retrieves key metric statistics (P/E ratio, current price, volume, previous close, sector) for stocks, ETFs, and cryptos.
+### 3.3 OSINT: `FrenchRegistryTool` & `UsernameSearchTool`
+Discover corporate registration metadata from keyless official registries or scan for user social-media presence.
 
 ```python
-from crew_custom_tools import YahooFinanceTickerInfoTool
+from crew_custom_tools import FrenchRegistryTool, UsernameSearchTool
 
-tool = YahooFinanceTickerInfoTool(caching=True, ttl=1800)
+# 1. Search the official keyless French corporate register (recherche-entreprises)
+registry_tool = FrenchRegistryTool()
+company_metadata = registry_tool._run(query="LVMH") # Accept SIREN or Company Name
+print(company_metadata)
 
-metrics_json = tool._run(ticker="TSLA")
-print(metrics_json)
+# 2. Run high-speed, parallel-friendly social account profile checks (Sherlock-style)
+username_tool = UsernameSearchTool()
+hits_json = username_tool._run(username="fjacquet")
+print(hits_json)
+```
+
+### 3.4 Reporting: `RenderReportTool` & `HtmlToPdfTool`
+Renders standardized beautiful HTML templates (Pestel, Data, Financial) using Jinja2 and compiles them into professional PDF dossiers via WeasyPrint.
+
+```python
+from crew_custom_tools import RenderReportTool, HtmlToPdfTool
+
+# 1. Render a professional report using template_name
+renderer = RenderReportTool()
+rendered_html = renderer._run(
+    title="Corporate Dossier",
+    sections=[{"heading": "Abstract", "content": "This is a brief summary."}],
+    template_name="professional_report_template.html"
+)
+
+# Save the HTML to disk
+with open("dossier.html", "w") as f:
+    f.write(rendered_html)
+
+# 2. Compile HTML into a PDF file
+pdf_compiler = HtmlToPdfTool()
+pdf_compiler._run(html_file_path="dossier.html", output_pdf_path="dossier.pdf")
 ```
 
 ---
 
-## 3. Utilizing the Caching Layer
+## 4. Utilizing the Caching and Resiliency Layers
 
-Our library features a thread-safe, persistence-deterministic, and self-healing caching layer.
+Our custom thread-safe TTL caching system and `@api_tool` decorator form the core backbone of the library, keeping multi-agent crews highly stable.
 
-### 3.1 Custom Caching on Functions (`@cache_api_call`)
-You can decorate any API/IO function to automatically cache its results based on input parameters.
+### 4.1 Caching Layer (`config/cache.py`)
+*   **Persistent & Thread-Safe**: Features memory and disk persistence across python script executions.
+*   **Modern Hashing**: All cache filenames are mapped using cryptographic **SHA-256** digests truncated to 32 characters (completely avoiding weak MD5).
+*   **Self-Healing**: Automatically catches corruption, malformed text, or JSON write errors dynamically, purging corrupted cache files and failing safe instead of crashing.
 
-```python
-from crew_custom_tools.config.cache import cache_api_call
-
-@cache_api_call(key="external_service_lookup", ttl=600)
-def fetch_user_data(user_id: int, include_metadata: bool = True):
-    # This side-effect function will execute once per unique arguments combo, 
-    # caching the result inside '.cache/' for 10 minutes.
-    print(f"Fetching data from external API for {user_id}...")
-    return {"user_id": user_id, "status": "active"}
-```
-
-*Note: `@cache_api_call` is fully compatible with class instance methods. It automatically strips/ignores the dynamic memory address of `self` so that cache keys are completely deterministic across separate script runs and instantiations.*
-
-### 3.2 Programmatic Cache Cleaning
-```python
-from crew_custom_tools.config.cache import get_cache_manager
-
-cache = get_cache_manager()
-
-# Clear ALL cached entries
-cache.clear()
-
-# Clear only entries that have exceeded their TTL
-expired_count = cache.clear_expired()
-print(f"Removed {expired_count} expired entries.")
-```
+### 4.2 Resiliency Decorator (`core/decorators.py`)
+All network-bound tools in this package use the `@api_tool` decorator:
+*   **Automatic Rate Limit Retries**: Catches HTTP `429` statuses and automatically retries with polite sleep delays.
+*   **Non-Blocking Execution Timeouts**: Employs non-blocking `ThreadPoolExecutor` and `executor.shutdown(wait=False)` to guarantee strict execution timeouts, returning graceful error fallback strings to the calling agent if a remote API hangs.
 
 ---
 
-## 4. Migration Walkthrough for Existing Projects
+## 5. Directory Mapping and Source Code Locations
 
-### 4.1 Migrating `epic_news`
-1. Run `uv add "crew-custom-tools[finance] @ file:///Users/fjacquet/Projects/crewai-tools"` inside `epic_news`' directory.
-2. In your crews or models, replace:
-   ```python
-   from epic_news.tools.perplexity_search_tool import PerplexitySearchTool
-   from epic_news.tools.yahoo_finance_news_tool import YahooFinanceNewsTool
-   from epic_news.tools.cache_manager import get_cache_manager
-   ```
-   with:
-   ```python
-   from crew_custom_tools import PerplexitySearchTool, YahooFinanceNewsTool
-   from crew_custom_tools.config.cache import get_cache_manager
-   ```
-3. Delete the duplicated local files from `src/epic_news/tools/` folder:
-   - `perplexity_search_tool.py`
-   - `yahoo_finance_news_tool.py`
-   - `yahoo_finance_ticker_info_tool.py`
-   - `cache_manager.py`
+The source files of `crew-custom-tools` are structured cleanly under `src/crew_custom_tools/`:
 
-### 4.2 Migrating `finwiz`
-1. Run `uv add "crew-custom-tools[finance] @ file:///Users/fjacquet/Projects/crewai-tools"` inside `finwiz`' directory.
-2. Replace:
-   ```python
-   from finwiz.tools.perplexity_search_tool import PerplexitySearchTool
-   from finwiz.tools.yahoo_finance_news_tool import YahooFinanceNewsTool
-   ```
-   with:
-   ```python
-   from crew_custom_tools import PerplexitySearchTool, YahooFinanceNewsTool
-   ```
-3. Safely delete duplicated python files from local `/tools/` folder.
+*   `config/cache.py`: Thread-safe caching engine.
+*   `core/decorators.py`: `@api_tool` retry/timeout boundaries.
+*   `models/`: Centralized Pydantic schemas (e.g., `finance_models.py`, `github_models.py`, etc.).
+*   `tools/web/`: Perplexity, Serper, fallback scraper, Wikipedia API, RSS/OPML feeds.
+*   `tools/finance/`: Yahoo Finance (history, holdings, company info), CoinMarketCap, Kraken, Alpha Vantage, FRED, CNN Fear/Greed.
+*   `tools/osint/`: GitHub (search, orgs), email intelligence (Hunter, Serper), username checking, crt.sh subdomains, RDAP WHOIS, French corporate registers.
+*   `reporting/`: HTML validating, PDF compilation, specialized layout templates.
+*   `enterprise/`: Todoist, Airtable, AccuWeather, RAG vector DB adapters.
