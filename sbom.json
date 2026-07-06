@@ -1,0 +1,116 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:af5d26b8-da89-4ac4-8ef7-55794a90eaf4",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-06T05:39:25.552899+00:00",
+    "component": {
+      "name": "crew-custom-tools",
+      "version": "0.1.0",
+      "type": "library",
+      "bom-ref": "pkg:pypi/crew-custom-tools@0.1.0",
+      "description": "Centralized, resilient tools for CrewAI multi-agent systems",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "name": "crewai",
+      "version": "1.15.1",
+      "type": "library",
+      "purl": "pkg:pypi/crewai@1.15.1",
+      "bom-ref": "pkg:pypi/crewai@1.15.1"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.12.5",
+      "type": "library",
+      "purl": "pkg:pypi/pydantic@2.12.5",
+      "bom-ref": "pkg:pypi/pydantic@2.12.5"
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "type": "library",
+      "purl": "pkg:pypi/requests@2.34.2",
+      "bom-ref": "pkg:pypi/requests@2.34.2"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "type": "library",
+      "purl": "pkg:pypi/httpx@0.28.1",
+      "bom-ref": "pkg:pypi/httpx@0.28.1"
+    },
+    {
+      "name": "beautifulsoup4",
+      "version": "4.15.0",
+      "type": "library",
+      "purl": "pkg:pypi/beautifulsoup4@4.15.0",
+      "bom-ref": "pkg:pypi/beautifulsoup4@4.15.0"
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "type": "library",
+      "purl": "pkg:pypi/jinja2@3.1.6",
+      "bom-ref": "pkg:pypi/jinja2@3.1.6"
+    },
+    {
+      "name": "yfinance",
+      "version": "1.5.1",
+      "type": "library",
+      "purl": "pkg:pypi/yfinance@1.5.1",
+      "bom-ref": "pkg:pypi/yfinance@1.5.1"
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.1",
+      "type": "library",
+      "purl": "pkg:pypi/numpy@2.5.1",
+      "bom-ref": "pkg:pypi/numpy@2.5.1"
+    },
+    {
+      "name": "pandas",
+      "version": "3.0.3",
+      "type": "library",
+      "purl": "pkg:pypi/pandas@3.0.3",
+      "bom-ref": "pkg:pypi/pandas@3.0.3"
+    },
+    {
+      "name": "pygithub",
+      "version": "2.9.1",
+      "type": "library",
+      "purl": "pkg:pypi/pygithub@2.9.1",
+      "bom-ref": "pkg:pypi/pygithub@2.9.1"
+    },
+    {
+      "name": "whodap",
+      "version": "0.1.16",
+      "type": "library",
+      "purl": "pkg:pypi/whodap@0.1.16",
+      "bom-ref": "pkg:pypi/whodap@0.1.16"
+    },
+    {
+      "name": "feedparser",
+      "version": "6.0.12",
+      "type": "library",
+      "purl": "pkg:pypi/feedparser@6.0.12",
+      "bom-ref": "pkg:pypi/feedparser@6.0.12"
+    },
+    {
+      "name": "todoist-api-python",
+      "version": "4.0.0",
+      "type": "library",
+      "purl": "pkg:pypi/todoist-api-python@4.0.0",
+      "bom-ref": "pkg:pypi/todoist-api-python@4.0.0"
+    }
+  ]
+}

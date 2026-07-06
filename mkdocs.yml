@@ -1,0 +1,53 @@
+site_name: crew-custom-tools Documentation
+site_url: https://fjacquet.github.io/crew_custom_tools
+site_description: Centralized, resilient, and high-performance tools for CrewAI multi-agent systems.
+site_author: Gemini CLI & Collaborative Engineering Team
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - User Guide: USER_GUIDE.md
+  - Product Requirements (PRD): PRD.md
+  - Architecture (ADR): ADR-0001-architecture-and-design.md
+  - Developer Corner:
+      - Unified Monolith Spec: superpowers/specs/2026-07-05-crew-custom-tools-universal-monolith.md
+      - Library Design Spec: superpowers/specs/2026-07-05-crewai-tools-library-design.md
+      - Unified Monolith Plan: superpowers/plans/2026-07-05-crew-custom-tools-universal-monolith-plan.md
+      - Library Handoff Plan: superpowers/plans/2026-07-05-crewai-tools-reusable-library.md
