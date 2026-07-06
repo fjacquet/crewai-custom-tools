@@ -1,0 +1,13 @@
+# OSV-Scanner Security Exception Configuration
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-311"
+reason = "crew-custom-tools only utilizes chromadb as an embedded, in-process local instance. We do not start, run, or expose the ChromaDB HTTP server or its /api/v2 endpoints to the network, neutralizing the remote code execution risk."
+
+[[IgnoredVulns]]
+id = "CVE-2026-45829"
+reason = "crew-custom-tools only utilizes chromadb as an embedded, in-process local instance. We do not start, run, or expose the ChromaDB HTTP server or its /api/v2 endpoints to the network, neutralizing the remote code execution risk."
+
+[[IgnoredVulns]]
+id = "GHSA-f4j7-r4q5-qw2c"
+reason = "crew-custom-tools only utilizes chromadb as an embedded, in-process local instance. We do not start, run, or expose the ChromaDB HTTP server or its /api/v2 endpoints to the network, neutralizing the remote code execution risk."
