@@ -2,6 +2,10 @@
 
 Welcome to the **`crew-custom-tools`** library! This guide outlines how to install the package, import and configure our consolidated, premium superpower tools, utilize the persistent caching layer and resiliency decorators, and write custom multi-agent scripts out of the box.
 
+*   **Source Code Repository**: [GitHub - fjacquet/crewai_custom_tools](https://github.com/fjacquet/crewai_custom_tools)
+*   **Latest Release**: [v0.1.0 (Initial Consolidated Release)](https://github.com/fjacquet/crewai_custom_tools/releases/tag/v0.1.0)
+*   **Documentation Site**: [GitHub Pages User Guide](https://fjacquet.github.io/crew_custom_tools)
+
 ---
 
 ## 1. Installation & Environment Setup
