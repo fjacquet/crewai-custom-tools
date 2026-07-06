@@ -1,4 +1,4 @@
-# Design Specification: crew-custom-tools (Universal Monolith Edition)
+# Design Specification: crewai-custom-tools (Universal Monolith Edition)
 
 **Date**: 2026-07-05
 **Status**: APPROVED / READY FOR IMPLEMENTATION PLAN
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-This document specifies the design for a consolidated, highly robust, and complete CrewAI tools library (`crew-custom-tools`). Built as an **exclusive Universal Monolith (Approach A)**, this library unifies overlapping, duplicated, and specialized tools from five distinct agentic codebases:
+This document specifies the design for a consolidated, highly robust, and complete CrewAI tools library (`crewai-custom-tools`). Built as an **exclusive Universal Monolith (Approach A)**, this library unifies overlapping, duplicated, and specialized tools from five distinct agentic codebases:
 
 1. `/Users/fjacquet/Projects/osint_tools`
 2. `/Users/fjacquet/Projects/finwiz`
@@ -32,7 +32,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "crew-custom-tools"
+name = "crewai-custom-tools"
 version = "0.1.0"
 description = "Centralized, resilient tools for CrewAI multi-agent systems"
 readme = "README.md"
@@ -68,7 +68,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/crew_custom_tools"]
+packages = ["src/crewai_custom_tools"]
 ```
 
 ---
@@ -78,7 +78,7 @@ packages = ["src/crew_custom_tools"]
 The workspace files are organized neatly by category:
 
 ```text
-src/crew_custom_tools/
+src/crewai_custom_tools/
 ├── __init__.py                    # Public exports for all tools
 ├── config/
 │   ├── __init__.py

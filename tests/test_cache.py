@@ -1,7 +1,11 @@
 import pytest
 import time
 from pathlib import Path
-from crew_custom_tools.config.cache import CacheManager, get_cache_manager, cache_api_call
+from crewai_custom_tools.config.cache import (
+    CacheManager,
+    get_cache_manager,
+    cache_api_call,
+)
 
 
 def test_cache_manager_basic_get_set(tmp_path):
@@ -94,10 +98,10 @@ def test_cache_manager_clear_expired(tmp_path):
     cache = CacheManager(cache_dir=cache_dir, default_ttl=1)
 
     cache.set("fresh", "value1")
-    
+
     # Modify timestamp of 'fresh' cache manually to be in the future, or wait, we can just sleep
     cache.set("expired", "value2")
-    
+
     # We sleep to let "expired" expire, but wait, if we sleep, both will expire.
     # To avoid sleep in tests, we can manually write a mock-expired timestamp.
     # Let's write an expired cache file manually or mock it.
@@ -128,12 +132,15 @@ def test_global_cache_manager():
 def test_cache_decorator(tmp_path):
     """Test caching decorator on API functions."""
     # Ensure global cache manager uses tmp_path to not pollute production/default cache
-    import crew_custom_tools.config.cache as cache_module
+    import crewai_custom_tools.config.cache as cache_module
+
     original_manager = cache_module._cache_manager
-    
+
     try:
-        cache_module._cache_manager = CacheManager(cache_dir=tmp_path / "decorator_cache")
-        
+        cache_module._cache_manager = CacheManager(
+            cache_dir=tmp_path / "decorator_cache"
+        )
+
         call_count = 0
 
         @cache_api_call(key="api_test", ttl=10)
@@ -161,6 +168,7 @@ def test_cache_decorator(tmp_path):
 
 def test_decorator_wraps_metadata():
     """Test that cache_api_call decorator preserves the original function's metadata via wraps."""
+
     @cache_api_call(key="test_wraps")
     def sample_function(x: int) -> int:
         """This is a sample function."""
@@ -173,17 +181,17 @@ def test_decorator_wraps_metadata():
 def test_filename_collision_avoidance(tmp_path):
     """Test that cache path generation handles collisions and long keys gracefully."""
     cache = CacheManager(cache_dir=tmp_path / "collision_cache")
-    
+
     # "foo bar" vs "foobar"
     path_space = cache._get_cache_path("foo bar")
     path_nospace = cache._get_cache_path("foobar")
     assert path_space != path_nospace
-    
+
     # Extremely long key
     long_key = "a" * 200
     long_path = cache._get_cache_path(long_key)
     assert len(long_path.name) <= 100  # Well within standard OS limits (usually 255)
-    
+
     # Another slightly different long key
     long_key_diff = "a" * 200 + "b"
     long_path_diff = cache._get_cache_path(long_key_diff)
@@ -193,54 +201,56 @@ def test_filename_collision_avoidance(tmp_path):
 def test_file_not_found_race_conditions(tmp_path):
     """Test that get and clear_expired handle FileNotFoundError race conditions gracefully."""
     cache = CacheManager(cache_dir=tmp_path / "race_cache")
-    
+
     # 1. Test get() handles FileNotFoundError when reading/opening
     # We set a file and then delete it before calling get, which is handled gracefully by exits check,
     # but let's test the FileNotFoundError handling in unlink/open.
     cache.set("race_key", "value")
-    
+
     # Let's mock unlink to raise FileNotFoundError or manually trigger unlinks
     # During clean/expiry:
     cache.set("expired_key", "value")
     # Set default ttl to -1 to force it to be expired
     cache.default_ttl = -1
-    
+
     # Delete the file manually right before calling get
     path = cache._get_cache_path("expired_key")
     path.unlink()
-    
+
     # Calling get() now should not raise FileNotFoundError, and should just return None
     assert cache.get("expired_key") is None
 
 
 def test_cache_decorator_with_class_instance(tmp_path):
     """Test that cache decorator generates deterministic keys even for instance methods where 'self' has dynamic memory address."""
-    import crew_custom_tools.config.cache as cache_module
+    import crewai_custom_tools.config.cache as cache_module
+
     original_manager = cache_module._cache_manager
-    
+
     try:
-        cache_module._cache_manager = CacheManager(cache_dir=tmp_path / "instance_cache")
-        
+        cache_module._cache_manager = CacheManager(
+            cache_dir=tmp_path / "instance_cache"
+        )
+
         class MyClass:
             def __init__(self, val):
                 self.val = val
-                
+
             @cache_api_call(key="instance_test", ttl=10)
             def compute(self, x):
                 return self.val + x
-                
+
         # Two different instances with identical values (different self address, e.g. <MyClass object at 0x...>)
         obj1 = MyClass(10)
         obj2 = MyClass(10)
-        
+
         # Call compute on obj1 (creates cache)
         assert obj1.compute(5) == 15
-        
+
         # Verify that obj2.compute(5) hits the cache instead of computing, because it's deterministic
         # To verify it hit the cache, let's change obj2's self.val to 20. If it hits the cache, it'll return 15!
         obj2.val = 20
         assert obj2.compute(5) == 15  # Cached result of 15 is returned!
-        
+
     finally:
         cache_module._cache_manager = original_manager
-

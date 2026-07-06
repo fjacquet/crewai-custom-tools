@@ -1,9 +1,9 @@
 # ADR 0002: Transition to the Universal Monolith Pattern (Approach A)
 
-**Date**: 2026-07-05  
-**Author**: Gemini CLI & Collaborative Engineering Team  
-**Status**: ACCEPTED  
-**Supersedes**: Decision 1 in [ADR-0001](0001-core-architecture-and-design.md)  
+**Date**: 2026-07-05
+**Author**: Gemini CLI & Collaborative Engineering Team
+**Status**: ACCEPTED
+**Supersedes**: Decision 1 in [ADR-0001](0001-core-architecture-and-design.md)
 
 ---
 
@@ -17,7 +17,7 @@ We needed a simpler, bulletproof packaging standard that guarantees all tools wo
 
 ## Considered Alternatives
 
-1. **Keep Python Extras Bracket groups**: Require downstream users to specify `crew-custom-tools[finance,osint]`.
+1. **Keep Python Extras Bracket groups**: Require downstream users to specify `crewai-custom-tools[finance,osint]`.
    - *Verdict*: Rejected. Highly prone to configuration errors; users frequently forget brackets, leading to runtime failures inside Docker containers.
 2. **The Universal Monolith Pattern** [Chosen]: Merge all package dependencies into the core required block. To prevent installation blocks on systems without C compilers (such as light Docker containers), write robust pure-Python fallbacks for all quantitative calculations, bypassing compile-heavy C extensions (like `ta-lib` or `quantlib`).
 
@@ -32,5 +32,5 @@ We needed a simpler, bulletproof packaging standard that guarantees all tools wo
 
 ## Implications & Consequences
 
-- **Zero-Config Usability**: Downstream multi-agent projects can install `crew-custom-tools` once and immediately import and execute any of the 30+ consolidated tools with zero dependency errors.
+- **Zero-Config Usability**: Downstream multi-agent projects can install `crewai-custom-tools` once and immediately import and execute any of the 30+ consolidated tools with zero dependency errors.
 - **Pristine Installations**: Eliminates dependency extras brackets completely from downstream `pyproject.toml` files, keeping package dependency definitions clean and direct.

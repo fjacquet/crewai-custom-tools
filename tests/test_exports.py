@@ -1,9 +1,10 @@
 """Smoke tests for package level exports."""
 
+
 def test_package_exports():
-    from crew_custom_tools import (
-        PerplexitySearchTool, 
-        YahooFinanceTickerInfoTool, 
+    from crewai_custom_tools import (
+        PerplexitySearchTool,
+        YahooFinanceTickerInfoTool,
         YahooFinanceNewsTool,
         SerperSearchTool,
         UnifiedScraperTool,
@@ -15,8 +16,9 @@ def test_package_exports():
         TodoistTool,
         EpieosEmailLookupTool,
         HoleheEmailScannerTool,
-        OpenCorporatesSearchTool
+        OpenCorporatesSearchTool,
     )
+
     assert PerplexitySearchTool is not None
     assert YahooFinanceTickerInfoTool is not None
     assert YahooFinanceNewsTool is not None

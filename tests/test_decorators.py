@@ -1,15 +1,16 @@
-"""Tests for the api_tool decorator in crew_custom_tools/core/decorators.py."""
+"""Tests for the api_tool decorator in crewai_custom_tools/core/decorators.py."""
 
 import time
 import pytest
 import requests
 import concurrent.futures
 from unittest.mock import MagicMock
-from crew_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.decorators import api_tool
 
 
 def test_api_tool_success():
     """Test that api_tool executes a successful function and returns its result."""
+
     @api_tool(provider="TestProvider", endpoint="TestEndpoint")
     def my_tool(x):
         return x + 1
@@ -23,6 +24,7 @@ def test_api_tool_timeout_non_blocking():
     A slow function runs for 2.0s but has a timeout of 0.1s.
     The decorator should return the timeout message in ~0.1s, rather than waiting for 2.0s.
     """
+
     @api_tool(provider="TestProvider", endpoint="TestEndpoint", timeout=0.1)
     def slow_tool():
         time.sleep(1.0)
@@ -39,7 +41,13 @@ def test_api_tool_timeout_non_blocking():
 
 def test_api_tool_default_return_on_timeout():
     """Test that api_tool returns the configured default_return value on timeout."""
-    @api_tool(provider="TestProvider", endpoint="TestEndpoint", timeout=0.1, default_return="fallback_val")
+
+    @api_tool(
+        provider="TestProvider",
+        endpoint="TestEndpoint",
+        timeout=0.1,
+        default_return="fallback_val",
+    )
     def slow_tool():
         time.sleep(0.5)
         return "slow_success"
@@ -51,8 +59,8 @@ def test_api_tool_default_return_on_timeout():
 def test_api_tool_http_429_retry_success(mocker):
     """Test that api_tool retries on HTTP 429 status code and succeeds if the retry succeeds."""
     # Mock sleep so we don't actually wait 2.0s in the test
-    mock_sleep = mocker.patch("crew_custom_tools.core.decorators.sleep")
-    
+    mock_sleep = mocker.patch("crewai_custom_tools.core.decorators.sleep")
+
     call_count = 0
 
     @api_tool(provider="TestProvider", endpoint="TestEndpoint")
@@ -73,8 +81,8 @@ def test_api_tool_http_429_retry_success(mocker):
 
 def test_api_tool_http_429_retry_timeout(mocker):
     """Test that api_tool retries on HTTP 429, but if the retry times out, it handles it properly."""
-    mocker.patch("crew_custom_tools.core.decorators.sleep")
-    
+    mocker.patch("crewai_custom_tools.core.decorators.sleep")
+
     call_count = 0
 
     @api_tool(provider="TestProvider", endpoint="TestEndpoint", timeout=0.1)
@@ -113,6 +121,7 @@ def test_api_tool_other_http_error_no_retry():
 
 def test_api_tool_unexpected_exception():
     """Test that api_tool handles unexpected exceptions gracefully."""
+
     @api_tool(provider="TestProvider", endpoint="TestEndpoint")
     def broken_tool():
         raise ValueError("Generic DB error")

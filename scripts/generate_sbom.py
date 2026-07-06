@@ -18,6 +18,7 @@ def get_package_version(name: str) -> str:
     """Retrieve installed version of a package, falling back to a default."""
     try:
         import importlib.metadata
+
         return importlib.metadata.version(name)
     except Exception:
         return "latest"
@@ -42,7 +43,9 @@ def dep_ver_cleanup(dep: str) -> str:
 
 def generate_sbom(project_dir: Path) -> dict:
     """Generate a valid CycloneDX JSON v1.5 SBOM."""
-    pyproject_path = project_root = Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
+    pyproject_path = project_root = (
+        Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
+    )
     if not pyproject_path.exists():
         pyproject_path = project_dir / "pyproject.toml"
 
@@ -54,7 +57,7 @@ def generate_sbom(project_dir: Path) -> dict:
         config = tomllib.load(f)
 
     project = config.get("project", {})
-    name = project.get("name", "crew-custom-tools")
+    name = project.get("name", "crewai-custom-tools")
     version = project.get("version", "0.1.0")
     description = project.get("description", "")
     dependencies = project.get("dependencies", [])
@@ -72,25 +75,23 @@ def generate_sbom(project_dir: Path) -> dict:
                 "type": "library",
                 "bom-ref": f"pkg:pypi/{name}@{version}",
                 "description": description,
-                "licenses": [
-                    {"license": {"id": "MIT"}}
-                ]
-            }
+                "licenses": [{"license": {"id": "MIT"}}],
+            },
         },
-        "components": []
+        "components": [],
     }
 
     # Add core dependencies to the SBOM components list
     for dep in dependencies:
         clean_dep_name = dep_url_to_name(dep)
         clean_ver = dep_ver_cleanup(dep)
-        
+
         comp_dict = {
             "name": clean_dep_name,
             "version": clean_ver,
             "type": "library",
             "purl": f"pkg:pypi/{clean_dep_name}@{clean_ver}",
-            "bom-ref": f"pkg:pypi/{clean_dep_name}@{clean_ver}"
+            "bom-ref": f"pkg:pypi/{clean_dep_name}@{clean_ver}",
         }
         sbom["components"].append(comp_dict)
 
@@ -100,7 +101,7 @@ def generate_sbom(project_dir: Path) -> dict:
 if __name__ == "__main__":
     root = Path(__file__).resolve().parent.parent
     sbom_data = generate_sbom(root)
-    
+
     output_path = root / "sbom.json"
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(sbom_data, f, indent=2)

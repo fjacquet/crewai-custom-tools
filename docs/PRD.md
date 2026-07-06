@@ -1,8 +1,8 @@
-# Product Requirements Document (PRD): `crew-custom-tools`
+# Product Requirements Document (PRD): `crewai-custom-tools`
 
-**Status**: APPROVED  
-**Version**: 1.0  
-**Target Release**: v0.1.0 (Initial Consolidative Release)  
+**Status**: APPROVED
+**Version**: 1.0
+**Target Release**: v0.1.0 (Initial Consolidative Release)
 
 ---
 
@@ -10,7 +10,7 @@
 
 Multi-agent frameworks like CrewAI rely heavily on specific, performant, and resilient tools to fetch information and interact with external systems. Historically, three separate agent repositories (`epic_news`, `finwiz`, and `osint_tools`) maintained duplicated, slightly divergent versions of identical tools (e.g., Perplexity Search, Yahoo Finance News, Ticker Info). This duplication led to fragmented improvements, high maintenance overhead, and inconsistent resilience (such as rate limits causing unexpected agent crashes).
 
-The goal of `crew-custom-tools` is to consolidate these duplicated utilities into a **highly reusable, lightweight, resilient, and standardized** local package. By separating the tools library from individual agent configurations, we achieve clean engineering boundaries, simplify codebases, and ensure that any core tool optimization immediately benefits all downstream projects.
+The goal of `crewai-custom-tools` is to consolidate these duplicated utilities into a **highly reusable, lightweight, resilient, and standardized** local package. By separating the tools library from individual agent configurations, we achieve clean engineering boundaries, simplify codebases, and ensure that any core tool optimization immediately benefits all downstream projects.
 
 ---
 
@@ -27,6 +27,7 @@ The goal of `crew-custom-tools` is to consolidate these duplicated utilities int
 ## 3. Targeted Capabilities (v0.1.0)
 
 ### 3.1 Core Architecture & Decorators
+
 - **Standardized Caching Layer (`config/cache.py`)**: A file-system and in-memory TTL caching manager.
   - Automatically handles `json.JSONDecodeError` or corrupted files gracefully by purging them and failing-safe.
   - Uses a deterministic hash generator combining key prefixes with MD5 digests to avoid file collisions or exceeding OS-level filename limits.
@@ -34,6 +35,7 @@ The goal of `crew-custom-tools` is to consolidate these duplicated utilities int
 - **Resilient API Handling**: Implements standardized retry logic and exponential backoff.
 
 ### 3.2 Unified Tool Suite
+
 - **`PerplexitySearchTool` (`tools/web/perplexity.py`)**:
   - Unified search interface supporting customizable search focus modes (`internet`, `news`, `academic`, `reddit`).
   - Supports dual return schemas: `"json"` (for downstream parsing engines) or `"markdown"` (for human-readable agent reports).

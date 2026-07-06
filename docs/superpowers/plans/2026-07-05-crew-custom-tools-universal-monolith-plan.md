@@ -1,4 +1,4 @@
-# crew-custom-tools Universal Monolith Implementation Plan
+# crewai-custom-tools Universal Monolith Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -23,8 +23,8 @@
 **Files:**
 
 - Modify: `pyproject.toml`
-- Create: `src/crew_custom_tools/models/__init__.py`
-- Modify: `src/crew_custom_tools/__init__.py`
+- Create: `src/crewai_custom_tools/models/__init__.py`
+- Modify: `src/crewai_custom_tools/__init__.py`
 
 **Interfaces:**
 
@@ -41,7 +41,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "crew-custom-tools"
+name = "crewai-custom-tools"
 version = "0.1.0"
 description = "Centralized, resilient tools for CrewAI multi-agent systems"
 readme = "README.md"
@@ -77,15 +77,15 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/crew_custom_tools"]
+packages = ["src/crewai_custom_tools"]
 ```
 
 - [ ] **Step 2: Initialize Pydantic models root package directory**
 
-Create file `src/crew_custom_tools/models/__init__.py`:
+Create file `src/crewai_custom_tools/models/__init__.py`:
 
 ```python
-"""Centralized Pydantic models for crew-custom-tools."""
+"""Centralized Pydantic models for crewai-custom-tools."""
 ```
 
 - [ ] **Step 3: Verify uv installation**
@@ -101,7 +101,7 @@ Expected: Package installs with all monolith dependencies successfully.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add pyproject.toml src/crew_custom_tools/models/__init__.py
+git add pyproject.toml src/crewai_custom_tools/models/__init__.py
 git commit -m "chore: setup universal monolith dependencies and models package"
 ```
 
@@ -111,9 +111,9 @@ git commit -m "chore: setup universal monolith dependencies and models package"
 
 **Files:**
 
-- Create/Overwrite: `src/crew_custom_tools/config/cache.py`
-- Create/Overwrite: `src/crew_custom_tools/core/decorators.py`
-- Create: `src/crew_custom_tools/core/__init__.py`
+- Create/Overwrite: `src/crewai_custom_tools/config/cache.py`
+- Create/Overwrite: `src/crewai_custom_tools/core/decorators.py`
+- Create: `src/crewai_custom_tools/core/__init__.py`
 - Test: `tests/test_cache.py`
 
 **Interfaces:**
@@ -126,7 +126,7 @@ git commit -m "chore: setup universal monolith dependencies and models package"
 
 - [ ] **Step 1: Write/Update the cache manager utilizing SHA-256**
 
-Overwrite `src/crew_custom_tools/config/cache.py` to enforce `hashlib.sha256` truncated key names:
+Overwrite `src/crewai_custom_tools/config/cache.py` to enforce `hashlib.sha256` truncated key names:
 
 ```python
 import os
@@ -136,7 +136,7 @@ import hashlib
 from typing import Any, Optional
 import logging
 
-logger = logging.getLogger("crew_custom_tools.cache")
+logger = logging.getLogger("crewai_custom_tools.cache")
 
 class CacheManager:
     def __init__(self, cache_dir: str = ".cache"):
@@ -193,7 +193,7 @@ class CacheManager:
 
 - [ ] **Step 2: Write Resiliency Decorators**
 
-Create `src/crew_custom_tools/core/decorators.py`:
+Create `src/crewai_custom_tools/core/decorators.py`:
 
 ```python
 import time
@@ -202,7 +202,7 @@ from functools import wraps
 from typing import Any, Callable, Optional
 import requests
 
-logger = logging.getLogger("crew_custom_tools.decorators")
+logger = logging.getLogger("crewai_custom_tools.decorators")
 
 def api_tool(
     provider: str,
@@ -233,11 +233,11 @@ def api_tool(
     return decorator
 ```
 
-Create file `src/crew_custom_tools/core/__init__.py`:
+Create file `src/crewai_custom_tools/core/__init__.py`:
 
 ```python
 """Core decorators and base tool definitions."""
-from crew_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.decorators import api_tool
 ```
 
 - [ ] **Step 3: Run existing cache tests using rtk proxy**
@@ -253,7 +253,7 @@ Expected: All caching tests pass successfully.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/crew_custom_tools/config/cache.py src/crew_custom_tools/core/decorators.py src/crew_custom_tools/core/__init__.py
+git add src/crewai_custom_tools/config/cache.py src/crewai_custom_tools/core/decorators.py src/crewai_custom_tools/core/__init__.py
 git commit -m "feat: implement SHA-256 caching and resiliency decorators"
 ```
 
@@ -265,49 +265,49 @@ We will import, consolidate, and export the Pydantic schemas from our source rep
 
 **Files:**
 
-- Create: `src/crew_custom_tools/models/web_search_models.py`
-- Create: `src/crew_custom_tools/models/finance_models.py`
-- Create: `src/crew_custom_tools/models/github_models.py`
-- Create: `src/crew_custom_tools/models/email_models.py`
-- Create: `src/crew_custom_tools/models/rss_models.py`
-- Create: `src/crew_custom_tools/models/airtable_models.py`
-- Create: `src/crew_custom_tools/models/todoist_models.py`
-- Create: `src/crew_custom_tools/models/reports/__init__.py`
-- Modify: `src/crew_custom_tools/models/__init__.py`
+- Create: `src/crewai_custom_tools/models/web_search_models.py`
+- Create: `src/crewai_custom_tools/models/finance_models.py`
+- Create: `src/crewai_custom_tools/models/github_models.py`
+- Create: `src/crewai_custom_tools/models/email_models.py`
+- Create: `src/crewai_custom_tools/models/rss_models.py`
+- Create: `src/crewai_custom_tools/models/airtable_models.py`
+- Create: `src/crewai_custom_tools/models/todoist_models.py`
+- Create: `src/crewai_custom_tools/models/reports/__init__.py`
+- Modify: `src/crewai_custom_tools/models/__init__.py`
 
 **Interfaces:**
 
 - Consumes: Standard Pydantic BaseModel attributes.
-- Produces: Reusable models accessible at `crew_custom_tools.models`.
+- Produces: Reusable models accessible at `crewai_custom_tools.models`.
 
 - [ ] **Step 1: Centralize web and search structures**
 
-Copy and merge models from `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/models/web_search_models.py` into `src/crew_custom_tools/models/web_search_models.py`.
+Copy and merge models from `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/models/web_search_models.py` into `src/crewai_custom_tools/models/web_search_models.py`.
 
 - [ ] **Step 2: Centralize stock, crypto and market structures**
 
-Copy models from `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/models/finance_models.py` and adapters from `finwiz` into `src/crew_custom_tools/models/finance_models.py`.
+Copy models from `/Users/fjacquet/Projects/crews/epic_news/src/epic_news/models/finance_models.py` and adapters from `finwiz` into `src/crewai_custom_tools/models/finance_models.py`.
 
 - [ ] **Step 3: Centralize GitHub, Email, RSS, Airtable, and Todoist models**
 
 Copy and populate standard models:
 
-- GitHub models to `src/crew_custom_tools/models/github_models.py`.
-- Email patterns to `src/crew_custom_tools/models/email_models.py`.
-- RSS/OPML schemas to `src/crew_custom_tools/models/rss_models.py`.
-- Airtable schemas to `src/crew_custom_tools/models/airtable_models.py`.
-- Todoist layout models to `src/crew_custom_tools/models/todoist_models.py`.
+- GitHub models to `src/crewai_custom_tools/models/github_models.py`.
+- Email patterns to `src/crewai_custom_tools/models/email_models.py`.
+- RSS/OPML schemas to `src/crewai_custom_tools/models/rss_models.py`.
+- Airtable schemas to `src/crewai_custom_tools/models/airtable_models.py`.
+- Todoist layout models to `src/crewai_custom_tools/models/todoist_models.py`.
 
 - [ ] **Step 4: Update models package exports**
 
-Modify `src/crew_custom_tools/models/__init__.py` to export everything:
+Modify `src/crewai_custom_tools/models/__init__.py` to export everything:
 
 ```python
-from crew_custom_tools.models.web_search_models import *
-from crew_custom_tools.models.finance_models import *
-from crew_custom_tools.models.github_models import *
-from crew_custom_tools.models.email_models import *
-from crew_custom_tools.models.rss_models import *
+from crewai_custom_tools.models.web_search_models import *
+from crewai_custom_tools.models.finance_models import *
+from crewai_custom_tools.models.github_models import *
+from crewai_custom_tools.models.email_models import *
+from crewai_custom_tools.models.rss_models import *
 ```
 
 - [ ] **Step 5: Run tests to ensure schemas load cleanly**
@@ -323,7 +323,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/crew_custom_tools/models/
+git add src/crewai_custom_tools/models/
 git commit -m "feat: migrate and centralize Pydantic models from source codebases"
 ```
 
@@ -331,16 +331,16 @@ git commit -m "feat: migrate and centralize Pydantic models from source codebase
 
 ### Task 4: Migrate & Unify Web & Search Tools
 
-We will consolidate search and scraper functions into `src/crew_custom_tools/tools/web/`.
+We will consolidate search and scraper functions into `src/crewai_custom_tools/tools/web/`.
 
 **Files:**
 
-- Create: `src/crew_custom_tools/tools/web/serper.py`
-- Create: `src/crew_custom_tools/tools/web/scraper.py`
-- Create: `src/crew_custom_tools/tools/web/wikipedia.py`
-- Create: `src/crew_custom_tools/tools/web/rss.py`
-- Create: `src/crew_custom_tools/tools/web/fact_checking.py`
-- Modify: `src/crew_custom_tools/tools/web/__init__.py`
+- Create: `src/crewai_custom_tools/tools/web/serper.py`
+- Create: `src/crewai_custom_tools/tools/web/scraper.py`
+- Create: `src/crewai_custom_tools/tools/web/wikipedia.py`
+- Create: `src/crewai_custom_tools/tools/web/rss.py`
+- Create: `src/crewai_custom_tools/tools/web/fact_checking.py`
+- Modify: `src/crewai_custom_tools/tools/web/__init__.py`
 - Create/Copy: `tests/test_web_tools.py`
 
 **Interfaces:**
@@ -350,28 +350,28 @@ We will consolidate search and scraper functions into `src/crew_custom_tools/too
 
 - [ ] **Step 1: Copy and adapt Serper search tool**
 
-Merge `safe_serper.py` and `serper_tool.py` from `menu_planner`/`osint_home` into `src/crew_custom_tools/tools/web/serper.py`.
+Merge `safe_serper.py` and `serper_tool.py` from `menu_planner`/`osint_home` into `src/crewai_custom_tools/tools/web/serper.py`.
 
 - [ ] **Step 2: Unify Scrapers**
 
-Create `src/crew_custom_tools/tools/web/scraper.py` containing `UnifiedScraperTool` which implements fallback logic: if Javascript or Cloudflare blocks standard BeautifulSoup extraction, automatically route requests through ScrapeNinja proxy or Firecrawl APIs.
+Create `src/crewai_custom_tools/tools/web/scraper.py` containing `UnifiedScraperTool` which implements fallback logic: if Javascript or Cloudflare blocks standard BeautifulSoup extraction, automatically route requests through ScrapeNinja proxy or Firecrawl APIs.
 
 - [ ] **Step 3: Port Wikipedia and RSS feeds**
 
 Migrate the tools:
 
-- Wikipedia Search to `src/crew_custom_tools/tools/web/wikipedia.py`.
-- Unified RSS reading & OPML parsing to `src/crew_custom_tools/tools/web/rss.py`.
-- Fact checking utilities to `src/crew_custom_tools/tools/web/fact_checking.py`.
+- Wikipedia Search to `src/crewai_custom_tools/tools/web/wikipedia.py`.
+- Unified RSS reading & OPML parsing to `src/crewai_custom_tools/tools/web/rss.py`.
+- Fact checking utilities to `src/crewai_custom_tools/tools/web/fact_checking.py`.
 
 - [ ] **Step 4: Export web tools**
 
-Modify `src/crew_custom_tools/tools/web/__init__.py`:
+Modify `src/crewai_custom_tools/tools/web/__init__.py`:
 
 ```python
-from crew_custom_tools.tools.web.perplexity import PerplexitySearchTool
-from crew_custom_tools.tools.web.serper import SerperSearchTool
-from crew_custom_tools.tools.web.scraper import UnifiedScraperTool
+from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool
+from crewai_custom_tools.tools.web.serper import SerperSearchTool
+from crewai_custom_tools.tools.web.scraper import UnifiedScraperTool
 ```
 
 - [ ] **Step 5: Run tests to verify the unified web tools**
@@ -387,7 +387,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/crew_custom_tools/tools/web/
+git add src/crewai_custom_tools/tools/web/
 git commit -m "feat: migrate and unify all web search and scraping tools"
 ```
 
@@ -395,17 +395,17 @@ git commit -m "feat: migrate and unify all web search and scraping tools"
 
 ### Task 5: Migrate & Unify Finance & Crypto Tools
 
-We will centralize Yahoo Finance, CoinMarketCap, Kraken, FRED, and Alpha Vantage tool configurations into `src/crew_custom_tools/tools/finance/`.
+We will centralize Yahoo Finance, CoinMarketCap, Kraken, FRED, and Alpha Vantage tool configurations into `src/crewai_custom_tools/tools/finance/`.
 
 **Files:**
 
-- Create: `src/crew_custom_tools/tools/finance/company_info.py`
-- Create: `src/crew_custom_tools/tools/finance/history_holdings.py`
-- Create: `src/crew_custom_tools/tools/finance/crypto.py`
-- Create: `src/crew_custom_tools/tools/finance/market_data.py`
-- Create: `src/crew_custom_tools/tools/finance/fear_greed.py`
-- Create: `src/crew_custom_tools/tools/finance/exchange_rate.py`
-- Modify: `src/crew_custom_tools/tools/finance/__init__.py`
+- Create: `src/crewai_custom_tools/tools/finance/company_info.py`
+- Create: `src/crewai_custom_tools/tools/finance/history_holdings.py`
+- Create: `src/crewai_custom_tools/tools/finance/crypto.py`
+- Create: `src/crewai_custom_tools/tools/finance/market_data.py`
+- Create: `src/crewai_custom_tools/tools/finance/fear_greed.py`
+- Create: `src/crewai_custom_tools/tools/finance/exchange_rate.py`
+- Modify: `src/crewai_custom_tools/tools/finance/__init__.py`
 
 **Interfaces:**
 
@@ -416,24 +416,24 @@ We will centralize Yahoo Finance, CoinMarketCap, Kraken, FRED, and Alpha Vantage
 
 Move:
 
-- Company Info metrics tool to `src/crew_custom_tools/tools/finance/company_info.py`.
-- History and ETF holdings to `src/crew_custom_tools/tools/finance/history_holdings.py`.
+- Company Info metrics tool to `src/crewai_custom_tools/tools/finance/company_info.py`.
+- History and ETF holdings to `src/crewai_custom_tools/tools/finance/history_holdings.py`.
 
 - [ ] **Step 2: Port CoinMarketCap and Kraken APIs**
 
-Consolidate historical and real-time listings from `epic_news` into a unified `src/crew_custom_tools/tools/finance/crypto.py`.
+Consolidate historical and real-time listings from `epic_news` into a unified `src/crewai_custom_tools/tools/finance/crypto.py`.
 
 - [ ] **Step 3: Port market indicators, sentiment, and FRED economic data**
 
 Copy:
 
-- FRED indicators to `src/crew_custom_tools/tools/finance/market_data.py`.
-- Fear & Greed indexing scraper to `src/crew_custom_tools/tools/finance/fear_greed.py`.
-- Exchange rate calculations to `src/crew_custom_tools/tools/finance/exchange_rate.py`.
+- FRED indicators to `src/crewai_custom_tools/tools/finance/market_data.py`.
+- Fear & Greed indexing scraper to `src/crewai_custom_tools/tools/finance/fear_greed.py`.
+- Exchange rate calculations to `src/crewai_custom_tools/tools/finance/exchange_rate.py`.
 
 - [ ] **Step 4: Expose finance imports and run unit tests**
 
-Update exports in `src/crew_custom_tools/tools/finance/__init__.py`.
+Update exports in `src/crewai_custom_tools/tools/finance/__init__.py`.
 Execute:
 
 ```bash
@@ -445,7 +445,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/crew_custom_tools/tools/finance/
+git add src/crewai_custom_tools/tools/finance/
 git commit -m "feat: consolidate stocks, crypto, and macroeconomic data tools"
 ```
 
@@ -453,16 +453,16 @@ git commit -m "feat: consolidate stocks, crypto, and macroeconomic data tools"
 
 ### Task 6: Migrate & Unify OSINT & Cyber Recon Tools
 
-We will migrate deep cyber investigations, domain recon, and French business registers under `src/crew_custom_tools/tools/osint/`.
+We will migrate deep cyber investigations, domain recon, and French business registers under `src/crewai_custom_tools/tools/osint/`.
 
 **Files:**
 
-- Create: `src/crew_custom_tools/tools/osint/github.py`
-- Create: `src/crew_custom_tools/tools/osint/email_recon.py`
-- Create: `src/crew_custom_tools/tools/osint/person_recon.py`
-- Create: `src/crew_custom_tools/tools/osint/domain_recon.py`
-- Create: `src/crew_custom_tools/tools/osint/registers.py`
-- Create: `src/crew_custom_tools/tools/osint/__init__.py`
+- Create: `src/crewai_custom_tools/tools/osint/github.py`
+- Create: `src/crewai_custom_tools/tools/osint/email_recon.py`
+- Create: `src/crewai_custom_tools/tools/osint/person_recon.py`
+- Create: `src/crewai_custom_tools/tools/osint/domain_recon.py`
+- Create: `src/crewai_custom_tools/tools/osint/registers.py`
+- Create: `src/crewai_custom_tools/tools/osint/__init__.py`
 - Create/Copy: `tests/test_osint_tools.py`
 
 **Interfaces:**
@@ -472,21 +472,21 @@ We will migrate deep cyber investigations, domain recon, and French business reg
 
 - [ ] **Step 1: Move and adapt GitHub tools**
 
-Unify search repositories and organizations into `src/crew_custom_tools/tools/osint/github.py`.
+Unify search repositories and organizations into `src/crewai_custom_tools/tools/osint/github.py`.
 
 - [ ] **Step 2: Port email verification and username search**
 
 Write:
 
-- Hunter.io email discoverer to `src/crew_custom_tools/tools/osint/email_recon.py`.
-- Sherlock/Maigret search patterns to `src/crew_custom_tools/tools/osint/person_recon.py`.
+- Hunter.io email discoverer to `src/crewai_custom_tools/tools/osint/email_recon.py`.
+- Sherlock/Maigret search patterns to `src/crewai_custom_tools/tools/osint/person_recon.py`.
 
 - [ ] **Step 3: Port domain certificates and business registers**
 
 Migrate:
 
-- `crt.sh` and `whodap` RDAP tools into `src/crew_custom_tools/tools/osint/domain_recon.py`.
-- INSEE Sirene, Bodacc, and company registers from `osint_tools` into `src/crew_custom_tools/tools/osint/registers.py`.
+- `crt.sh` and `whodap` RDAP tools into `src/crewai_custom_tools/tools/osint/domain_recon.py`.
+- INSEE Sirene, Bodacc, and company registers from `osint_tools` into `src/crewai_custom_tools/tools/osint/registers.py`.
 
 - [ ] **Step 4: Create package init and run OSINT tests**
 
@@ -501,7 +501,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/crew_custom_tools/tools/osint/
+git add src/crewai_custom_tools/tools/osint/
 git commit -m "feat: consolidate OSINT, cyber recon, and corporate registries"
 ```
 
@@ -509,14 +509,14 @@ git commit -m "feat: consolidate OSINT, cyber recon, and corporate registries"
 
 ### Task 7: Migrate Report & PDF Document Generators
 
-We will establish template layout builders and HTML-to-PDF compilation under `src/crew_custom_tools/reporting/`.
+We will establish template layout builders and HTML-to-PDF compilation under `src/crewai_custom_tools/reporting/`.
 
 **Files:**
 
-- Create: `src/crew_custom_tools/reporting/pdf_generator.py`
-- Create: `src/crew_custom_tools/reporting/html_generator.py`
-- Create: `src/crew_custom_tools/reporting/template_renderers.py`
-- Create: `src/crew_custom_tools/reporting/__init__.py`
+- Create: `src/crewai_custom_tools/reporting/pdf_generator.py`
+- Create: `src/crewai_custom_tools/reporting/html_generator.py`
+- Create: `src/crewai_custom_tools/reporting/template_renderers.py`
+- Create: `src/crewai_custom_tools/reporting/__init__.py`
 
 **Interfaces:**
 
@@ -525,14 +525,14 @@ We will establish template layout builders and HTML-to-PDF compilation under `sr
 
 - [ ] **Step 1: Port HTML-to-PDF compilers**
 
-Copy and adjust PDF layout engine from `epic_news` to `src/crew_custom_tools/reporting/pdf_generator.py`.
+Copy and adjust PDF layout engine from `epic_news` to `src/crewai_custom_tools/reporting/pdf_generator.py`.
 
 - [ ] **Step 2: Port Markdown-to-HTML and special template dashboards**
 
 Consolidate dashboard generation templates and Pestel, Financial, HR, and Geospatial Jinja2 renderers from `epic_news` into:
 
-- `src/crew_custom_tools/reporting/html_generator.py`
-- `src/crew_custom_tools/reporting/template_renderers.py`
+- `src/crewai_custom_tools/reporting/html_generator.py`
+- `src/crewai_custom_tools/reporting/template_renderers.py`
 
 - [ ] **Step 3: Run report tests**
 
@@ -542,7 +542,7 @@ Expected: PASS
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/crew_custom_tools/reporting/
+git add src/crewai_custom_tools/reporting/
 git commit -m "feat: migrate rich HTML/PDF document formatting and layout generators"
 ```
 
@@ -554,12 +554,12 @@ We will finalize Accuweather, Todoist, Airtable, and RAG tools, and expose a cle
 
 **Files:**
 
-- Create: `src/crew_custom_tools/enterprise/todoist.py`
-- Create: `src/crew_custom_tools/enterprise/airtable.py`
-- Create: `src/crew_custom_tools/enterprise/accuweather.py`
-- Create: `src/crew_custom_tools/enterprise/rag_tools.py`
-- Create: `src/crew_custom_tools/enterprise/__init__.py`
-- Modify: `src/crew_custom_tools/__init__.py`
+- Create: `src/crewai_custom_tools/enterprise/todoist.py`
+- Create: `src/crewai_custom_tools/enterprise/airtable.py`
+- Create: `src/crewai_custom_tools/enterprise/accuweather.py`
+- Create: `src/crewai_custom_tools/enterprise/rag_tools.py`
+- Create: `src/crewai_custom_tools/enterprise/__init__.py`
+- Modify: `src/crewai_custom_tools/__init__.py`
 
 **Interfaces:**
 
@@ -570,17 +570,17 @@ We will finalize Accuweather, Todoist, Airtable, and RAG tools, and expose a cle
 
 Consolidate:
 
-- Todoist list/task integrations to `src/crew_custom_tools/enterprise/todoist.py`.
-- Airtable database readers/writers to `src/crew_custom_tools/enterprise/airtable.py`.
-- Accuweather widgets to `src/crew_custom_tools/enterprise/accuweather.py`.
+- Todoist list/task integrations to `src/crewai_custom_tools/enterprise/todoist.py`.
+- Airtable database readers/writers to `src/crewai_custom_tools/enterprise/airtable.py`.
+- Accuweather widgets to `src/crewai_custom_tools/enterprise/accuweather.py`.
 
 - [ ] **Step 2: Migrate RAG Knowledge base adapters**
 
-Copy `save_to_rag_tool.py` and `rag_tools.py` into `src/crew_custom_tools/enterprise/rag_tools.py`.
+Copy `save_to_rag_tool.py` and `rag_tools.py` into `src/crewai_custom_tools/enterprise/rag_tools.py`.
 
 - [ ] **Step 3: Expose clean public imports in package root**
 
-Modify `src/crew_custom_tools/__init__.py` to neatly export all public tools, decorators, and centralized models from one single, clear, namespace.
+Modify `src/crewai_custom_tools/__init__.py` to neatly export all public tools, decorators, and centralized models from one single, clear, namespace.
 
 - [ ] **Step 4: Verify complete, comprehensive test suite pass**
 
@@ -595,6 +595,6 @@ Expected: 100% PASS in < 5 seconds.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/crew_custom_tools/enterprise/ src/crew_custom_tools/__init__.py
+git add src/crewai_custom_tools/enterprise/ src/crewai_custom_tools/__init__.py
 git commit -m "feat: implement enterprise integrations and complete package exports"
 ```

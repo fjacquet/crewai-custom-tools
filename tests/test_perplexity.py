@@ -6,7 +6,7 @@ import os
 import pytest
 import requests
 
-from crew_custom_tools.tools.web.perplexity import (
+from crewai_custom_tools.tools.web.perplexity import (
     PerplexitySearchInput,
     PerplexitySearchTool,
 )
@@ -19,7 +19,9 @@ PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions"
 @pytest.fixture
 def mock_env_perplexity_key(mocker):
     """Mock environment with Perplexity API key."""
-    mocker.patch.dict(os.environ, {"PERPLEXITY_API_KEY": TEST_PERPLEXITY_API_KEY}, clear=True)
+    mocker.patch.dict(
+        os.environ, {"PERPLEXITY_API_KEY": TEST_PERPLEXITY_API_KEY}, clear=True
+    )
     yield
 
 
@@ -129,7 +131,9 @@ def test_run_http_error(mock_env_perplexity_key, mocker):
     """Test handling of HTTP errors."""
     mock_post = mocker.patch("requests.post")
     mock_response = mocker.MagicMock()
-    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
+    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
+        "401 Unauthorized"
+    )
     mock_post.return_value = mock_response
 
     tool = PerplexitySearchTool()

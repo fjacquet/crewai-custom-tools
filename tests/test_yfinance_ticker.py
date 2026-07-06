@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from crew_custom_tools.tools.finance.yfinance_ticker import (
+from crewai_custom_tools.tools.finance.yfinance_ticker import (
     GetTickerInfoInput,
     YahooFinanceTickerInfoTool,
 )
@@ -16,7 +16,8 @@ def ticker_info_tool_instance():
 
 @pytest.fixture(autouse=True)
 def clear_cache():
-    from crew_custom_tools.config.cache import get_cache_manager
+    from crewai_custom_tools.config.cache import get_cache_manager
+
     get_cache_manager().clear()
 
 
@@ -32,8 +33,12 @@ def test_tool_instantiation(ticker_info_tool_instance):
 
 # --- Test _run Method ---
 def test_run_success_stock(ticker_info_tool_instance, mocker):
-    mock_get_cache_manager = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.get_cache_manager")
-    mock_yf_ticker = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.yf.Ticker")
+    mock_get_cache_manager = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.get_cache_manager"
+    )
+    mock_yf_ticker = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.yf.Ticker"
+    )
     # Mock the cache manager to return None (no cached result)
     mock_cache = mocker.MagicMock()
     mock_cache.get.return_value = None  # No cached result
@@ -84,8 +89,12 @@ def test_run_success_stock(ticker_info_tool_instance, mocker):
 
 
 def test_run_success_etf(ticker_info_tool_instance, mocker):
-    mock_get_cache_manager = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.get_cache_manager")
-    mock_yf_ticker = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.yf.Ticker")
+    mock_get_cache_manager = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.get_cache_manager"
+    )
+    mock_yf_ticker = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.yf.Ticker"
+    )
     # Mock the cache manager to return None (no cached result)
     mock_cache = mocker.MagicMock()
     mock_cache.get.return_value = None  # No cached result
@@ -129,8 +138,12 @@ def test_run_success_etf(ticker_info_tool_instance, mocker):
 
 
 def test_run_success_crypto(ticker_info_tool_instance, mocker):
-    mock_get_cache_manager = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.get_cache_manager")
-    mock_yf_ticker = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.yf.Ticker")
+    mock_get_cache_manager = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.get_cache_manager"
+    )
+    mock_yf_ticker = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.yf.Ticker"
+    )
     # Mock the cache manager to return None (no cached result)
     mock_cache = mocker.MagicMock()
     mock_cache.get.return_value = None  # No cached result
@@ -172,8 +185,12 @@ def test_run_success_crypto(ticker_info_tool_instance, mocker):
 
 
 def test_run_success_with_regular_market_price(ticker_info_tool_instance, mocker):
-    mock_get_cache_manager = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.get_cache_manager")
-    mock_yf_ticker = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.yf.Ticker")
+    mock_get_cache_manager = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.get_cache_manager"
+    )
+    mock_yf_ticker = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.yf.Ticker"
+    )
     # Mock the cache manager to return None (no cached result)
     mock_cache = mocker.MagicMock()
     mock_cache.get.return_value = None  # No cached result
@@ -199,8 +216,12 @@ def test_run_success_with_regular_market_price(ticker_info_tool_instance, mocker
 
 
 def test_run_minimal_data(ticker_info_tool_instance, mocker):
-    mock_get_cache_manager = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.get_cache_manager")
-    mock_yf_ticker = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.yf.Ticker")
+    mock_get_cache_manager = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.get_cache_manager"
+    )
+    mock_yf_ticker = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.yf.Ticker"
+    )
     # Mock the cache manager to return None (no cached result)
     mock_cache = mocker.MagicMock()
     mock_cache.get.return_value = None  # No cached result
@@ -231,8 +252,12 @@ def test_run_minimal_data(ticker_info_tool_instance, mocker):
 
 
 def test_run_yfinance_exception(ticker_info_tool_instance, mocker):
-    mock_get_cache_manager = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.get_cache_manager")
-    mock_yf_ticker = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.yf.Ticker")
+    mock_get_cache_manager = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.get_cache_manager"
+    )
+    mock_yf_ticker = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.yf.Ticker"
+    )
     # Mock the cache manager to return None (no cached result)
     mock_cache = mocker.MagicMock()
     mock_cache.get.return_value = None  # No cached result
@@ -246,12 +271,19 @@ def test_run_yfinance_exception(ticker_info_tool_instance, mocker):
     result_data = json.loads(result_str)
 
     assert "error" in result_data
-    assert result_data["error"] == "Error fetching ticker info for ERROR: Test yfinance error"
+    assert (
+        result_data["error"]
+        == "Error fetching ticker info for ERROR: Test yfinance error"
+    )
 
 
 def test_run_invalid_ticker_empty_info(ticker_info_tool_instance, mocker):
-    mock_get_cache_manager = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.get_cache_manager")
-    mock_yf_ticker = mocker.patch("crew_custom_tools.tools.finance.yfinance_ticker.yf.Ticker")
+    mock_get_cache_manager = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.get_cache_manager"
+    )
+    mock_yf_ticker = mocker.patch(
+        "crewai_custom_tools.tools.finance.yfinance_ticker.yf.Ticker"
+    )
     # Mock the cache manager to return None (no cached result)
     mock_cache = mocker.MagicMock()
     mock_cache.get.return_value = None  # No cached result

@@ -1,0 +1,69 @@
+"""CNN Fear & Greed Index Scraper Tool."""
+
+import json
+import logging
+import requests
+from crewai.tools import BaseTool
+from pydantic import BaseModel
+from crewai_custom_tools.core.decorators import api_tool
+
+logger = logging.getLogger(__name__)
+
+
+def score_to_sentiment(score: float) -> str:
+    """Map Fear & Greed numeric score (0-100) to market classification."""
+    if score <= 25:
+        return "Extreme Fear"
+    if score <= 45:
+        return "Fear"
+    if score <= 55:
+        return "Neutral"
+    if score <= 75:
+        return "Greed"
+    return "Extreme Greed"
+
+
+class FearGreedTool(BaseTool):
+    """CNN Fear & Greed Index sentiment analysis tool."""
+
+    name: str = "fear_and_greed_sentiment"
+    description: str = "Fetches the current market-wide sentiment from the CNN Fear & Greed Index (0-100 and label)."
+
+    @api_tool(provider="CNN", endpoint="FearGreed", default_return="{}")
+    def _run(self) -> str:
+        """Fetch Fear & Greed sentiment from CNN Dataviz endpoint."""
+        url = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+        }
+
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        # Parse CNN's nested payload format
+        fear_greed_data = data.get("fear_and_greed", {})
+        score = fear_greed_data.get("score")
+
+        if score is None:
+            return json.dumps(
+                {"error": "Failed to parse Fear & Greed score from API response"}
+            )
+
+        score_val = float(score)
+        sentiment = score_to_sentiment(score_val)
+
+        result = {
+            "score": score_val,
+            "sentiment": sentiment,
+            "rating_label": fear_greed_data.get("rating"),
+            "previous_close_score": fear_greed_data.get("previous_close"),
+            "one_week_ago_score": fear_greed_data.get("one_week_ago"),
+            "one_month_ago_score": fear_greed_data.get("one_month_ago"),
+            "one_year_ago_score": fear_greed_data.get("one_year_ago"),
+            "source": "CNN Fear & Greed",
+        }
+        return json.dumps(result)
