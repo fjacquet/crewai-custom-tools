@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`crewai-custom-tools` is a **Universal Monolith** Python package (Python ≥3.11) that centralizes **81 Pydantic-validated tools** for CrewAI multi-agent systems — ported from three source repos (`finwiz`, `osint_tools`, `epic_news`) — into a single, zero-config installable library. Tools cover five domains: Web Search/Scraping, Finance/Markets, OSINT recon, Report/PDF compilation, and Enterprise integrations. Every tool returns a uniform `ToolResult` JSON envelope, and all tools are exposed over MCP via a FastMCP stdio server (full parity, auto-registered).
+`crewai-custom-tools` is a **Universal Monolith** Python package (Python ≥3.11) that centralizes **87 Pydantic-validated tools** for CrewAI multi-agent systems — ported from three source repos (`finwiz`, `osint_tools`, `epic_news`) — into a single, zero-config installable library. Tools cover five domains: Web Search/Scraping, Finance/Markets, OSINT recon, Report/PDF compilation, and Enterprise integrations. Every tool returns a uniform `ToolResult` JSON envelope, and all tools are exposed over MCP via a FastMCP stdio server (full parity, auto-registered).
 
 ## Commands
 
@@ -30,7 +30,7 @@ Ruff is used for linting (`.ruff_cache/` present) but is not wired into CI — r
 ## Architecture
 
 ### Universal Monolith packaging (ADR-0002)
-All runtime dependencies live in the single `dependencies` block of `pyproject.toml` — there are **no optional extras** for features (only `[dev]`). Any of the 81 tools must import and run out of the box with zero `ModuleNotFoundError`. When adding a dependency, prefer pure-Python libraries and avoid C-compiled ones (e.g. no `ta-lib`/`quantlib`) so installs work in minimal Docker containers. Implement quantitative calculations with pandas/numpy fallbacks rather than C extensions.
+All runtime dependencies live in the single `dependencies` block of `pyproject.toml` — there are **no optional extras** for features (only `[dev]`). Any of the 87 tools must import and run out of the box with zero `ModuleNotFoundError`. When adding a dependency, prefer pure-Python libraries and avoid C-compiled ones (e.g. no `ta-lib`/`quantlib`) so installs work in minimal Docker containers. Implement quantitative calculations with pandas/numpy fallbacks rather than C extensions.
 
 ### Tool anatomy (the pattern every tool follows)
 Each tool is a `crewai.tools.BaseTool` subclass paired with a Pydantic `BaseModel` input schema:
@@ -64,7 +64,7 @@ OSINT/scraper tools default to **keyless/free fallbacks** and auto-upgrade to th
 HTML templates live **inside the package** at `reporting/templates/` and are resolved via `Path(__file__).parent / "templates"` (`default_template_dir()` in `html_generator.py`), so they ship in the wheel and work on a plain `pip install`. Reporting tools share `build_environment()`; untrusted section content is escaped (`_sections_to_html`) — do not reintroduce `| safe` on agent-supplied content.
 
 ## Testing conventions
-- **207 tests, 100% offline/mocked** — the whole suite runs in seconds with no network. Use `pytest-mock`'s `mocker`: `mocker.patch("requests.get", ...)` for HTTP and `mocker.patch.dict(os.environ, {...})` for keys. Assert on the envelope (`json.loads(result)["success"]`), not on prose strings.
+- **224 tests, 100% offline/mocked** — the whole suite runs in seconds with no network. Use `pytest-mock`'s `mocker`: `mocker.patch("requests.get", ...)` for HTTP and `mocker.patch.dict(os.environ, {...})` for keys. Assert on the envelope (`json.loads(result)["success"]`), not on prose strings.
 - New tools require a mocked success-path test and an error/no-key-path test (asserting `success is False`), plus the export in `__all__`.
 - There is no `conftest.py` — fixtures come from `pytest-mock`. Test files live under `tests/` per domain (e.g. `test_finance_tools.py`, `test_search_providers.py`).
 

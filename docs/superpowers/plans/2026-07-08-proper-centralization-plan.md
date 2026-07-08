@@ -6,12 +6,13 @@
 
 ## Final outcome
 - Phase 0 (foundation), Phase 1 (37 existing tools fixed), Phase 2 (41 new tools
-  centralized), Phase 3 (MCP parity, docs, v0.2.0) — all done.
-- **81 tool classes** exported; **207 tests** green; MCP exposes all 81.
-- **Deferred** (too app-coupled to port cleanly — recommend fresh clean rebuilds):
-  `MarketScreeningTool`, `StandardizedSentimentAnalysisTool`,
-  `CrossAssetSentimentComparatorTool`, `EnhancedSECAnalysisTool`,
-  `StandardizedRiskScoringTool` (finwiz); `HtmlGeneratorTool` (epic_news crew renderer).
+  centralized), Phase 3 (MCP parity, docs, v0.2.0), Phase 4 (6 deferred tools rebuilt
+  fresh) — all done. Opened as PR #1.
+- **87 tool classes** exported; **224 tests** green; MCP exposes all 87.
+- **Phase 4 rebuilds (fresh, not finwiz-infra ports):** `MarketScreeningTool` (yfinance
+  screener), `StandardizedRiskScoringTool` (transparent 0–10 score), `EnhancedSECAnalysisTool`
+  (keyless SEC EDGAR), `StandardizedSentimentAnalysisTool` + `CrossAssetSentimentComparatorTool`
+  (VADER), `HtmlGeneratorTool` (template-free). Added dep: `vadersentiment`.
 - **Follow-ups:** `menu_report_template.html` still has a `{{ | safe }}` for a future
   menu tool; broaden `@cache_api_call` usage to more idempotent GET tools if desired.
 

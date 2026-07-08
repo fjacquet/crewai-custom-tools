@@ -12,13 +12,15 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
   `{"success": bool, "data": <any>|null, "error": <str>|null}` JSON string via the
   `ok()` / `err()` helpers, so callers can always distinguish a genuine failure from an
   empty-but-successful result.
-- **41 newly centralized tools** (library now exports 81 tool classes). New capabilities:
-  additional search providers (Brave, Tavily, SerpApi, Hybrid) and standalone scrapers;
-  CoinMarketCap list/news/historical; enhanced ETF/crypto/DeFi analysis; TwelveData
+- **47 newly centralized / rebuilt tools** (library now exports 87 tool classes). New
+  capabilities: additional search providers (Brave, Tavily, SerpApi, Hybrid) and standalone
+  scrapers; CoinMarketCap list/news/historical; enhanced ETF/crypto/DeFi analysis; TwelveData
   indicators; Alpha Vantage news-sentiment; ChartImg; structured Perplexity; INSEE Sirene,
   BODACC, GDELT, Google News RSS, Hunter finder/verifier; CLI-backed recon (sherlock,
   maigret, theHarvester, net_recon) with graceful gating; data-centric + report-writer
-  tools; Geoapify, TechStack, Wikipedia processing, RSS aggregators, delegating email.
+  tools; Geoapify, TechStack, Wikipedia processing, RSS aggregators, delegating email; and
+  6 clean-rebuilt analytics tools (market screener, standardized risk scoring, SEC EDGAR
+  analysis, VADER sentiment + cross-asset comparator, template-free HTML generator).
 - **`core/cli_runner.py`**: hardened no-shell subprocess runner (target validation,
   PATH resolution, mandatory timeout, stdout cap) backing the CLI-based OSINT tools.
 - **Full MCP parity**: `mcp_server.py` auto-registers every exported tool (81) instead of

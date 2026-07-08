@@ -21,7 +21,7 @@
 
 ## 🛠️ Superpower Domains Excluded
 
-The library packs **81 standardized, Pydantic-validated tools** across five major categories:
+The library packs **87 standardized, Pydantic-validated tools** across five major categories:
 
 1. **Web Search & Scraping**: Perplexity AI queries, Serper.dev, auto-escalating crawlers (BeautifulSoup -> ScrapeNinja -> Firecrawl), Wikipedia REST interfaces, and RSS parsers.
 2. **Quantitative Stocks & Markets**: Yahoo Finance metrics, ETF holdings, CoinMarketCap quotes, Kraken balances, FRED macroeconomic observations, CNN Fear/Greed sentiment indexes, and exchange rates.
@@ -92,5 +92,5 @@ print(registry._run(query="LVMH"))
 - **Uniform `ToolResult` envelope**: every tool returns `{"success", "data", "error"}` as a JSON string, so an agent can always distinguish a genuine failure from an empty-but-successful result.
 - **Decorated API Resiliency**: the `@api_tool` wrapper adds per-call timeouts (via a `ThreadPoolExecutor`, to prevent hanging multi-agent loops), one automatic retry on HTTP 429, and converts any failure into a JSON error envelope.
 - **SHA-256 TTL caching**: thread-safe memory and disk cache with automatic corruption recovery, used by the Yahoo Finance tools.
-- **207 offline, mocked tests** covering the tools and infrastructure, running in seconds.
-- **Full MCP parity**: the FastMCP stdio server auto-exposes all 81 tools (`uv run crewai-custom-tools-mcp`).
+- **224 offline, mocked tests** covering the tools and infrastructure, running in seconds.
+- **Full MCP parity**: the FastMCP stdio server auto-exposes all 87 tools (`uv run crewai-custom-tools-mcp`).
