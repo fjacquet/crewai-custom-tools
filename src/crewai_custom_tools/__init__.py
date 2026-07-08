@@ -67,6 +67,9 @@ from crewai_custom_tools.tools.finance.market_extras import (
     AlphaVantageNewsSentimentTool,
     ChartImgTool,
 )
+from crewai_custom_tools.tools.finance.screening import MarketScreeningTool
+from crewai_custom_tools.tools.finance.risk import StandardizedRiskScoringTool
+from crewai_custom_tools.tools.finance.sec import EnhancedSECAnalysisTool
 
 # 3. OSINT & Cyber Recon
 from crewai_custom_tools.tools.osint.github import GitHubSearchTool, GitHubOrgSearchTool
@@ -161,6 +164,9 @@ __all__ = [
     "EnhancedETFAnalysisTool",
     "EnhancedCryptoAnalysisTool",
     "DeFiMetricsTool",
+    "MarketScreeningTool",
+    "StandardizedRiskScoringTool",
+    "EnhancedSECAnalysisTool",
     "TwelveDataIndicatorTool",
     "TwelveDataMultiIndicatorTool",
     "AlphaVantageNewsSentimentTool",
