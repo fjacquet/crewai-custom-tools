@@ -30,7 +30,6 @@ def api_tool(
     provider: str,
     endpoint: str,
     timeout: float = 30.0,
-    default_return: Any = None,
 ) -> Callable:
     """Wrap a tool ``_run`` with a timeout, a single HTTP-429 retry, and a JSON error envelope.
 
@@ -42,8 +41,6 @@ def api_tool(
         provider: API provider name, used in log lines and the error message.
         endpoint: Endpoint/category name, used in log lines and the error message.
         timeout: Per-call wall-clock timeout in seconds.
-        default_return: DEPRECATED and ignored — failures now always return the error
-            envelope. Kept only so existing call sites keep importing; removed in cleanup.
     """
 
     def decorator(func: Callable) -> Callable:
