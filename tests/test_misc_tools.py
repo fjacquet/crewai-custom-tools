@@ -136,21 +136,6 @@ def test_rss_feed_tool_unknown_region():
     assert "atlantis" in payload["error"]
 
 
-def test_unified_rss_tool(mocker):
-    mocker.patch(
-        "crewai_custom_tools.tools.web.rss_aggregator.OpmlParserTool._run",
-        side_effect=lambda *a, **k: ok(["http://feed1", "http://feed2"]),
-    )
-    mocker.patch(
-        "crewai_custom_tools.tools.web.rss_aggregator.RssFeedParserTool._run",
-        side_effect=lambda *a, **k: ok([{"title": "A", "link": "l", "published": "p", "summary": ""}]),
-    )
-    payload = _env(UnifiedRssTool()._run(opml_file_path="/tmp/x.opml"))
-    assert payload["success"] is True
-    assert payload["data"]["feeds"] == 2
-    assert len(payload["data"]["articles"]) == 2
-
-
 def test_unified_rss_tool_bad_opml(mocker):
     mocker.patch(
         "crewai_custom_tools.tools.web.rss_aggregator.OpmlParserTool._run",

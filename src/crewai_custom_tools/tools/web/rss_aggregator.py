@@ -5,14 +5,24 @@
 """
 
 import json
+import logging
 import math
-from typing import ClassVar
+import os
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, ClassVar
 
+import feedparser
 from crewai.tools import BaseTool
-from pydantic import BaseModel, Field
+from dateutil import parser as date_parser
+from pydantic import BaseModel, Field, PrivateAttr
 
 from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.tools.web.rss import OpmlParserTool, RssFeedParserTool
+from crewai_custom_tools.tools.web.rss_models import Article, FeedWithArticles, RssFeeds
+from crewai_custom_tools.tools.web.scraper import UnifiedScraperTool
+
+logger = logging.getLogger(__name__)
 
 # Curated, working RSS feeds by region.
 _RSS_SOURCES: dict[str, list[dict[str, str]]] = {
@@ -85,32 +95,199 @@ class UnifiedRssToolInput(BaseModel):
 
     opml_file_path: str = Field(..., description="Path to an OPML file listing RSS feed sources.")
     days: int = Field(7, ge=1, description="Number of past days of entries to include per feed.")
-    max_articles: int = Field(50, ge=1, le=500, description="Maximum number of aggregated articles.")
+    output_file_path: str | None = Field(
+        None,
+        description="Optional path to write the aggregated RssFeeds JSON. When set, the written file is the primary output.",
+    )
+    invalid_sources_file_path: str | None = Field(
+        None,
+        description="Optional path to write the list of feeds that errored or yielded no articles.",
+    )
 
 
 class UnifiedRssTool(BaseTool):
-    """Parse an OPML file, fetch recent entries from every feed, and aggregate them."""
+    """Parse an OPML file end to end: extract feeds, fetch and date-filter entries, scrape
+    article content, and (optionally) persist the aggregated result as a RssFeeds JSON file."""
 
     name: str = "unified_rss_tool"
     description: str = (
         "Process an OPML subscription file end to end: extract every RSS feed URL, fetch each "
-        "feed's recent entries, and return them aggregated."
+        "feed's recent entries, scrape article content, and aggregate them. When an output file "
+        "path is provided the RssFeeds JSON is written to it (the file is the primary output)."
     )
     args_schema: type[BaseModel] = UnifiedRssToolInput
+    _scraper: Any = PrivateAttr(default=None)
 
-    def _run(self, opml_file_path: str, days: int = 7, max_articles: int = 50) -> str:
-        """Parse the OPML, then fetch and merge entries from each feed."""
+    def _get_scraper(self) -> Any:
+        """Lazily build the resilient in-package scraper, reused across articles."""
+        if self._scraper is None:
+            self._scraper = UnifiedScraperTool()
+        return self._scraper
+
+    def _run(
+        self,
+        opml_file_path: str,
+        days: int = 7,
+        output_file_path: str | None = None,
+        invalid_sources_file_path: str | None = None,
+    ) -> str:
+        """Parse the OPML, fetch/filter/scrape entries per feed, and aggregate or persist them."""
         opml_payload = json.loads(OpmlParserTool()._run(opml_file_path=opml_file_path))
         if not opml_payload["success"]:
             return err(opml_payload["error"])
 
         feed_urls = opml_payload["data"]
-        parser = RssFeedParserTool()
-        articles: list[dict] = []
-        for url in feed_urls:
-            payload = json.loads(parser._run(feed_url=url, days=days))
-            if payload["success"]:
-                for entry in payload["data"]:
-                    articles.append({**entry, "feed_url": url})
+        invalid_sources: set[str] = set()
+        # Inclusive, day-granular cutoff: normalise to 00:00 so any hour that day is kept.
+        cutoff_date = (datetime.now() - timedelta(days=days)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
-        return ok({"feeds": len(feed_urls), "count": min(len(articles), max_articles), "articles": articles[:max_articles]})
+        all_feeds: list[FeedWithArticles] = []
+        for feed_url in feed_urls:
+            articles = self._fetch_and_filter_articles(feed_url, cutoff_date, invalid_sources)
+            if articles:
+                all_feeds.append(FeedWithArticles(feed_url=feed_url, articles=articles))
+            else:
+                invalid_sources.add(feed_url)
+
+        # Scrape content for each article, falling back to the RSS summary on failure.
+        for feed in all_feeds:
+            for article in feed.articles:
+                scraped = self._scrape_article_content(article.link)
+                if scraped:
+                    article.content = scraped
+                elif article.summary:
+                    article.content = article.summary
+
+        rss_feeds = RssFeeds(rss_feeds=all_feeds)
+
+        if output_file_path:
+            output_dir = os.path.dirname(output_file_path)
+            if output_dir:
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
+            with open(output_file_path, "w", encoding="utf-8") as fh:
+                json.dump(rss_feeds.model_dump(), fh, ensure_ascii=False, indent=2)
+            logger.info(f"UnifiedRssTool wrote {len(all_feeds)} feeds to {output_file_path}")
+
+        if invalid_sources and invalid_sources_file_path:
+            inv_dir = os.path.dirname(invalid_sources_file_path)
+            if inv_dir:
+                Path(inv_dir).mkdir(parents=True, exist_ok=True)
+            with open(invalid_sources_file_path, "w", encoding="utf-8") as fh:
+                json.dump(
+                    {
+                        "invalid_sources": sorted(invalid_sources),
+                        "timestamp": datetime.now().isoformat(),
+                        "total_invalid": len(invalid_sources),
+                    },
+                    fh,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            logger.info(
+                f"UnifiedRssTool recorded {len(invalid_sources)} invalid sources to {invalid_sources_file_path}"
+            )
+
+        total_articles = sum(len(f.articles) for f in all_feeds)
+        return ok(
+            {
+                "feeds": len(all_feeds),
+                "articles": total_articles,
+                "invalid_sources": sorted(invalid_sources),
+                "output_file_path": output_file_path,
+            }
+        )
+
+    def _fetch_and_filter_articles(
+        self, feed_url: str, cutoff_date: datetime, invalid_sources: set[str]
+    ) -> list[Article]:
+        """Fetch a feed and return Articles newer than ``cutoff_date``; track invalid feeds."""
+        try:
+            feed = feedparser.parse(feed_url)
+
+            status = getattr(feed, "status", None)
+            if status is not None:
+                try:
+                    if int(status) >= 400:
+                        invalid_sources.add(feed_url)
+                        return []
+                except (TypeError, ValueError):
+                    pass  # non-integer status: treat as unknown, keep going
+
+            if getattr(feed, "bozo", False):
+                invalid_sources.add(feed_url)
+                return []
+
+            articles: list[Article] = []
+            for entry in feed.entries:
+                pub_date = self._entry_pub_date(entry)
+                if not pub_date or pub_date < cutoff_date:
+                    continue
+                articles.append(
+                    Article(
+                        title=entry.get("title", "No Title"),
+                        link=entry.get("link", ""),
+                        published=pub_date.isoformat(),
+                        summary=entry.get("summary"),
+                        content=None,  # populated by the scraping pass
+                    )
+                )
+            return articles
+        except Exception as exc:  # noqa: BLE001 — any feed error marks the source invalid
+            logger.warning(f"Error fetching feed {feed_url}: {exc}")
+            invalid_sources.add(feed_url)
+            return []
+
+    @staticmethod
+    def _entry_pub_date(entry: Any) -> datetime | None:
+        """Best-effort naive publication date: struct_time fields first, then string fields."""
+        for attr in ("published_parsed", "updated_parsed"):
+            parsed = getattr(entry, attr, None)
+            if parsed:
+                try:
+                    return datetime(*parsed[:6])
+                except (TypeError, ValueError):
+                    pass
+        for attr in ("published", "updated"):
+            value = getattr(entry, attr, None)
+            if value:
+                try:
+                    return date_parser.parse(value).replace(tzinfo=None)
+                except (TypeError, ValueError):
+                    pass
+        return None
+
+    def _scrape_article_content(self, url: str) -> str | None:
+        """Scrape readable article text, staying pure-Python-friendly (ADR-0002).
+
+        Order: optional Newspaper3k (only if the caller installed it) -> the in-package
+        resilient UnifiedScraperTool (requests + BeautifulSoup, auto-escalating to
+        ScrapeNinja/Firecrawl when their keys are set) -> None (caller uses the RSS summary).
+        """
+        if not url:
+            return None
+
+        # 1. Best-effort Newspaper3k — never a hard dependency of this package.
+        try:
+            from newspaper import Article as NewspaperArticle
+
+            article = NewspaperArticle(url)
+            article.download()
+            article.parse()
+            if article.text and len(article.text.strip()) > 100:
+                return str(article.text)
+        except Exception as exc:  # noqa: BLE001 — ImportError or any scrape error
+            logger.debug(f"Newspaper3k unavailable/failed for {url}: {exc}")
+
+        # 2. Fall back to the package's own resilient scraper.
+        try:
+            payload = json.loads(self._get_scraper()._run(url=url))
+            if payload.get("success"):
+                content = (payload.get("data") or {}).get("content")
+                if content:
+                    return str(content)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"UnifiedScraperTool failed for {url}: {exc}")
+
+        return None

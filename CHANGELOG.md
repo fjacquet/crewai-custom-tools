@@ -4,6 +4,30 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.3.0] - 2026-07-08
+
+### Fixed
+
+- **`SaveToRagTool` collection injection**: the tool now accepts an optional pre-configured
+  `rag_tool` via its constructor (`SaveToRagTool(rag_tool=...)`) and stores into it, instead of
+  always instantiating a bare default `RagTool()` — which wrote to the wrong chromadb
+  collection/embeddings and silently broke save->retrieve. Falls back to a default `RagTool()`
+  only when none is injected. Keeps the `save_to_rag` name, args schema, and
+  `{success,data,error}` envelope.
+- **`UnifiedRssTool` full-pipeline restoration**: restored the
+  `_run(opml_file_path, days=7, output_file_path=None, invalid_sources_file_path=None)`
+  signature, `RssFeeds` JSON **output-file writing**, article **content-scraping** (via the
+  in-package resilient `UnifiedScraperTool`, with an optional Newspaper3k fast path), and
+  **invalid-source tracking**. This makes the tool a drop-in for programmatic callers that
+  invoke `._run(opml, days, output_file_path)` positionally and rely on the written file as the
+  output.
+
+### Added
+
+- `tools/web/rss_models.py`: `Article` / `FeedWithArticles` / `RssFeeds` pydantic models
+  describing the aggregated RSS JSON output contract.
+- Dependency: `python-dateutil` (pure-Python) for RSS entry date fallback parsing.
+
 ## [0.2.0] - 2026-07-08
 
 ### Added

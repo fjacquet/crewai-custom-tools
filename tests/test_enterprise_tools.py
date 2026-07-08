@@ -173,3 +173,17 @@ def test_save_to_rag_failure_returns_error(mocker):
     payload = _envelope(SaveToRagTool()._run(text="data that will not persist"))
     assert payload["success"] is False
     assert payload["error"] is not None
+
+
+def test_save_to_rag_uses_injected_rag_tool(mocker):
+    """An injected rag_tool is used directly, without importing crewai_tools at all."""
+    # Force `from crewai_tools import RagTool` to fail — if the injected tool is honored,
+    # the import is never reached, so storage still succeeds.
+    mocker.patch.dict("sys.modules", {"crewai_tools": None})
+    injected = mocker.MagicMock()
+
+    payload = _envelope(SaveToRagTool(rag_tool=injected)._run(text="Acme PESTEL results"))
+
+    assert payload["success"] is True
+    assert payload["data"]["stored"] is True
+    injected.add.assert_called_once_with("Acme PESTEL results", data_type="text")
