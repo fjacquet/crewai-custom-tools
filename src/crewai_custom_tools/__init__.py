@@ -5,13 +5,24 @@ __version__ = "0.1.1"
 # 1. Web Search & Scraping
 from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool
 from crewai_custom_tools.tools.web.serper import SerperSearchTool
-from crewai_custom_tools.tools.web.scraper import UnifiedScraperTool
+from crewai_custom_tools.tools.web.scraper import (
+    UnifiedScraperTool,
+    ScrapeNinjaTool,
+    FirecrawlTool,
+    BatchArticleScraperTool,
+)
 from crewai_custom_tools.tools.web.wikipedia import (
     WikipediaSearchTool,
     WikipediaArticleTool,
 )
 from crewai_custom_tools.tools.web.rss import RssFeedParserTool, OpmlParserTool
 from crewai_custom_tools.tools.web.fact_checking import GoogleFactCheckTool
+from crewai_custom_tools.tools.web.search_providers import (
+    BraveSearchTool,
+    TavilyTool,
+    SerpApiTool,
+    HybridSearchTool,
+)
 
 # 2. Stocks & Market Data
 from crewai_custom_tools.tools.finance.yfinance_ticker import YahooFinanceTickerInfoTool
@@ -65,11 +76,18 @@ __all__ = [
     "PerplexitySearchTool",
     "SerperSearchTool",
     "UnifiedScraperTool",
+    "ScrapeNinjaTool",
+    "FirecrawlTool",
+    "BatchArticleScraperTool",
     "WikipediaSearchTool",
     "WikipediaArticleTool",
     "RssFeedParserTool",
     "OpmlParserTool",
     "GoogleFactCheckTool",
+    "BraveSearchTool",
+    "TavilyTool",
+    "SerpApiTool",
+    "HybridSearchTool",
     # Finance Tools
     "YahooFinanceTickerInfoTool",
     "YahooFinanceNewsTool",

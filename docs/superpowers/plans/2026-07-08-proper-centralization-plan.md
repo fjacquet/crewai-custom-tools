@@ -68,13 +68,15 @@ Move `templates/` → `src/crewai_custom_tools/reporting/templates/`, load via
 
 ## Phased roadmap
 
-### Phase 0 — Foundation
+### Phase 0 — Foundation ✅ DONE (commit 9e90923)
 - [x] Create branch, `core/results.py`, this plan.
-- [ ] Rework `@api_tool` to the error envelope; update `tests/test_decorators.py`.
-- [ ] Package templates properly; fix resolvers; packaging test.
-- [ ] Green baseline: full `pytest` passes on the reworked foundation.
+- [x] Rework `@api_tool` to the error envelope; update `tests/test_decorators.py`.
+- [x] Package templates properly; fix resolvers; packaging test (verified in built wheel).
+- [x] Green baseline: full `pytest` passes on the reworked foundation.
 
-### Phase 1 — Fix existing tools (envelope + per-tool defects)
+### Phase 1 — Fix existing tools (envelope + per-tool defects) ✅ DONE
+Committed per domain: finance (bbde848), web (06db04c), osint (0aa60fc),
+reporting (e463555), enterprise (ddbe527). Full suite green (121 passed).
 Convert each tool to `ok()/err()` and fix its specific findings. By domain:
 - **Web:** perplexity (wire or drop `focus`, guard parse, `@api_tool`, read key in `_run`);
   serper (only `SERPER_API_KEY`); scraper (firecrawl SDK object, uniform schema, `title` default);
