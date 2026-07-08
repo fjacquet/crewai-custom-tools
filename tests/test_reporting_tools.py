@@ -45,7 +45,7 @@ def test_render_report_tool_success(mocker):
         return_value=mock_env,
     )
 
-    tool = RenderReportTool(template_dir="./templates")
+    tool = RenderReportTool()
     result = tool._run(
         title="Acme Report",
         sections=[{"heading": "Section 1", "content": "Section 1 Content"}],
@@ -102,7 +102,7 @@ def test_pestel_report_renderer(mocker):
         return_value=mock_env,
     )
 
-    tool = PestelReportRenderer(template_dir="./templates")
+    tool = PestelReportRenderer()
     result = tool._run(
         title="PESTEL Analysis",
         sections=[{"heading": "Political", "content": "Political stability"}],
@@ -128,7 +128,7 @@ def test_financial_report_renderer(mocker):
         return_value=mock_env,
     )
 
-    tool = FinancialReportRenderer(template_dir="./templates")
+    tool = FinancialReportRenderer()
     result = tool._run(
         title="Q2 Financial Report",
         sections=[{"heading": "Revenue", "content": "10M USD"}],

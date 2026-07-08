@@ -64,13 +64,9 @@ class RenderReportTool(BaseTool):
         if template_dir:
             self._template_dir = Path(template_dir)
         else:
-            # Locate the templates directory inside project root
-            project_root = Path(__file__).resolve().parent.parent.parent.parent
-            self._template_dir = project_root / "templates"
-
-        if not self._template_dir.exists():
-            # Fallback check
-            self._template_dir = Path("./templates")
+            # Templates are packaged inside the reporting/ package, so this resolves
+            # correctly in an editable checkout AND a wheel install (site-packages).
+            self._template_dir = Path(__file__).resolve().parent / "templates"
 
         if not self._template_dir.exists():
             raise FileNotFoundError(
