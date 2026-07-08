@@ -4,6 +4,47 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.2.0] - 2026-07-08
+
+### Added
+
+- **`ToolResult` envelope (`core/results.py`)**: every tool now returns a uniform
+  `{"success": bool, "data": <any>|null, "error": <str>|null}` JSON string via the
+  `ok()` / `err()` helpers, so callers can always distinguish a genuine failure from an
+  empty-but-successful result.
+- **41 newly centralized tools** (library now exports 81 tool classes). New capabilities:
+  additional search providers (Brave, Tavily, SerpApi, Hybrid) and standalone scrapers;
+  CoinMarketCap list/news/historical; enhanced ETF/crypto/DeFi analysis; TwelveData
+  indicators; Alpha Vantage news-sentiment; ChartImg; structured Perplexity; INSEE Sirene,
+  BODACC, GDELT, Google News RSS, Hunter finder/verifier; CLI-backed recon (sherlock,
+  maigret, theHarvester, net_recon) with graceful gating; data-centric + report-writer
+  tools; Geoapify, TechStack, Wikipedia processing, RSS aggregators, delegating email.
+- **`core/cli_runner.py`**: hardened no-shell subprocess runner (target validation,
+  PATH resolution, mandatory timeout, stdout cap) backing the CLI-based OSINT tools.
+- **Full MCP parity**: `mcp_server.py` auto-registers every exported tool (81) instead of
+  a hand-written subset.
+
+### Fixed
+
+- **~50 correctness/security findings** across the ported tools, including: Yahoo ETF
+  holdings (called non-existent yfinance methods → always empty; now `get_funds_data()`),
+  Yahoo news deprecated keys, history %-change divide-by-zero, Perplexity dead `focus`
+  param + unguarded parse, username detection (HTTP-200-only → found/unknown/absent
+  heuristic), RDAP `.co.uk` handling, both report renderers (one errored, one blanked),
+  RAG false-success, AccuWeather cleartext key, Airtable URL encoding, and many non-JSON
+  returns. Reporting **templates are now packaged** so they work on a `pip install`.
+
+### Security
+
+- Stored-XSS in HTML report rendering closed (escape untrusted section content).
+- XXE hardening for OPML parsing via `defusedxml`.
+- AccuWeather calls moved to HTTPS.
+
+### Changed
+
+- `@api_tool` returns a JSON error envelope on failure (was empty `{}`/`[]`).
+- Added dependencies: `defusedxml`, `tldextract` (both pure-Python).
+
 ## [0.1.0] - 2026-07-05
 
 ### Added

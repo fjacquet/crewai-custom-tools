@@ -21,7 +21,7 @@
 
 ## 🛠️ Superpower Domains Excluded
 
-The library packs over 30+ standardized, Pydantic-validated tools across five major categories:
+The library packs **81 standardized, Pydantic-validated tools** across five major categories:
 
 1. **Web Search & Scraping**: Perplexity AI queries, Serper.dev, auto-escalating crawlers (BeautifulSoup -> ScrapeNinja -> Firecrawl), Wikipedia REST interfaces, and RSS parsers.
 2. **Quantitative Stocks & Markets**: Yahoo Finance metrics, ETF holdings, CoinMarketCap quotes, Kraken balances, FRED macroeconomic observations, CNN Fear/Greed sentiment indexes, and exchange rates.
@@ -51,6 +51,17 @@ To activate and configure our external API integrations, set the following envir
 | `OPENCORPORATES_API_KEY` | `OpenCorporatesSearchTool`| *OPTIONAL (FALLBACK)* | OpenCorporates. High-speed global corporate registry. |
 | `FRED_API_KEY` | `FREDMacroTool` | *OPTIONAL (FALLBACK)* | St. Louis Fed. Key macroeconomic indicators. |
 | `ALPHA_VANTAGE_API_KEY` | `AlphaVantageOverviewTool`| *OPTIONAL (FALLBACK)* | Alpha Vantage. Company balance-sheet overview metrics. |
+| `BRAVE_API_KEY` | `BraveSearchTool` | *OPTIONAL* | Brave Search API. |
+| `TAVILY_API_KEY` | `TavilyTool` | *OPTIONAL* | Tavily AI search. |
+| `SERPAPI_API_KEY` | `SerpApiTool` | *OPTIONAL* | SerpApi (serpapi.com) organic search. |
+| `TWELVE_DATA_API_KEY` | `TwelveDataIndicatorTool` | *OPTIONAL* | Twelve Data. Technical indicators (RSI/MACD/…). |
+| `CHART_IMG_API_KEY` | `ChartImgTool` | *OPTIONAL* | chart-img.com. Rendered chart images. |
+| `GEOAPIFY_API_KEY` | `GeoapifyPlacesTool` | *OPTIONAL* | Geoapify. Places / POI lookup. |
+| `HUNTER_API_KEY` | `HunterIOTool`, `HunterEmailFinderTool` | *OPTIONAL* | Hunter.io. Email discovery / verification. |
+| `INSEE_SIRENE_API_KEY` | `InseeSireneTool` | *OPTIONAL* | INSEE Sirene. Authoritative FR firmographics. |
+| `GOOGLE_API_KEY` | `GoogleFactCheckTool` | *OPTIONAL* | Google Fact Check Tools API. |
+
+> The CLI-backed OSINT tools (`SherlockTool`, `MaigretTool`, `TheHarvesterTool`, `NetReconTool`) need their respective binaries on `PATH`; they return a clear error when the binary is absent, so the package installs and runs everywhere.
 
 ---
 
@@ -78,6 +89,8 @@ print(registry._run(query="LVMH"))
 
 ## ⚡ Robust Core Infrastructure
 
-- **Secure SHA-256 TTL Caching**: Thread-safe persistent memory and disk caching with automatic corruption recovery (completely bypassing weak MD5 keying).
-- **Decorated API Resiliency**: `@api_tool` wrappers providing automatic retries on HTTP 429 rate limits, and non-blocking `ThreadPoolExecutor` execution timeouts to prevent hanging multi-agent loops.
-- **100% Mock Test Coverage**: 87 highly stable, offline unit and integration tests executing in under 5.0 seconds (4.90s!).
+- **Uniform `ToolResult` envelope**: every tool returns `{"success", "data", "error"}` as a JSON string, so an agent can always distinguish a genuine failure from an empty-but-successful result.
+- **Decorated API Resiliency**: the `@api_tool` wrapper adds per-call timeouts (via a `ThreadPoolExecutor`, to prevent hanging multi-agent loops), one automatic retry on HTTP 429, and converts any failure into a JSON error envelope.
+- **SHA-256 TTL caching**: thread-safe memory and disk cache with automatic corruption recovery, used by the Yahoo Finance tools.
+- **207 offline, mocked tests** covering the tools and infrastructure, running in seconds.
+- **Full MCP parity**: the FastMCP stdio server auto-exposes all 81 tools (`uv run crewai-custom-tools-mcp`).
