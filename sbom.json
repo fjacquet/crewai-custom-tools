@@ -1,15 +1,15 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:af5d26b8-da89-4ac4-8ef7-55794a90eaf4",
+  "serialNumber": "urn:uuid:8b64a140-d310-4e08-8bba-cef4265e02d5",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-07-06T05:39:25.552899+00:00",
+    "timestamp": "2026-07-08T11:14:47.648289+00:00",
     "component": {
       "name": "crewai-custom-tools",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "type": "library",
-      "bom-ref": "pkg:pypi/crewai-custom-tools@0.1.0",
+      "bom-ref": "pkg:pypi/crewai-custom-tools@0.2.0",
       "description": "Centralized, resilient tools for CrewAI multi-agent systems",
       "licenses": [
         {
@@ -111,6 +111,34 @@
       "type": "library",
       "purl": "pkg:pypi/todoist-api-python@4.0.0",
       "bom-ref": "pkg:pypi/todoist-api-python@4.0.0"
+    },
+    {
+      "name": "holehe",
+      "version": "1.61",
+      "type": "library",
+      "purl": "pkg:pypi/holehe@1.61",
+      "bom-ref": "pkg:pypi/holehe@1.61"
+    },
+    {
+      "name": "defusedxml",
+      "version": "0.7.1",
+      "type": "library",
+      "purl": "pkg:pypi/defusedxml@0.7.1",
+      "bom-ref": "pkg:pypi/defusedxml@0.7.1"
+    },
+    {
+      "name": "tldextract",
+      "version": "5.3.1",
+      "type": "library",
+      "purl": "pkg:pypi/tldextract@5.3.1",
+      "bom-ref": "pkg:pypi/tldextract@5.3.1"
+    },
+    {
+      "name": "vadersentiment",
+      "version": "3.3.2",
+      "type": "library",
+      "purl": "pkg:pypi/vadersentiment@3.3.2",
+      "bom-ref": "pkg:pypi/vadersentiment@3.3.2"
     }
   ]
 }

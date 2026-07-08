@@ -1,19 +1,35 @@
 """Airtable table operations and databases tools."""
 
-import json
 import logging
 import os
+import urllib.parse
+from typing import Any
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel
-from typing import Any
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.models.airtable_models import (
     AirtableReaderToolInput,
     AirtableToolInput,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _table_url(base_id: str, table_name: str) -> str:
+    """Build the Airtable REST URL, percent-encoding both path segments.
+
+    Table names commonly contain spaces/special chars (e.g. 'Project Tasks'), which
+    would otherwise produce a malformed request path.
+    """
+    return (
+        "https://api.airtable.com/v0/"
+        f"{urllib.parse.quote(base_id, safe='')}/"
+        f"{urllib.parse.quote(table_name, safe='')}"
+    )
 
 
 class AirtableReaderTool(BaseTool):
@@ -26,20 +42,19 @@ class AirtableReaderTool(BaseTool):
     )
     args_schema: type[BaseModel] = AirtableReaderToolInput
 
-    @api_tool(provider="Airtable", endpoint="ReadRecords", default_return="[]")
+    @api_tool(provider="Airtable", endpoint="ReadRecords")
     def _run(self, base_id: str, table_name: str) -> str:
         """Run the Airtable tool to read records."""
         api_key = os.getenv("AIRTABLE_API_KEY")
         if not api_key:
-            return "Error: AIRTABLE_API_KEY environment variable not set."
+            return err("AIRTABLE_API_KEY environment variable not set")
 
-        url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
         headers = {"Authorization": f"Bearer {api_key}"}
-
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(
+            _table_url(base_id, table_name), headers=headers, timeout=10
+        )
         response.raise_for_status()
-        records = response.json().get("records", [])
-        return json.dumps(records)
+        return ok(response.json().get("records", []))
 
 
 class AirtableTool(BaseTool):
@@ -52,25 +67,24 @@ class AirtableTool(BaseTool):
     )
     args_schema: type[BaseModel] = AirtableToolInput
 
-    @api_tool(
-        provider="Airtable",
-        endpoint="CreateRecord",
-        default_return="Error: Failed to create record.",
-    )
+    @api_tool(provider="Airtable", endpoint="CreateRecord")
     def _run(self, base_id: str, table_name: str, data: dict[str, Any]) -> str:
         """Run the Airtable tool to create a record."""
         api_key = os.getenv("AIRTABLE_API_KEY")
         if not api_key:
-            return "Error: AIRTABLE_API_KEY environment variable not set."
+            return err("AIRTABLE_API_KEY environment variable not set")
+        if not data:
+            return err("data must be a non-empty dict of fields")
 
-        url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-        payload = {"fields": data}
-
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        response = requests.post(
+            _table_url(base_id, table_name),
+            headers=headers,
+            json={"fields": data},
+            timeout=10,
+        )
         response.raise_for_status()
-        record_id = response.json().get("id")
-        return f"Successfully created record in Airtable: {record_id}"
+        return ok({"record_id": response.json().get("id")})

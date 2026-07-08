@@ -7,6 +7,7 @@ from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from typing import Any, Optional
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 logger = logging.getLogger("crewai_custom_tools.fact_checking")
 
@@ -40,16 +41,12 @@ class GoogleFactCheckTool(BaseTool):
     )
     args_schema: type[BaseModel] = GoogleFactCheckInput
 
-    @api_tool(
-        provider="GoogleFactCheck",
-        endpoint="Search",
-        default_return="Error performing fact check.",
-    )
+    @api_tool(provider="GoogleFactCheck", endpoint="Search")
     def _run(self, query: str, **kwargs: Any) -> str:
         """Run the tool."""
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            return "Error: GOOGLE_API_KEY environment variable not set."
+            return err("GOOGLE_API_KEY not configured")
 
         params = {
             "query": query,
@@ -69,4 +66,4 @@ class GoogleFactCheckTool(BaseTool):
             timeout=10,
         )
         response.raise_for_status()
-        return str(response.json())
+        return ok(response.json())

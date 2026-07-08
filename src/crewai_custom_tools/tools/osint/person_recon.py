@@ -1,14 +1,69 @@
 """Username reconnaissance and intelligence tools (Sherlock-style)."""
 
-import json
+import concurrent.futures
 import logging
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, List
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 logger = logging.getLogger(__name__)
+
+_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
+# Per-site rules. `url` is the profile URL template; `absent_markers` are
+# case-insensitive substrings that appear on a "no such profile" page returned
+# with HTTP 200 (soft-404), letting us reject login-wall/soft-404 false positives.
+_PLATFORMS = {
+    "GitHub": {"url": "https://github.com/{u}", "absent_markers": []},
+    "Reddit": {
+        "url": "https://www.reddit.com/user/{u}/",
+        "absent_markers": ["nobody on reddit goes by that name", "this account has been suspended"],
+    },
+    "Medium": {
+        "url": "https://medium.com/@{u}",
+        "absent_markers": ["page not found", "out of nowhere"],
+    },
+    "Pinterest": {
+        "url": "https://www.pinterest.com/{u}/",
+        "absent_markers": ["couldn't find", "user not found"],
+    },
+    "SoundCloud": {"url": "https://soundcloud.com/{u}", "absent_markers": []},
+    "Dev.to": {"url": "https://dev.to/{u}", "absent_markers": []},
+}
+
+
+def _classify(name: str, cfg: dict, username: str) -> tuple[str, str, str]:
+    """Check one platform and classify as found / not_found / unknown.
+
+    A 404 means absent; a 200 without an "absent" body marker means present;
+    a block/rate-limit (403/429/5xx) or a transport error means *unknown* — we
+    could not tell, which is deliberately distinct from "not found".
+    """
+    url = cfg["url"].format(u=username)
+    headers = {"User-Agent": _USER_AGENT}
+    try:
+        resp = requests.get(url, headers=headers, allow_redirects=True, timeout=5)
+    except requests.exceptions.RequestException:
+        return (name, url, "unknown")
+
+    status = resp.status_code
+    if status == 404:
+        return (name, url, "not_found")
+    if status in (403, 429) or status >= 500:
+        return (name, url, "unknown")
+    if status == 200:
+        body = (resp.text or "").lower()
+        if any(marker in body for marker in cfg["absent_markers"]):
+            return (name, url, "not_found")
+        return (name, url, "found")
+    return (name, url, "unknown")
 
 
 class UsernameSearchInput(BaseModel):
@@ -21,61 +76,47 @@ class UsernameSearchInput(BaseModel):
 
 
 class UsernameSearchTool(BaseTool):
-    """A pure-Python Sherlock-style tool to scan for a username across major platforms."""
+    """A pure-Python tool that checks whether a username exists across major platforms."""
 
     name: str = "username_search"
-    description: str = "Scans multiple major social media platforms and websites to check if a username exists."
+    description: str = (
+        "Checks major social platforms for a username. Reports profiles found, and "
+        "separately reports platforms that could not be determined (blocked/rate-limited)."
+    )
     args_schema: type[BaseModel] = UsernameSearchInput
 
-    @api_tool(provider="UsernameRecon", endpoint="Scan", default_return="[]")
+    @api_tool(provider="UsernameRecon", endpoint="Scan")
     def _run(self, username: str) -> str:
-        """Scan popular platforms for the target username directly."""
-        # Sanity check
+        """Scan popular platforms for the target username, concurrently."""
         clean_username = username.strip()
         if not clean_username or " " in clean_username:
-            return json.dumps({"error": "Invalid username: cannot contain spaces."})
+            return err("Invalid username: cannot contain spaces.")
 
-        # Focus platforms with stable public profile URLs
-        platforms = {
-            "GitHub": f"https://github.com/{clean_username}",
-            "Reddit": f"https://www.reddit.com/user/{clean_username}",
-            "Medium": f"https://medium.com/@{clean_username}",
-            "Pinterest": f"https://www.pinterest.com/{clean_username}/",
-            "SoundCloud": f"https://soundcloud.com/{clean_username}",
-            "Dev.to": f"https://dev.to/{clean_username}",
-        }
-
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(_PLATFORMS)
+        ) as executor:
+            verdicts = list(
+                executor.map(
+                    lambda item: _classify(item[0], item[1], clean_username),
+                    _PLATFORMS.items(),
+                )
             )
-        }
 
-        hits = []
-        for name, url in platforms.items():
-            try:
-                # We use a HEAD request where possible to make this super-fast and light on bandwidth
-                response = requests.head(
-                    url, headers=headers, allow_redirects=True, timeout=5
-                )
-                # If HEAD fails or returns some odd statuses, fall back to GET
-                if response.status_code == 405:
-                    response = requests.get(url, headers=headers, timeout=5)
-
-                if response.status_code == 200:
-                    hits.append(
-                        {
-                            "platform": name,
-                            "url": url,
-                            "username": clean_username,
-                            "status": "Found",
-                        }
-                    )
-            except requests.exceptions.RequestException as e:
-                logger.warning(
-                    f"Error checking platform {name} for username {clean_username}: {e}"
-                )
-                continue
-
-        return json.dumps(hits)
+        found = [
+            {"platform": name, "url": url}
+            for name, url, verdict in verdicts
+            if verdict == "found"
+        ]
+        unknown = [
+            {"platform": name, "url": url}
+            for name, url, verdict in verdicts
+            if verdict == "unknown"
+        ]
+        return ok(
+            {
+                "username": clean_username,
+                "found": found,
+                "unknown": unknown,
+                "checked": len(verdicts),
+            }
+        )

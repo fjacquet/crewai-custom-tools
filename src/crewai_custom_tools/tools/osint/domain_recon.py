@@ -1,16 +1,19 @@
 """Domain and Certificate Transparency reconnaissance tools (crt.sh & whodap)."""
 
-import json
 import logging
 import urllib.parse
 from datetime import datetime
+from typing import Any, List, Optional
+
 import requests
+import tldextract
 import whodap
-from whodap.utils import WHOISKeys
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, List, Optional
+from whodap.utils import WHOISKeys
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +22,7 @@ class DomainInput(BaseModel):
     """Input schema for domain-recon tools."""
 
     domain: str = Field(
-        ..., description="The apex domain to scan or query (e.g., 'example.com')."
+        ..., description="The domain to scan or query (e.g., 'example.com')."
     )
 
 
@@ -30,12 +33,12 @@ class CrtShTool(BaseTool):
     description: str = "Queries crt.sh's public Certificate Transparency logs to find subdomains that have had TLS certificates."
     args_schema: type[BaseModel] = DomainInput
 
-    @api_tool(provider="crtsh", endpoint="Subdomains", default_return="[]")
+    @api_tool(provider="crtsh", endpoint="Subdomains")
     def _run(self, domain: str) -> str:
         """Search subdomains on crt.sh."""
         clean_domain = domain.strip().lower()
         if not clean_domain or " " in clean_domain:
-            return json.dumps([])
+            return err(f"Invalid domain: {domain!r}")
 
         encoded_domain = urllib.parse.quote(clean_domain)
         url = f"https://crt.sh/?q=%25.{encoded_domain}&output=json"
@@ -55,7 +58,7 @@ class CrtShTool(BaseTool):
                     continue
                 hostnames.add(name)
 
-        return json.dumps(sorted(list(hostnames)))
+        return ok(sorted(hostnames))
 
 
 class RDAPDomainTool(BaseTool):
@@ -65,25 +68,28 @@ class RDAPDomainTool(BaseTool):
     description: str = "Structured machine-readable WHOIS lookup using RDAP to fetch domain registrar, creation date, and nameservers."
     args_schema: type[BaseModel] = DomainInput
 
-    @api_tool(provider="RDAP", endpoint="DomainLookup", default_return="{}")
+    @api_tool(provider="RDAP", endpoint="DomainLookup")
     def _run(self, domain: str) -> str:
-        """Lookup RDAP domain registrations using whodap."""
-        clean_domain = domain.strip().lower()
-        label, _, tld = clean_domain.rpartition(".")
-        if not label or not tld:
-            return json.dumps(
-                {
-                    "error": f"Invalid domain: {domain}. Must contain label and TLD (e.g. 'google.com')."
-                }
+        """Lookup RDAP registration for the registrable domain using whodap."""
+        # Public-suffix-aware parsing: strips subdomains (www.) and handles
+        # multi-label suffixes (.co.uk) that a naive rpartition('.') breaks.
+        ext = tldextract.extract(domain.strip().lower())
+        if not ext.domain or not ext.suffix:
+            return err(
+                f"Invalid domain: {domain!r}. Must be a registrable domain (e.g. 'google.com')."
             )
 
+        registrable = f"{ext.domain}.{ext.suffix}"
+        # whodap resolves the RDAP server from the final TLD label; splitting the
+        # registrable domain on its last dot keeps that working for .co.uk too.
+        sld, _, tld = registrable.rpartition(".")
+
         try:
-            # Execute synchronous whodap lookup
-            response = whodap.lookup_domain(label, tld)
+            response = whodap.lookup_domain(sld, tld)
             whois = response.to_whois_dict()
-        except Exception as e:
-            logger.warning(f"RDAP lookup failed for {domain}: {e}")
-            return json.dumps({"error": f"RDAP lookup failed: {e}"})
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"RDAP lookup failed for {registrable}: {e}")
+            return err(f"RDAP lookup failed: {e}")
 
         def _stringify_date(value: Any) -> Optional[str]:
             if value is None:
@@ -95,13 +101,13 @@ class RDAPDomainTool(BaseTool):
         def _as_list(value: Any) -> List[str]:
             return list(value) if isinstance(value, list) else []
 
-        result = {
-            "domain": clean_domain,
-            "registrar": whois.get(WHOISKeys.REGISTRAR_NAME)
-            if isinstance(whois.get(WHOISKeys.REGISTRAR_NAME), str)
-            else None,
-            "created": _stringify_date(whois.get(WHOISKeys.CREATED_DATE)),
-            "nameservers": _as_list(whois.get(WHOISKeys.NAMESERVERS)),
-            "source": "RDAP via whodap",
-        }
-        return json.dumps(result)
+        registrar = whois.get(WHOISKeys.REGISTRAR_NAME)
+        return ok(
+            {
+                "domain": registrable,
+                "registrar": registrar if isinstance(registrar, str) else None,
+                "created": _stringify_date(whois.get(WHOISKeys.CREATED_DATE)),
+                "nameservers": _as_list(whois.get(WHOISKeys.NAMESERVERS)),
+                "source": "RDAP via whodap",
+            }
+        )

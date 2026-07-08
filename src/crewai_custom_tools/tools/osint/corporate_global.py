@@ -1,6 +1,5 @@
 """OpenCorporates global corporate registry search tool."""
 
-import json
 import logging
 import os
 import requests
@@ -8,6 +7,7 @@ from typing import Optional
 from crewai.tools import BaseTool
 from pydantic import BaseModel
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.models import OpenCorporatesSearchInput
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class OpenCorporatesSearchTool(BaseTool):
     )
     args_schema: type[BaseModel] = OpenCorporatesSearchInput
 
-    @api_tool(provider="OpenCorporates", endpoint="CompanySearch", default_return="{}")
+    @api_tool(provider="OpenCorporates", endpoint="CompanySearch")
     def _run(self, query: str, jurisdiction_code: Optional[str] = None) -> str:
         """Run global company registry search."""
         api_url = "https://api.opencorporates.com/v1/companies/search"
@@ -38,16 +38,18 @@ class OpenCorporatesSearchTool(BaseTool):
             params["api_token"] = api_token
 
         response = requests.get(api_url, params=params, timeout=10)
+        # OpenCorporates v1 search rejects anonymous calls — surface that clearly
+        # instead of degrading to an empty result that looks like "no matches".
+        if response.status_code in (401, 403):
+            return err(
+                "OpenCorporates requires OPENCORPORATES_API_KEY (anonymous v1 search is not permitted)."
+            )
         response.raise_for_status()
         data = response.json()
 
         companies = data.get("results", {}).get("companies", [])
         if not companies:
-            return json.dumps(
-                {
-                    "error": f"No global corporate registry records found for query: {query}"
-                }
-            )
+            return err(f"No global corporate registry records found for query: {query}")
 
         # Format and normalize the corporate records
         formatted_companies = []
@@ -69,10 +71,11 @@ class OpenCorporatesSearchTool(BaseTool):
             )
 
         # Return structured corporate results
-        result = {
-            "query": query,
-            "total_results": len(formatted_companies),
-            "companies": formatted_companies[:5],  # Return top 5 matches
-            "source": "OpenCorporates Global Registry",
-        }
-        return json.dumps(result)
+        return ok(
+            {
+                "query": query,
+                "total_results": len(formatted_companies),
+                "companies": formatted_companies[:5],  # Return top 5 matches
+                "source": "OpenCorporates Global Registry",
+            }
+        )

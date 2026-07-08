@@ -1,16 +1,29 @@
 """RSS feed parsing and OPML subscription utilities."""
 
-import json
 import logging
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# defusedxml guards against XXE / billion-laughs attacks in untrusted OPML files.
+from defusedxml.ElementTree import ParseError, parse as parse_xml
+
 import feedparser
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, List, Union
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 logger = logging.getLogger(__name__)
+
+
+def _entry_dict(entry, published: str) -> dict:
+    """Build a normalized entry record from a feedparser entry."""
+    return {
+        "title": entry.get("title", "No Title"),
+        "link": entry.get("link", ""),
+        "published": published,
+        "summary": entry.get("summary", "")[:300] if hasattr(entry, "summary") else "",
+    }
 
 
 class RssFeedParserInput(BaseModel):
@@ -29,57 +42,36 @@ class RssFeedParserTool(BaseTool):
     description: str = "A tool for parsing an RSS feed and returning recent entries. It requires the RSS feed URL."
     args_schema: type[BaseModel] = RssFeedParserInput
 
-    @api_tool(provider="RSS", endpoint="ParseFeed", default_return="[]")
+    @api_tool(provider="RSS", endpoint="ParseFeed")
     def _run(self, feed_url: str, days: int = 7) -> str:
-        """Run the RSS feed parser tool with robust error handling."""
+        """Parse an RSS feed and return entries newer than the cutoff."""
         feed = feedparser.parse(feed_url)
 
         if feed.bozo:
             logger.warning(
-                f"Feed at {feed_url} is not well-formed. Reason: {feed.get('bozo_exception', 'Unknown')}"
+                f"Feed at {feed_url} is not well-formed: {feed.get('bozo_exception', 'Unknown')}"
             )
+        if getattr(feed, "status", 0) and feed.status >= 400:
+            return err(f"Failed to fetch RSS feed, status code {feed.status}")
 
-        if hasattr(feed, "status") and feed.status >= 400:
-            logger.error(f"Feed at {feed_url} returned HTTP status {feed.status}")
-            return f"Error: Failed to fetch RSS feed, status code {feed.status}"
-
-        cutoff_date = datetime.now() - timedelta(days=days)
+        # feedparser normalizes published_parsed to UTC — compare in UTC too.
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
         recent_entries = []
         for entry in feed.entries:
-            if hasattr(entry, "published_parsed") and entry.published_parsed:
-                try:
-                    published_time = datetime(*entry.published_parsed[:6])
-                    if published_time >= cutoff_date:
-                        recent_entries.append(
-                            {
-                                "title": entry.get("title", "No Title"),
-                                "link": entry.get("link", ""),
-                                "published": entry.get("published", ""),
-                                "summary": entry.get("summary", "")[:300]
-                                if hasattr(entry, "summary")
-                                else "",
-                            }
-                        )
-                except (ValueError, TypeError):
-                    logger.warning(
-                        f"Could not parse date for an entry in {feed_url}. Title: {entry.get('title', 'N/A')}"
-                    )
-                    continue
-            else:
-                # Fallback if no publication date is present
-                recent_entries.append(
-                    {
-                        "title": entry.get("title", "No Title"),
-                        "link": entry.get("link", ""),
-                        "published": "Unknown",
-                        "summary": entry.get("summary", "")[:300]
-                        if hasattr(entry, "summary")
-                        else "",
-                    }
-                )
+            parsed = getattr(entry, "published_parsed", None)
+            if not parsed:
+                recent_entries.append(_entry_dict(entry, "Unknown"))
+                continue
+            try:
+                published_time = datetime(*parsed[:6], tzinfo=timezone.utc)
+            except (ValueError, TypeError):
+                logger.warning(f"Could not parse date for an entry in {feed_url}.")
+                continue
+            if published_time >= cutoff:
+                recent_entries.append(_entry_dict(entry, entry.get("published", "")))
 
-        return json.dumps(recent_entries, default=str)
+        return ok(recent_entries)
 
 
 class OpmlParserInput(BaseModel):
@@ -99,19 +91,19 @@ class OpmlParserTool(BaseTool):
     )
     args_schema: type[BaseModel] = OpmlParserInput
 
-    @api_tool(provider="OPML", endpoint="ParseFile", default_return="[]")
-    def _run(self, opml_file_path: str) -> Union[List[str], str]:
-        """Parses the OPML file and extracts all xmlUrl attributes."""
+    @api_tool(provider="OPML", endpoint="ParseFile")
+    def _run(self, opml_file_path: str) -> str:
+        """Parse the OPML file and extract all xmlUrl attributes."""
         try:
-            tree = ET.parse(opml_file_path)
-            root = tree.getroot()
-            urls = []
-            for outline in root.findall(".//outline[@xmlUrl]"):
-                url = outline.get("xmlUrl")
-                if url:
-                    urls.append(url)
-            return urls
-        except ET.ParseError as e:
-            return f"Error parsing XML file: {e}"
+            root = parse_xml(opml_file_path).getroot()
+        except ParseError as e:
+            return err(f"Error parsing OPML file: {e}")
         except FileNotFoundError:
-            return f"Error: The file was not found at {opml_file_path}"
+            return err(f"OPML file not found at {opml_file_path}")
+
+        urls = [
+            url
+            for outline in root.findall(".//outline[@xmlUrl]")
+            if (url := outline.get("xmlUrl"))
+        ]
+        return ok(urls)

@@ -153,6 +153,15 @@
             <div class="timestamp">Generated on: {{ timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
         </header>
 
+        {% if sections %}
+        {% for section in sections %}
+        <section>
+            <h2>{{ section.heading }}</h2>
+            <div>{{ section.content }}</div>
+        </section>
+        {% endfor %}
+        {% endif %}
+
         {% if kpis %}
         <section>
             <h2>Key Performance Indicators</h2>

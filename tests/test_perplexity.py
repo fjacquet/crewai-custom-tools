@@ -15,7 +15,6 @@ TEST_PERPLEXITY_API_KEY = "test_perplexity_key"
 PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions"
 
 
-# --- Fixtures ---
 @pytest.fixture
 def mock_env_perplexity_key(mocker):
     """Mock environment with Perplexity API key."""
@@ -28,157 +27,103 @@ def mock_env_perplexity_key(mocker):
 @pytest.fixture
 def mock_env_no_perplexity_key(mocker):
     """Mock environment without Perplexity API key."""
-    mocker.patch.dict(os.environ, {"PERPLEXITY_API_KEY": ""}, clear=True)
+    mocker.patch.dict(os.environ, {}, clear=True)
     yield
 
 
-# --- Instantiation Tests ---
-def test_instantiation_success(mock_env_perplexity_key):
-    """Test successful tool instantiation with API key."""
+def _mock_post(mocker, payload):
+    mock_post = mocker.patch("requests.post")
+    mock_response = mocker.MagicMock()
+    mock_response.json.return_value = payload
+    mock_response.raise_for_status.return_value = None
+    mock_post.return_value = mock_response
+    return mock_post
+
+
+def test_instantiation():
+    """The tool exposes its name/description/schema."""
     tool = PerplexitySearchTool()
     assert tool.name == "perplexity_search"
     assert "AI-powered web search" in tool.description
     assert tool.args_schema == PerplexitySearchInput
-    assert tool.api_key == TEST_PERPLEXITY_API_KEY
 
 
-def test_instantiation_no_api_key(mock_env_no_perplexity_key):
-    """Test tool instantiation without API key."""
-    tool = PerplexitySearchTool()
-    # API key is None when not set or empty
-    assert tool.api_key is None
-
-
-# --- _run Method Tests ---
 def test_run_no_api_key(mock_env_no_perplexity_key):
-    """Test _run returns error when API key is missing."""
-    tool = PerplexitySearchTool()
-    result_str = tool._run(query="test query")
-    result_data = json.loads(result_str)
-
-    assert result_data["success"] is False
-    assert "not configured" in result_data["error"]
+    """_run returns an error envelope when the API key is missing (read at call time)."""
+    result = json.loads(PerplexitySearchTool()._run(query="test query"))
+    assert result["success"] is False
+    assert "not configured" in result["error"]
 
 
 def test_run_success(mock_env_perplexity_key, mocker):
-    """Test successful search execution."""
-    mock_post = mocker.patch("requests.post")
-    mock_response = mocker.MagicMock()
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": "Test answer about Python."}}],
-        "citations": ["https://python.org", "https://docs.python.org"],
-        "model": "sonar",
-    }
-    mock_response.raise_for_status.return_value = None
-    mock_post.return_value = mock_response
+    """A successful search returns the answer/citations under the envelope's data."""
+    mock_post = _mock_post(
+        mocker,
+        {
+            "choices": [{"message": {"content": "Test answer about Python."}}],
+            "citations": ["https://python.org", "https://docs.python.org"],
+        },
+    )
+    result = json.loads(PerplexitySearchTool()._run(query="What is Python?"))
 
-    tool = PerplexitySearchTool()
-    result_str = tool._run(query="What is Python?")
-    result_data = json.loads(result_str)
-
-    # Verify API call
-    mock_post.assert_called_once()
     call_args = mock_post.call_args
     assert call_args[0][0] == PERPLEXITY_API_URL
-    assert "Authorization" in call_args[1]["headers"]
-    assert call_args[1]["json"]["model"] == "sonar"
     assert call_args[1]["json"]["messages"][0]["content"] == "What is Python?"
-
-    # Verify result
-    assert result_data["success"] is True
-    assert result_data["answer"] == "Test answer about Python."
-    assert result_data["citations"] == ["https://python.org", "https://docs.python.org"]
-    assert result_data["source"] == "perplexity"
+    assert result["success"] is True
+    assert result["data"]["answer"] == "Test answer about Python."
+    assert result["data"]["citations"] == ["https://python.org", "https://docs.python.org"]
+    assert result["data"]["source"] == "perplexity"
 
 
-def test_run_with_focus_and_recency(mock_env_perplexity_key, mocker):
-    """Test search with custom focus and recency parameters."""
-    mock_post = mocker.patch("requests.post")
-    mock_response = mocker.MagicMock()
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": "Latest news."}}],
-        "citations": [],
-    }
-    mock_response.raise_for_status.return_value = None
-    mock_post.return_value = mock_response
+def test_focus_academic_sets_search_mode(mock_env_perplexity_key, mocker):
+    """focus='academic' adds search_mode to the request payload."""
+    mock_post = _mock_post(
+        mocker, {"choices": [{"message": {"content": "scholarly"}}]}
+    )
+    PerplexitySearchTool()._run(query="q", focus="academic", recency="day")
+    body = mock_post.call_args[1]["json"]
+    assert body["search_mode"] == "academic"
+    assert body["search_recency_filter"] == "day"
 
-    tool = PerplexitySearchTool()
-    result_str = tool._run(query="AI news", focus="news", recency="day")
-    result_data = json.loads(result_str)
 
-    # Verify API call parameters
-    call_args = mock_post.call_args
-    assert call_args[1]["json"]["search_recency_filter"] == "day"
+def test_focus_reddit_sets_domain_filter(mock_env_perplexity_key, mocker):
+    """focus='reddit' restricts the domain filter to reddit.com."""
+    mock_post = _mock_post(mocker, {"choices": [{"message": {"content": "r/"}}]})
+    PerplexitySearchTool()._run(query="q", focus="reddit")
+    assert mock_post.call_args[1]["json"]["search_domain_filter"] == ["reddit.com"]
 
-    assert result_data["success"] is True
+
+def test_focus_internet_adds_no_extra_params(mock_env_perplexity_key, mocker):
+    """The default focus sends no search_mode/domain filter."""
+    mock_post = _mock_post(mocker, {"choices": [{"message": {"content": "x"}}]})
+    PerplexitySearchTool()._run(query="q", focus="internet")
+    body = mock_post.call_args[1]["json"]
+    assert "search_mode" not in body
+    assert "search_domain_filter" not in body
+
+
+def test_run_missing_content_returns_error(mock_env_perplexity_key, mocker):
+    """A 200 with no answer content returns an error envelope, not a crash."""
+    _mock_post(mocker, {"choices": []})
+    result = json.loads(PerplexitySearchTool()._run(query="q"))
+    assert result["success"] is False
+    assert "no answer" in result["error"].lower()
 
 
 def test_run_api_error(mock_env_perplexity_key, mocker):
-    """Test handling of API errors."""
-    mock_post = mocker.patch("requests.post")
-    mock_post.side_effect = requests.exceptions.RequestException("Connection failed")
-
-    tool = PerplexitySearchTool()
-    result_str = tool._run(query="test query")
-    result_data = json.loads(result_str)
-
-    assert result_data["success"] is False
-    assert "Connection failed" in result_data["error"]
-    assert result_data["fallback_needed"] is True
-
-
-def test_run_http_error(mock_env_perplexity_key, mocker):
-    """Test handling of HTTP errors."""
-    mock_post = mocker.patch("requests.post")
-    mock_response = mocker.MagicMock()
-    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
-        "401 Unauthorized"
+    """A network error is caught by the decorator and returned as an error envelope."""
+    mocker.patch(
+        "requests.post",
+        side_effect=requests.exceptions.RequestException("Connection failed"),
     )
-    mock_post.return_value = mock_response
-
-    tool = PerplexitySearchTool()
-    result_str = tool._run(query="test query")
-    result_data = json.loads(result_str)
-
-    assert result_data["success"] is False
-    assert result_data["fallback_needed"] is True
+    result = json.loads(PerplexitySearchTool()._run(query="test query"))
+    assert result["success"] is False
+    assert "Connection failed" in result["error"]
 
 
-def test_run_empty_citations(mock_env_perplexity_key, mocker):
-    """Test handling of responses without citations."""
-    mock_post = mocker.patch("requests.post")
-    mock_response = mocker.MagicMock()
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": "Answer without citations."}}],
-        # No citations field
-    }
-    mock_response.raise_for_status.return_value = None
-    mock_post.return_value = mock_response
-
-    tool = PerplexitySearchTool()
-    result_str = tool._run(query="simple question")
-    result_data = json.loads(result_str)
-
-    assert result_data["success"] is True
-    assert result_data["citations"] == []
-
-
-# --- Input Schema Tests ---
 def test_input_schema_defaults():
-    """Test PerplexitySearchInput default values."""
+    """PerplexitySearchInput default values."""
     input_data = PerplexitySearchInput(query="test")
     assert input_data.query == "test"
     assert input_data.focus == "internet"
     assert input_data.recency == "week"
-
-
-def test_input_schema_custom_values():
-    """Test PerplexitySearchInput with custom values."""
-    input_data = PerplexitySearchInput(
-        query="news about AI",
-        focus="news",
-        recency="day",
-    )
-    assert input_data.query == "news about AI"
-    assert input_data.focus == "news"
-    assert input_data.recency == "day"

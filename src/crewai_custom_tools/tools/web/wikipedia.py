@@ -1,14 +1,16 @@
 """Wikipedia search and article extraction tools."""
 
-import json
 import logging
 import urllib.parse
+from enum import StrEnum
+from typing import Optional
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, Optional
-from enum import StrEnum
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 logger = logging.getLogger(__name__)
 
@@ -37,19 +39,18 @@ class WikipediaSearchTool(BaseTool):
     description: str = "Searches Wikipedia for articles matching a query and returns a list of matching titles."
     args_schema: type[BaseModel] = WikipediaSearchToolInput
 
-    @api_tool(provider="Wikipedia", endpoint="Search", default_return="[]")
+    @api_tool(provider="Wikipedia", endpoint="Search")
     def _run(self, query: str, limit: int = 5) -> str:
-        """Run the Wikipedia search tool using MediaWiki REST API."""
+        """Run the Wikipedia search tool using the MediaWiki API."""
         encoded_query = urllib.parse.quote(query)
-        url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={encoded_query}&utf8=&format=json&srlimit={limit}"
-
+        url = (
+            "https://en.wikipedia.org/w/api.php?action=query&list=search"
+            f"&srsearch={encoded_query}&utf8=&format=json&srlimit={limit}"
+        )
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        data = response.json()
-
-        search_results = data.get("query", {}).get("search", [])
-        results = [item.get("title") for item in search_results]
-        return json.dumps(results)
+        search_results = response.json().get("query", {}).get("search", [])
+        return ok([item.get("title") for item in search_results])
 
 
 class WikipediaArticleToolInput(BaseModel):
@@ -66,74 +67,48 @@ class WikipediaArticleTool(BaseTool):
     """A tool to fetch various types of content from a Wikipedia article."""
 
     name: str = "Wikipedia Article Fetcher"
-    description: str = "Fetches content (summary, full article sections, etc.) from a specified Wikipedia article."
+    description: str = "Fetches content (summary, full article, or section titles) from a specified Wikipedia article."
     args_schema: type[BaseModel] = WikipediaArticleToolInput
 
-    @api_tool(
-        provider="Wikipedia",
-        endpoint="ArticleFetcher",
-        default_return="Error: Failed to fetch Wikipedia content.",
-    )
+    @api_tool(provider="Wikipedia", endpoint="ArticleFetcher")
     def _run(
         self, title: str, action: ArticleAction = ArticleAction.GET_SUMMARY
     ) -> str:
-        """Fetch article content via English Wikipedia REST/MediaWiki API."""
+        """Fetch article content via the English Wikipedia REST/MediaWiki API."""
         encoded_title = urllib.parse.quote(title)
 
-        # 1. Action: Summary
         if action == ArticleAction.GET_SUMMARY:
             url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{encoded_title}"
             response = requests.get(url, timeout=10)
             if response.status_code == 404:
-                return f"Could not find a Wikipedia page for '{title}'. Please check the spelling."
+                return err(f"No Wikipedia page found for '{title}'")
             response.raise_for_status()
-            data = response.json()
-            return data.get("extract", "No extract found.")
-
-        # 2. Action: Full text or sections
-        url = f"https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&titles={encoded_title}&format=json"
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        data = response.json()
-
-        pages = data.get("query", {}).get("pages", {})
-        if not pages or "-1" in pages:
-            return f"Could not find a Wikipedia page for '{title}'."
-
-        page_id = list(pages.keys())[0]
-        page_data = pages[page_id]
-        extract = page_data.get("extract", "")
-
-        if action == ArticleAction.GET_ARTICLE:
-            return extract
+            return ok({"title": title, "summary": response.json().get("extract", "")})
 
         if action == ArticleAction.GET_SECTIONS:
-            # Parse sections simply based on header lines (e.g. == Section Title ==)
-            sections = []
-            current_section = "Intro"
-            current_content = []
+            # Use the parse API's structured section list rather than parsing the
+            # plaintext extract (whose '==' header markers are stripped away).
+            url = (
+                "https://en.wikipedia.org/w/api.php?action=parse&prop=sections"
+                f"&page={encoded_title}&format=json"
+            )
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            if "error" in data:
+                return err(f"No Wikipedia page found for '{title}'")
+            sections = [s.get("line") for s in data.get("parse", {}).get("sections", [])]
+            return ok({"title": title, "sections": sections})
 
-            for line in extract.splitlines():
-                if line.startswith("==") and line.endswith("=="):
-                    if current_content:
-                        sections.append(
-                            {
-                                "title": current_section,
-                                "content": "\n".join(current_content).strip(),
-                            }
-                        )
-                    current_section = line.strip("=").strip()
-                    current_content = []
-                else:
-                    current_content.append(line)
-            if current_content:
-                sections.append(
-                    {
-                        "title": current_section,
-                        "content": "\n".join(current_content).strip(),
-                    }
-                )
-
-            return json.dumps(sections)
-
-        return f"Error: Unknown action '{action}'."
+        # GET_ARTICLE — full plaintext extract.
+        url = (
+            "https://en.wikipedia.org/w/api.php?action=query&prop=extracts"
+            f"&explaintext=1&titles={encoded_title}&format=json"
+        )
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        pages = response.json().get("query", {}).get("pages", {})
+        if not pages or "-1" in pages:
+            return err(f"No Wikipedia page found for '{title}'")
+        page_data = next(iter(pages.values()))
+        return ok({"title": title, "content": page_data.get("extract", "")})

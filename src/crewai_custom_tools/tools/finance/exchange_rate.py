@@ -2,16 +2,17 @@
 
 import logging
 import os
+from typing import List, Optional
+
 import requests
 from crewai.tools import BaseTool
-from pydantic import BaseModel, Field
-from typing import Any, List, Optional
+from pydantic import BaseModel
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
+from crewai_custom_tools.models import ExchangeRateToolInput
 
 logger = logging.getLogger(__name__)
-
-
-from crewai_custom_tools.models import ExchangeRateToolInput
 
 
 class ExchangeRateTool(BaseTool):
@@ -24,22 +25,17 @@ class ExchangeRateTool(BaseTool):
     )
     args_schema: type[BaseModel] = ExchangeRateToolInput
 
-    @api_tool(
-        provider="OpenExchangeRates",
-        endpoint="LatestRates",
-        default_return="Error: Exchange rates request failed.",
-    )
+    @api_tool(provider="OpenExchangeRates", endpoint="LatestRates")
     def _run(
         self, base_currency: str = "USD", target_currencies: Optional[List[str]] = None
     ) -> str:
         """Fetch latest exchange rates."""
         api_key = os.getenv("OPENEXCHANGERATES_API_KEY")
         if not api_key:
-            return "Error: OPENEXCHANGERATES_API_KEY environment variable not set."
+            return err("OPENEXCHANGERATES_API_KEY environment variable not set.")
 
         base_url = "https://openexchangerates.org/api/latest.json"
         params = {"app_id": api_key, "base": base_currency}
-
         if target_currencies:
             params["symbols"] = ",".join(target_currencies)
 
@@ -48,11 +44,13 @@ class ExchangeRateTool(BaseTool):
         data = response.json()
 
         if "error" in data:
-            return f"API Error: {data.get('description', 'Unknown error from OpenExchangeRates API.')}"
+            return err(
+                f"OpenExchangeRates API error: {data.get('description', 'Unknown error')}"
+            )
 
         rates = data.get("rates")
         if not rates:
-            return "Error: Could not retrieve exchange rates from the API response."
+            return err("Could not retrieve exchange rates from the API response.")
 
         if target_currencies:
             output_rates = {
@@ -62,8 +60,8 @@ class ExchangeRateTool(BaseTool):
             output_rates = rates
 
         if not output_rates:
-            return f"Error: No rates found for the specified target currencies: {target_currencies} with base {base_currency}"
+            return err(
+                f"No rates found for target currencies {target_currencies} with base {base_currency}"
+            )
 
-        return (
-            f"Exchange rates based on {data.get('base', base_currency)}: {output_rates}"
-        )
+        return ok({"base": data.get("base", base_currency), "rates": output_rates})

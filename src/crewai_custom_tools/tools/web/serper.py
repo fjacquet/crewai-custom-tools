@@ -2,11 +2,13 @@
 
 import logging
 import os
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ class SerperSearchInput(BaseModel):
 
 
 class SerperSearchTool(BaseTool):
-    """A robust web search tool using Serper API with improved error handling."""
+    """A robust web search tool using the Serper.dev API."""
 
     name: str = "search_internet"
     description: str = (
@@ -27,23 +29,19 @@ class SerperSearchTool(BaseTool):
     )
     args_schema: type[BaseModel] = SerperSearchInput
 
-    @api_tool(
-        provider="Serper",
-        endpoint="Search",
-        default_return="Error performing search: API call failed.",
-    )
+    @api_tool(provider="Serper", endpoint="Search")
     def _run(self, query: str) -> str:
-        """Execute the search query with error handling."""
-        # Validation and normalization (agents sometimes pass dicts)
+        """Execute the search query against Serper.dev."""
+        # Agents sometimes pass a dict instead of a bare string.
         if not isinstance(query, str):
             d = query if isinstance(query, dict) else {}
             query = str(
                 d.get("query") or d.get("search_query") or d.get("description") or query
             )
 
-        api_key = os.getenv("SERPLY_API_KEY") or os.getenv("SERPER_API_KEY")
+        api_key = os.getenv("SERPER_API_KEY")
         if not api_key:
-            return "Error: SERPER_API_KEY environment variable not set"
+            return err("SERPER_API_KEY not configured")
 
         response = requests.post(
             "https://google.serper.dev/search",
@@ -54,12 +52,12 @@ class SerperSearchTool(BaseTool):
         response.raise_for_status()
         data = response.json()
 
-        # Format the results in a user-friendly way
-        result = f"Search results for: {query}\n\n"
-
-        for i, item in enumerate(data.get("organic", [])[:5], 1):
-            result += f"{i}. {item.get('title', 'No title')}\n"
-            result += f"   {item.get('snippet', 'No description')}\n"
-            result += f"   URL: {item.get('link', 'No link')}\n\n"
-
-        return result
+        results = [
+            {
+                "title": item.get("title", "No title"),
+                "snippet": item.get("snippet", ""),
+                "link": item.get("link", ""),
+            }
+            for item in data.get("organic", [])[:5]
+        ]
+        return ok({"query": query, "results": results})

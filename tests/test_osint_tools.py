@@ -2,363 +2,376 @@
 
 import json
 import os
-import pytest
-import requests
-from unittest.mock import MagicMock
+
 from crewai_custom_tools.tools.osint.github import GitHubSearchTool, GitHubOrgSearchTool
 from crewai_custom_tools.tools.osint.email_recon import (
+    EpieosEmailLookupTool,
+    HoleheEmailScannerTool,
     HunterIOTool,
     SerperEmailSearchTool,
 )
 from crewai_custom_tools.tools.osint.person_recon import UsernameSearchTool
 from crewai_custom_tools.tools.osint.domain_recon import CrtShTool, RDAPDomainTool
 from crewai_custom_tools.tools.osint.registers import FrenchRegistryTool
+from crewai_custom_tools.tools.osint.corporate_global import OpenCorporatesSearchTool
 
 
-# ==============================================================================
-# 1. GitHub Tools Tests
-# ==============================================================================
+def _data(result_str):
+    """Assert an ok-envelope and return its data payload."""
+    payload = json.loads(result_str)
+    assert payload["success"] is True, payload
+    return payload["data"]
+
+
+def _error(result_str):
+    """Assert an err-envelope and return its message."""
+    payload = json.loads(result_str)
+    assert payload["success"] is False, payload
+    return payload["error"]
+
+
+def _resp(mocker, *, status=200, json_data=None, text=""):
+    r = mocker.MagicMock()
+    r.status_code = status
+    r.text = text
+    if json_data is not None:
+        r.json.return_value = json_data
+    return r
+
+
+# ============================== GitHub ==============================
 
 
 def test_github_search_success(mocker):
-    """Test successful GitHub repository searching with token."""
     mocker.patch.dict(os.environ, {"GITHUB_TOKEN": "test_gh_token"})
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data={
+                "total_count": 100,
+                "items": [
+                    {
+                        "full_name": "owner/repo-name",
+                        "html_url": "https://github.com/owner/repo-name",
+                        "stargazers_count": 42,
+                        "forks_count": 7,
+                    }
+                ],
+            },
+        ),
+    )
 
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "total_count": 100,
-        "items": [
-            {
-                "full_name": "owner/repo-name",
-                "html_url": "https://github.com/owner/repo-name",
-                "description": "A test repository",
-                "stargazers_count": 42,
-                "forks_count": 7,
-            }
-        ],
-    }
-    mocker.patch("requests.get", return_value=mock_response)
+    data = _data(GitHubSearchTool()._run(query="OSINT", search_type="repositories"))
+    assert data["search_type"] == "repositories"
+    assert data["total_count"] == 100
+    assert data["results"][0]["name"] == "owner/repo-name"
 
-    tool = GitHubSearchTool()
-    result_str = tool._run(query="OSINT", search_type="repositories")
-    result = json.loads(result_str)
 
-    assert result["search_type"] == "repositories"
-    assert result["total_count"] == 100
-    assert result["results"][0]["name"] == "owner/repo-name"
+def test_github_search_missing_key_does_not_drop_all(mocker):
+    """One item missing a key must not KeyError-nuke the whole result set (L8)."""
+    mocker.patch.dict(os.environ, {"GITHUB_TOKEN": "t"})
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data={
+                "total_count": 2,
+                "items": [{"html_url": "u1"}, {"full_name": "a/b", "html_url": "u2"}],
+            },
+        ),
+    )
+    data = _data(GitHubSearchTool()._run(query="x"))
+    assert len(data["results"]) == 2
+    assert data["results"][0]["name"] is None  # missing full_name → None, not a crash
+    assert data["results"][1]["name"] == "a/b"
 
 
 def test_github_org_search_success(mocker):
-    """Test successful GitHub organization intelligence retrieval."""
     mocker.patch.dict(os.environ, {"GITHUB_TOKEN": "test_gh_token"})
+    org = _resp(
+        mocker,
+        json_data={
+            "name": "Acme Org",
+            "login": "acme",
+            "html_url": "https://github.com/acme",
+            "public_repos": 10,
+            "followers": 50,
+            "repos_url": "https://api.github.com/orgs/acme/repos",
+        },
+    )
+    repos = _resp(
+        mocker,
+        json_data=[
+            {"name": "small", "html_url": "u1", "stargazers_count": 3},
+            {"name": "big", "html_url": "u2", "stargazers_count": 99},
+        ],
+    )
+    mocker.patch(
+        "requests.get",
+        side_effect=lambda url, *a, **k: repos if "repos" in url else org,
+    )
 
-    # Mocking first GET to organization profile
-    mock_org_response = mocker.MagicMock()
-    mock_org_response.status_code = 200
-    mock_org_response.json.return_value = {
-        "name": "Acme Org",
-        "login": "acme",
-        "html_url": "https://github.com/acme",
-        "description": "Standard Acme Corp",
-        "public_repos": 10,
-        "followers": 50,
-        "repos_url": "https://api.github.com/orgs/acme/repos",
-    }
-
-    # Mocking second GET to organization repositories list
-    mock_repos_response = mocker.MagicMock()
-    mock_repos_response.status_code = 200
-    mock_repos_response.json.return_value = [
-        {"name": "core-lib", "html_url": "https://github.com/acme/core-lib"}
-    ]
-
-    def side_effect(url, *args, **kwargs):
-        if "repos" in url:
-            return mock_repos_response
-        return mock_org_response
-
-    mocker.patch("requests.get", side_effect=side_effect)
-
-    tool = GitHubOrgSearchTool()
-    result_str = tool._run(org_name="acme")
-    result = json.loads(result_str)
-
-    assert result["name"] == "Acme Org"
-    assert len(result["top_repos"]) == 1
-    assert result["top_repos"][0]["name"] == "core-lib"
+    data = _data(GitHubOrgSearchTool()._run(org_name="acme"))
+    assert data["exists"] is True
+    assert data["name"] == "Acme Org"
+    assert data["top_repos"][0]["name"] == "big"  # sorted by stars desc
 
 
-# ==============================================================================
-# 2. Email Intelligence Tests
-# ==============================================================================
+def test_github_org_search_not_found(mocker):
+    mocker.patch.dict(os.environ, {"GITHUB_TOKEN": "t"})
+    mocker.patch("requests.get", return_value=_resp(mocker, status=404))
+    data = _data(GitHubOrgSearchTool()._run(org_name="nope"))
+    assert data["exists"] is False
+
+
+# ============================== Email ==============================
 
 
 def test_hunter_io_success(mocker):
-    """Test domain professional email lookup via Hunter.io."""
     mocker.patch.dict(os.environ, {"HUNTER_API_KEY": "test_hunter_key"})
-
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "data": {
-            "domain": "acme.com",
-            "emails": [{"value": "admin@acme.com", "first_name": "Admin"}],
-        }
-    }
-    mocker.patch("requests.get", return_value=mock_response)
-
-    tool = HunterIOTool()
-    result_str = tool._run(domain="acme.com")
-    result = json.loads(result_str)
-
-    assert result["domain"] == "acme.com"
-    assert result["emails"][0]["value"] == "admin@acme.com"
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data={"data": {"domain": "acme.com", "emails": [{"value": "a@acme.com"}]}},
+        ),
+    )
+    data = _data(HunterIOTool()._run(domain="acme.com"))
+    assert data["domain"] == "acme.com"
 
 
 def test_serper_email_search(mocker):
-    """Test regex extraction of professional emails from Serper listings."""
     mocker.patch.dict(os.environ, {"SERPER_API_KEY": "test_serper_key"})
-
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "organic": [
-            {
-                "title": "Contact Acme",
-                "snippet": "Send a message to info@acme.com or sales@acme.com for inquiries.",
-                "link": "https://acme.com/contact",
-            }
-        ]
-    }
-    mocker.patch("requests.post", return_value=mock_response)
-
-    tool = SerperEmailSearchTool()
-    result_str = tool._run(query="Acme")
-    result = json.loads(result_str)
-
-    assert "emails" in result[0]
-    assert "info@acme.com" in result[0]["emails"]
-    assert "sales@acme.com" in result[0]["emails"]
+    post = mocker.patch(
+        "requests.post",
+        return_value=_resp(
+            mocker,
+            json_data={
+                "organic": [
+                    {"title": "Contact", "snippet": "info@acme.com or sales@acme.com", "link": "x"}
+                ]
+            },
+        ),
+    )
+    data = _data(SerperEmailSearchTool()._run(query="Acme Corp"))
+    assert "info@acme.com" in data["emails"]
+    assert "sales@acme.com" in data["emails"]
+    # Balanced-quote query: the domain guess sits inside the quotes.
+    assert post.call_args.kwargs["json"]["q"] == '"acme corp" "@acmecorp" email'
 
 
-def test_epieos_email_lookup_keyless_success(mocker):
-    """Test Epieos reverse lookup keyless scraping fallback."""
+def test_serper_email_search_only_serper_key(mocker):
+    """A stray SERPAPI key must NOT be used (M3/L10)."""
+    mocker.patch.dict(os.environ, {"SERPAPI_API_KEY": "wrong"}, clear=True)
+    assert "SERPER_API_KEY" in _error(SerperEmailSearchTool()._run(query="x"))
+
+
+def test_epieos_keyless_unavailable(mocker):
+    """Keyless Epieos now returns an honest error, not success-with-empty-data (H9)."""
     mocker.patch.dict(os.environ, {}, clear=True)
-
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.text = '<html><body><a href="https://maps.google.com/reviews/123">Review</a></body></html>'
-    mocker.patch("requests.get", return_value=mock_response)
-
-    from crewai_custom_tools.tools.osint.email_recon import EpieosEmailLookupTool
-
-    tool = EpieosEmailLookupTool()
-    result_str = tool._run(email="test@gmail.com")
-    result = json.loads(result_str)
-
-    assert result["success"] is True
-    assert result["provider"] == "keyless_fallback"
-    assert "https://maps.google.com/reviews/123" in result["associated_profiles"]
+    assert "EPIEOS_API_KEY" in _error(EpieosEmailLookupTool()._run(email="a@b.com"))
 
 
-def test_epieos_email_lookup_api_success(mocker):
-    """Test Epieos reverse lookup using official API key."""
-    mocker.patch.dict(os.environ, {"EPIEOS_API_KEY": "test_epieos_key"})
-
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "success": True,
-        "email": "test@gmail.com",
-        "data": {"google": {"name": "Test User"}},
-    }
-    mocker.patch("requests.get", return_value=mock_response)
-
-    from crewai_custom_tools.tools.osint.email_recon import EpieosEmailLookupTool
-
-    tool = EpieosEmailLookupTool()
-    result_str = tool._run(email="test@gmail.com")
-    result = json.loads(result_str)
-
-    assert result["success"] is True
-    assert result["data"]["google"]["name"] == "Test User"
+def test_epieos_api_success(mocker):
+    mocker.patch.dict(os.environ, {"EPIEOS_API_KEY": "k"})
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(mocker, json_data={"email": "a@b.com", "data": {"google": {"name": "T"}}}),
+    )
+    data = _data(EpieosEmailLookupTool()._run(email="a@b.com"))
+    assert data["data"]["google"]["name"] == "T"
 
 
-def test_holehe_email_platform_scanner_success(mocker):
-    """Test Holehe email platform checker mocking the async trio execution."""
-
-    async def mock_run_scan():
-        return [
-            {"name": "github", "exists": True, "rateLimit": False, "error": False},
-            {"name": "twitter", "exists": False, "rateLimit": False, "error": False},
-        ]
-
+def test_holehe_scan_success(mocker):
     mocker.patch(
         "trio.run",
         return_value=[
             {"name": "github", "exists": True, "rateLimit": False, "error": False},
             {"name": "twitter", "exists": False, "rateLimit": False, "error": False},
+            {"name": "netflix", "exists": None, "rateLimit": True, "error": False},
         ],
     )
-
-    from crewai_custom_tools.tools.osint.email_recon import HoleheEmailScannerTool
-
-    tool = HoleheEmailScannerTool()
-    result_str = tool._run(email="test@gmail.com")
-    result = json.loads(result_str)
-
-    assert len(result) == 1
-    assert result[0]["name"] == "github"
-    assert result[0]["exists"] is True
+    data = _data(HoleheEmailScannerTool()._run(email="a@b.com"))
+    assert [h["name"] for h in data["found"]] == ["github"]
+    assert data["undetermined"][0]["name"] == "netflix"  # rate-limited surfaced (M10)
+    assert data["checked"] == 3
 
 
-# ==============================================================================
-# 3. Username Recon and Domain Recon Tests
-# ==============================================================================
+def test_holehe_scan_import_failure_is_error(mocker):
+    mocker.patch("trio.run", side_effect=ImportError("holehe missing"))
+    assert "Holehe scan failed" in _error(HoleheEmailScannerTool()._run(email="a@b.com"))
 
 
-def test_username_search_success(mocker):
-    """Test pure-Python Sherlock-style username scanning."""
+# ============================== Username ==============================
 
-    # Mocking requests.head so that only GitHub exists for this user
-    def side_effect(url, *args, **kwargs):
-        mock_resp = mocker.MagicMock()
+
+def test_username_search_found_and_unknown(mocker):
+    """200→found, 404→not_found, 403→unknown (H7)."""
+
+    def side_effect(url, *a, **k):
         if "github.com" in url:
-            mock_resp.status_code = 200
-        else:
-            mock_resp.status_code = 404
-        return mock_resp
+            return _resp(mocker, status=200, text="<html>profile</html>")
+        if "reddit.com" in url:
+            return _resp(mocker, status=403)
+        return _resp(mocker, status=404)
 
-    mocker.patch("requests.head", side_effect=side_effect)
+    mocker.patch("requests.get", side_effect=side_effect)
+    data = _data(UsernameSearchTool()._run(username="johndoe"))
 
-    tool = UsernameSearchTool()
-    result_str = tool._run(username="johndoe")
-    result = json.loads(result_str)
+    assert [f["platform"] for f in data["found"]] == ["GitHub"]
+    assert [u["platform"] for u in data["unknown"]] == ["Reddit"]
+    assert data["checked"] == 6
 
-    assert len(result) == 1
-    assert result[0]["platform"] == "GitHub"
-    assert result[0]["status"] == "Found"
+
+def test_username_search_soft_404_marker(mocker):
+    """A 200 login-wall/soft-404 with an absent-marker is NOT a false positive."""
+
+    def side_effect(url, *a, **k):
+        if "reddit.com" in url:
+            return _resp(mocker, status=200, text="Sorry, nobody on Reddit goes by that name.")
+        return _resp(mocker, status=404)
+
+    mocker.patch("requests.get", side_effect=side_effect)
+    data = _data(UsernameSearchTool()._run(username="ghost"))
+    assert data["found"] == []
+
+
+def test_username_search_rejects_spaces():
+    assert "Invalid username" in _error(UsernameSearchTool()._run(username="a b"))
+
+
+# ============================== Domain ==============================
 
 
 def test_crt_sh_subdomain_recon(mocker):
-    """Test subdomain certificate harvesting via crt.sh."""
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [
-        {"name_value": "api.acme.com\nwww.acme.com"},
-        {"name_value": "*.acme.com"},  # Will be ignored as wildcard
-    ]
-    mocker.patch("requests.get", return_value=mock_response)
-
-    tool = CrtShTool()
-    result_str = tool._run(domain="acme.com")
-    result = json.loads(result_str)
-
-    assert len(result) == 2
-    assert "api.acme.com" in result
-    assert "www.acme.com" in result
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data=[
+                {"name_value": "api.acme.com\nwww.acme.com"},
+                {"name_value": "*.acme.com"},
+            ],
+        ),
+    )
+    data = _data(CrtShTool()._run(domain="acme.com"))
+    assert "api.acme.com" in data and "www.acme.com" in data
+    assert not any(d.startswith("*.") for d in data)
 
 
 def test_rdap_domain_recon(mocker):
-    """Test structured domain registration WHOIS details fetching via whodap."""
-    mock_response = mocker.MagicMock()
-    mock_response.to_whois_dict.return_value = {
+    whois = mocker.MagicMock()
+    whois.to_whois_dict.return_value = {
         "registrar_name": "MarkMonitor, Inc.",
         "created_date": "1997-09-15T04:00:00Z",
         "nameservers": ["ns1.google.com", "ns2.google.com"],
     }
-    mocker.patch("whodap.lookup_domain", return_value=mock_response)
+    lookup = mocker.patch("whodap.lookup_domain", return_value=whois)
 
-    tool = RDAPDomainTool()
-    result_str = tool._run(domain="google.com")
-    result = json.loads(result_str)
-
-    assert result["domain"] == "google.com"
-    assert result["registrar"] == "MarkMonitor, Inc."
-    assert "ns1.google.com" in result["nameservers"]
+    data = _data(RDAPDomainTool()._run(domain="www.google.com"))
+    assert data["domain"] == "google.com"  # subdomain stripped
+    assert data["registrar"] == "MarkMonitor, Inc."
+    lookup.assert_called_once_with("google", "com")
 
 
-# ==============================================================================
-# 4. French Public corporate registries Tests
-# ==============================================================================
+def test_rdap_multi_label_suffix(mocker):
+    """.co.uk must not be mangled by a naive last-dot split (M1)."""
+    whois = mocker.MagicMock()
+    whois.to_whois_dict.return_value = {}
+    lookup = mocker.patch("whodap.lookup_domain", return_value=whois)
+
+    data = _data(RDAPDomainTool()._run(domain="www.example.co.uk"))
+    assert data["domain"] == "example.co.uk"
+    lookup.assert_called_once_with("example.co", "uk")
+
+
+# ============================== Registers ==============================
 
 
 def test_french_registry_search_success(mocker):
-    """Test SIREN querying of public recherche-entreprises French API."""
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "results": [
-            {
-                "siren": "123456789",
-                "nom_complet": "ACME FRANCE SAS",
-                "activite_principale": "62.01Z",
-                "tranche_effectif_salarie": "11",
-                "etat_administratif": "A",
-                "siege": {
-                    "siret": "12345678900010",
-                    "numero_voie": "10",
-                    "type_voie": "RUE",
-                    "libelle_voie": "DE LA PAIX",
-                    "code_postal": "75002",
-                    "libelle_commune": "PARIS",
-                },
-                "dirigeants": [{"prenoms": "Jean", "nom": "Dupont"}],
-                "complements": {"site_web": "https://acme.fr"},
-            }
-        ]
-    }
-    mocker.patch("requests.get", return_value=mock_response)
-
-    tool = FrenchRegistryTool()
-    result_str = tool._run(query="123456789")
-    result = json.loads(result_str)
-
-    assert result["siren"] == "123456789"
-    assert result["company_name"] == "ACME FRANCE SAS"
-    assert result["address"] == "10 RUE DE LA PAIX 75002 PARIS"
-    assert "Jean Dupont" in result["officers"]
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data={
+                "results": [
+                    {
+                        "siren": "123456789",
+                        "nom_complet": "ACME FRANCE SAS",
+                        "etat_administratif": "A",
+                        "siege": {
+                            "siret": "12345678900010",
+                            "numero_voie": "10",
+                            "type_voie": "RUE",
+                            "libelle_voie": "DE LA PAIX",
+                            "code_postal": "75002",
+                            "libelle_commune": "PARIS",
+                        },
+                        "dirigeants": [{"prenoms": "Jean", "nom": "Dupont"}],
+                        "complements": {"site_web": "https://acme.fr"},
+                    }
+                ]
+            },
+        ),
+    )
+    data = _data(FrenchRegistryTool()._run(query="123456789"))
+    assert data["siren"] == "123456789"
+    assert data["address"] == "10 RUE DE LA PAIX 75002 PARIS"
+    assert "Jean Dupont" in data["officers"]
 
 
-# ==============================================================================
-# 5. OpenCorporates Global Search Tests
-# ==============================================================================
+def test_french_registry_keeps_corporate_officer(mocker):
+    """personne-morale dirigeants (denomination only) must not be dropped (L6)."""
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data={
+                "results": [
+                    {
+                        "siren": "1",
+                        "nom_complet": "HOLDCO",
+                        "dirigeants": [{"denomination": "PARENT HOLDING SAS"}],
+                    }
+                ]
+            },
+        ),
+    )
+    data = _data(FrenchRegistryTool()._run(query="1"))
+    assert "PARENT HOLDING SAS" in data["officers"]
+
+
+# ============================== OpenCorporates ==============================
 
 
 def test_opencorporates_search_success(mocker):
-    """Test global corporate registration details lookup via OpenCorporates API."""
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "results": {
-            "companies": [
-                {
-                    "company": {
-                        "name": "ACME GLOBAL LTD",
-                        "company_number": "1234567",
-                        "jurisdiction_code": "gb",
-                        "incorporation_date": "2010-05-20",
-                        "current_status": "Active",
-                        "opencorporates_url": "https://opencorporates.com/companies/gb/1234567",
-                        "registry_url": "https://companieshouse.gov.uk/1234567",
-                        "registered_address_in_full": "123 ACME WAY, LONDON",
-                    }
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data={
+                "results": {
+                    "companies": [
+                        {
+                            "company": {
+                                "name": "ACME GLOBAL LTD",
+                                "company_number": "1234567",
+                                "jurisdiction_code": "gb",
+                            }
+                        }
+                    ]
                 }
-            ]
-        }
-    }
-    mocker.patch("requests.get", return_value=mock_response)
-
-    from crewai_custom_tools.tools.osint.corporate_global import (
-        OpenCorporatesSearchTool,
+            },
+        ),
     )
+    data = _data(OpenCorporatesSearchTool()._run(query="ACME", jurisdiction_code="gb"))
+    assert data["total_results"] == 1
+    assert data["companies"][0]["name"] == "ACME GLOBAL LTD"
 
-    tool = OpenCorporatesSearchTool()
-    result_str = tool._run(query="ACME", jurisdiction_code="gb")
-    result = json.loads(result_str)
 
-    assert result["query"] == "ACME"
-    assert result["total_results"] == 1
-    assert result["companies"][0]["name"] == "ACME GLOBAL LTD"
-    assert result["companies"][0]["jurisdiction_code"] == "gb"
+def test_opencorporates_anonymous_rejected(mocker):
+    """A 401/403 (no token) surfaces a clear error, not an empty result (H9)."""
+    mocker.patch.dict(os.environ, {}, clear=True)
+    mocker.patch("requests.get", return_value=_resp(mocker, status=403))
+    assert "OPENCORPORATES_API_KEY" in _error(OpenCorporatesSearchTool()._run(query="x"))

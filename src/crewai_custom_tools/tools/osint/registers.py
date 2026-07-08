@@ -1,12 +1,11 @@
 """French Corporate Registries reconnaissance tools."""
 
-import json
 import logging
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, List, Optional
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ class FrenchRegistryTool(BaseTool):
     description: str = "Searches the official French corporate register for company metadata, SIREN, address, status, and corporate officers."
     args_schema: type[BaseModel] = RegistrySearchInput
 
-    @api_tool(provider="RechercheEntreprises", endpoint="Search", default_return="{}")
+    @api_tool(provider="RechercheEntreprises", endpoint="Search")
     def _run(self, query: str) -> str:
         """Fetch company metadata from the public French api.gouv.fr register."""
         url = "https://recherche-entreprises.api.gouv.fr/search"
@@ -41,11 +40,7 @@ class FrenchRegistryTool(BaseTool):
 
         results = payload.get("results") or []
         if not results:
-            return json.dumps(
-                {
-                    "error": f"No French corporate registry results found for query: {query}"
-                }
-            )
+            return err(f"No French corporate registry results found for query: {query}")
 
         # Match and format the top result
         result = results[0]
@@ -62,10 +57,13 @@ class FrenchRegistryTool(BaseTool):
         ]
         address = " ".join(str(part) for part in addr_parts if part) or None
 
-        # Gather officers (dirigeants)
+        # Gather officers (dirigeants). Corporate officers (personne morale) carry a
+        # `denomination` instead of prenoms/nom — include them rather than dropping.
         officers = []
         for d in result.get("dirigeants") or []:
             name = f"{d.get('prenoms', '')} {d.get('nom', '')}".strip()
+            if not name:
+                name = (d.get("denomination") or "").strip()
             if name:
                 officers.append(name)
 
@@ -81,4 +79,4 @@ class FrenchRegistryTool(BaseTool):
             "website": complements.get("site_web"),
             "source": "French official recherche-entreprises register (DINUM)",
         }
-        return json.dumps(company_info)
+        return ok(company_info)

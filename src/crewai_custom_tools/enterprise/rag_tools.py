@@ -1,11 +1,12 @@
 """RAG Vector database search and persistence tools."""
 
-import json
 import logging
+
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, Optional
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import ok
 
 logger = logging.getLogger(__name__)
 
@@ -26,31 +27,14 @@ class SaveToRagTool(BaseTool):
     description: str = "Persist arbitrary text chunks so they can be retrieved and searched later via RAG query tools."
     args_schema: type[BaseModel] = SaveToRagInput
 
-    @api_tool(
-        provider="RAG",
-        endpoint="StoreText",
-        default_return="Error: RAG storage failed.",
-    )
+    @api_tool(provider="RAG", endpoint="StoreText")
     def _run(self, text: str) -> str:
-        """Add a text block to the local vector database."""
-        try:
-            from crewai_tools import RagTool
+        """Add a text block to the local vector database.
 
-            # Dynamically instantiate standard RagTool
-            rag = RagTool()
-            rag.add(text, data_type="text")
-            return json.dumps(
-                {
-                    "status": "success",
-                    "message": "Content successfully stored in knowledge base.",
-                }
-            )
-        except Exception as e:
-            logger.warning(f"RAG storage fallback activated. Error: {e}")
-            return json.dumps(
-                {
-                    "status": "success",
-                    "message": "Mock-stored: RAG vector database is inactive, but text parsed successfully.",
-                    "preview": text[:100],
-                }
-            )
+        Any failure (missing backend, import error, add() error) propagates to
+        @api_tool and becomes an error envelope — we never report a fake success (H8).
+        """
+        from crewai_tools import RagTool
+
+        RagTool().add(text, data_type="text")
+        return ok({"stored": True, "preview": text[:100]})

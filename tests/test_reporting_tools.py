@@ -1,138 +1,107 @@
-"""Mock-based unit tests for unified HTML and PDF reporting tools."""
+"""Tests for the HTML and PDF reporting tools.
+
+These render the REAL bundled templates (no mocked Jinja Environment) so that a
+context/variable mismatch surfaces as a failing test instead of a silently empty
+or error report.
+"""
 
 import json
-import os
+
 import pytest
-from unittest.mock import MagicMock
+
 from crewai_custom_tools.reporting.html_generator import RenderReportTool, validate_html
 from crewai_custom_tools.reporting.pdf_generator import HtmlToPdfTool
 from crewai_custom_tools.reporting.template_renderers import (
-    PestelReportRenderer,
     FinancialReportRenderer,
+    PestelReportRenderer,
 )
 
+SECTIONS = [
+    {"heading": "Political Landscape", "content": "Regulatory stability is improving."},
+    {"heading": "Revenue", "content": "10M USD in Q2."},
+]
 
-# ==============================================================================
-# 1. HTML Generator and Validator Tests
-# ==============================================================================
+
+def _html(result: str) -> str:
+    """Assert the result is a success envelope and return the rendered HTML."""
+    payload = json.loads(result)
+    assert payload["success"] is True, payload
+    assert payload["error"] is None
+    return payload["data"]
 
 
 def test_html_validator():
-    """Test HTML structural validation."""
-    valid_html = (
-        "<html><head><title>Test</title></head><body><h1>Hello</h1></body></html>"
-    )
-    invalid_html = "<html><head><title>Test</title></head></html>"  # Missing <body>
+    """HTML structural validation requires a <body> element."""
+    valid_html = "<html><head><title>T</title></head><body><h1>Hi</h1></body></html>"
+    invalid_html = "<html><head><title>T</title></head></html>"
 
     assert validate_html(valid_html) is True
-
     with pytest.raises(ValueError, match="Missing required <body> element"):
         validate_html(invalid_html, raise_on_error=True)
 
 
-def test_render_report_tool_success(mocker):
-    """Test successful Jinja2 HTML rendering with report_template."""
-    # Mock Jinja2 Template and Environment
-    mock_template = mocker.MagicMock()
-    mock_template.render.return_value = "<html><body><h1>Acme Report</h1></body></html>"
+@pytest.mark.parametrize(
+    "tool_cls",
+    [RenderReportTool, PestelReportRenderer, FinancialReportRenderer],
+)
+def test_renderer_produces_nonempty_report_with_sections(tool_cls):
+    """Every renderer returns non-empty HTML in which the sections are visible (H2/H3)."""
+    html = _html(tool_cls()._run(title="Acme Report", sections=SECTIONS))
 
-    mock_env = mocker.MagicMock()
-    mock_env.get_template.return_value = mock_template
+    assert "Acme Report" in html
+    # The provided section headings and content must actually appear in the output.
+    assert "Political Landscape" in html
+    assert "Regulatory stability is improving." in html
+    assert "Revenue" in html
 
-    # Patch Environment creation in html_generator
+
+@pytest.mark.parametrize(
+    "tool_cls",
+    [RenderReportTool, PestelReportRenderer, FinancialReportRenderer],
+)
+def test_renderer_escapes_untrusted_section_content(tool_cls):
+    """A <script> in section content is escaped, never emitted raw (M8 stored XSS)."""
+    malicious = [{"heading": "Injected", "content": "<script>alert('xss')</script>"}]
+    html = _html(tool_cls()._run(title="Sec", sections=malicious))
+
+    assert "<script>alert('xss')</script>" not in html
+    assert "&lt;script&gt;" in html
+
+
+def test_financial_renderer_uses_data_template():
+    """FinancialReportRenderer renders the data template (timestamp block present)."""
+    html = _html(FinancialReportRenderer()._run(title="Q2", sections=SECTIONS))
+    assert "Generated on:" in html  # data_report_template header
+
+
+def test_html_to_pdf_success_envelope(mocker):
+    """A successful conversion returns ok({pdf_path})."""
+    mocker.patch("crewai_custom_tools.reporting.pdf_generator.WEASYPRINT_AVAILABLE", True)
+    mock_html = mocker.MagicMock()
     mocker.patch(
-        "crewai_custom_tools.reporting.html_generator.Environment",
-        return_value=mock_env,
+        "crewai_custom_tools.reporting.pdf_generator.HTML", return_value=mock_html
     )
-
-    tool = RenderReportTool(template_dir="./templates")
-    result = tool._run(
-        title="Acme Report",
-        sections=[{"heading": "Section 1", "content": "Section 1 Content"}],
-        citations=["http://acme.com"],
-    )
-
-    assert "Acme Report" in result
-    mock_template.render.assert_called_once()
-
-
-# ==============================================================================
-# 2. PDF Generator and Specialized Template Tests
-# ==============================================================================
-
-
-def test_html_to_pdf_conversion_success(mocker):
-    """Test that HtmlToPdfTool triggers WeasyPrint rendering upon valid inputs."""
-    mocker.patch(
-        "crewai_custom_tools.reporting.pdf_generator.WEASYPRINT_AVAILABLE", True
-    )
-
-    # Mock WeasyPrint HTML class and write_pdf
-    mock_html_class = mocker.MagicMock()
-    mocker.patch(
-        "crewai_custom_tools.reporting.pdf_generator.HTML", return_value=mock_html_class
-    )
-
-    # Mock filesystem operations
     mocker.patch("os.path.exists", return_value=True)
     mocker.patch("os.makedirs")
 
-    tool = HtmlToPdfTool()
-    result = tool._run(
-        html_file_path="/path/to/report.html", output_pdf_path="/path/to/output.pdf"
+    result = HtmlToPdfTool()._run(
+        html_file_path="/path/report.html", output_pdf_path="/path/out.pdf"
     )
+    payload = json.loads(result)
+    assert payload["success"] is True
+    assert payload["data"]["pdf_path"] == "/path/out.pdf"
+    mock_html.write_pdf.assert_called_once_with("/path/out.pdf")
 
-    assert "Successfully converted" in result
-    mock_html_class.write_pdf.assert_called_once_with("/path/to/output.pdf")
 
+def test_html_to_pdf_missing_input_returns_error_envelope(mocker):
+    """A missing input file returns an error envelope, not a success string."""
+    mocker.patch("crewai_custom_tools.reporting.pdf_generator.WEASYPRINT_AVAILABLE", True)
+    mocker.patch("os.path.exists", return_value=False)
 
-def test_pestel_report_renderer(mocker):
-    """Test that PestelReportRenderer forces professional template rendering."""
-    # Mock Jinja2 Template and Environment
-    mock_template = mocker.MagicMock()
-    mock_template.render.return_value = (
-        "<html><body><h1>PESTEL Analysis</h1></body></html>"
+    payload = json.loads(
+        HtmlToPdfTool()._run(
+            html_file_path="/nope.html", output_pdf_path="/out.pdf"
+        )
     )
-
-    mock_env = mocker.MagicMock()
-    mock_env.get_template.return_value = mock_template
-
-    mocker.patch(
-        "crewai_custom_tools.reporting.html_generator.Environment",
-        return_value=mock_env,
-    )
-
-    tool = PestelReportRenderer(template_dir="./templates")
-    result = tool._run(
-        title="PESTEL Analysis",
-        sections=[{"heading": "Political", "content": "Political stability"}],
-    )
-
-    assert "PESTEL Analysis" in result
-    mock_env.get_template.assert_called_once_with("professional_report_template.html")
-
-
-def test_financial_report_renderer(mocker):
-    """Test that FinancialReportRenderer forces data template rendering."""
-    # Mock Jinja2 Template and Environment
-    mock_template = mocker.MagicMock()
-    mock_template.render.return_value = (
-        "<html><body><h1>Q2 Financial Report</h1></body></html>"
-    )
-
-    mock_env = mocker.MagicMock()
-    mock_env.get_template.return_value = mock_template
-
-    mocker.patch(
-        "crewai_custom_tools.reporting.html_generator.Environment",
-        return_value=mock_env,
-    )
-
-    tool = FinancialReportRenderer(template_dir="./templates")
-    result = tool._run(
-        title="Q2 Financial Report",
-        sections=[{"heading": "Revenue", "content": "10M USD"}],
-    )
-
-    assert "Q2 Financial Report" in result
-    mock_env.get_template.assert_called_once_with("data_report_template.html")
+    assert payload["success"] is False
+    assert "not found" in payload["error"]

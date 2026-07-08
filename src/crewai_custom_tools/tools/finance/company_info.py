@@ -1,11 +1,11 @@
 """Yahoo Finance Company Info Tools."""
 
-import json
 import logging
 import yfinance as yf
 from crewai.tools import BaseTool
 from pydantic import BaseModel
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import ok
 from crewai_custom_tools.models.finance_models import GetCompanyInfoInput
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class YahooFinanceCompanyInfoTool(BaseTool):
     )
     args_schema: type[BaseModel] = GetCompanyInfoInput
 
-    @api_tool(provider="YahooFinance", endpoint="CompanyInfo", default_return="{}")
+    @api_tool(provider="YahooFinance", endpoint="CompanyInfo")
     def _run(self, ticker: str) -> str:
         """Execute the Yahoo Finance company info lookup."""
         ticker_data = yf.Ticker(ticker)
@@ -69,4 +69,4 @@ class YahooFinanceCompanyInfoTool(BaseTool):
         if "valuation_metrics" in result and not result["valuation_metrics"]:
             del result["valuation_metrics"]
 
-        return json.dumps(result)
+        return ok(result)

@@ -2,13 +2,13 @@
 Tool for fetching Yahoo Finance Ticker Information.
 """
 
-import json
-
 import yfinance as yf
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from crewai_custom_tools.config.cache import get_cache_manager
+from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 
 
 class GetTickerInfoInput(BaseModel):
@@ -35,6 +35,7 @@ class YahooFinanceTickerInfoTool(BaseTool):
     )
     args_schema: type[BaseModel] = GetTickerInfoInput
 
+    @api_tool(provider="YahooFinance", endpoint="TickerInfo")
     def _run(self, ticker: str) -> str:
         """Execute the Yahoo Finance ticker info lookup."""
         cache = get_cache_manager()
@@ -45,38 +46,36 @@ class YahooFinanceTickerInfoTool(BaseTool):
         if cached_result is not None:
             return str(cached_result)
 
-        try:
-            ticker_data = yf.Ticker(ticker)
-            info = ticker_data.info
+        info = yf.Ticker(ticker).info
 
-            # Format a clean subset of the most important information
-            result = {
-                "symbol": ticker,
-                "name": info.get("shortName", "N/A"),
-                "currency": info.get("currency", "N/A"),
-                "current_price": info.get(
-                    "currentPrice", info.get("regularMarketPrice", "N/A")
-                ),
-                "previous_close": info.get("previousClose", "N/A"),
-                "market_cap": info.get("marketCap", "N/A"),
-                "volume": info.get("volume", "N/A"),
-                "average_volume": info.get("averageVolume", "N/A"),
-                "52wk_high": info.get("fiftyTwoWeekHigh", "N/A"),
-                "52wk_low": info.get("fiftyTwoWeekLow", "N/A"),
-                "pe_ratio": info.get("trailingPE", "N/A"),
-                "dividend_yield": info.get("dividendYield", "N/A"),
-                "sector": info.get("sector", "N/A"),
-                "industry": info.get("industry", "N/A"),
-            }
+        # Format a clean subset of the most important information
+        fields = {
+            "symbol": ticker,
+            "name": info.get("shortName", "N/A"),
+            "currency": info.get("currency", "N/A"),
+            "current_price": info.get(
+                "currentPrice", info.get("regularMarketPrice", "N/A")
+            ),
+            "previous_close": info.get("previousClose", "N/A"),
+            "market_cap": info.get("marketCap", "N/A"),
+            "volume": info.get("volume", "N/A"),
+            "average_volume": info.get("averageVolume", "N/A"),
+            "52wk_high": info.get("fiftyTwoWeekHigh", "N/A"),
+            "52wk_low": info.get("fiftyTwoWeekLow", "N/A"),
+            "pe_ratio": info.get("trailingPE", "N/A"),
+            "forward_pe": info.get("forwardPE", "N/A"),
+            "beta": info.get("beta", "N/A"),
+            "dividend_yield": info.get("dividendYield", "N/A"),
+            "sector": info.get("sector", "N/A"),
+            "industry": info.get("industry", "N/A"),
+        }
+        result = {k: v for k, v in fields.items() if v != "N/A"}
 
-            # Remove N/A values for cleaner output
-            final_result = {k: v for k, v in result.items() if v != "N/A"}
-            json_result = json.dumps(final_result)
+        # Only "symbol" survived => yfinance returned nothing usable (invalid/delisted).
+        # Signal a failure and do NOT cache it, so a transient miss can recover.
+        if set(result) <= {"symbol"}:
+            return err(f"No data for ticker {ticker}")
 
-            # Cache the result
-            cache.set(cache_key, json_result)
-
-            return json_result
-        except Exception as e:
-            error_msg = f"Error fetching ticker info for {ticker}: {str(e)}"
-            return json.dumps({"error": error_msg, "ticker": ticker})
+        envelope = ok(result)
+        cache.set(cache_key, envelope)
+        return envelope

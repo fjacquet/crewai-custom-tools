@@ -1,13 +1,15 @@
 """Yahoo Finance Ticker History and ETF Holdings Tools."""
 
-import json
 import logging
 from contextlib import suppress
+
 import pandas as pd
 import yfinance as yf
 from crewai.tools import BaseTool
 from pydantic import BaseModel
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import ok
 from crewai_custom_tools.models.finance_models import (
     GetETFHoldingsInput,
     GetTickerHistoryInput,
@@ -26,40 +28,41 @@ class YahooFinanceETFHoldingsTool(BaseTool):
     )
     args_schema: type[BaseModel] = GetETFHoldingsInput
 
-    @api_tool(provider="YahooFinance", endpoint="ETFHoldings", default_return="{}")
+    @api_tool(provider="YahooFinance", endpoint="ETFHoldings")
     def _run(self, ticker: str) -> str:
-        """Execute the Yahoo Finance ETF holdings lookup."""
+        """Execute the Yahoo Finance ETF holdings lookup via the funds_data API."""
         etf_data = yf.Ticker(ticker)
-
-        # Get basic ETF info
         info = etf_data.info
 
-        # Get holdings if available
-        holdings = []
+        # ETF holdings/sectors live under funds_data (get_holdings/get_sector_data do
+        # NOT exist in yfinance and previously failed silently). funds_data is absent
+        # for non-fund tickers, so guard each access.
+        holdings: list[dict] = []
+        sector_breakdown: dict[str, float] = {}
+        funds_data = None
         with suppress(Exception):
-            holdings_data = etf_data.get_holdings()
-            if holdings_data is not None and not holdings_data.empty:
-                for symbol, row in holdings_data.iterrows():
-                    holding = {
-                        "symbol": symbol,
-                        "name": row.get("Name")
-                        if not pd.isna(row.get("Name"))
-                        else "N/A",
-                        "weight": row.get("% Assets")
-                        if not pd.isna(row.get("% Assets"))
-                        else "N/A",
-                        "shares": row.get("Shares")
-                        if not pd.isna(row.get("Shares"))
-                        else "N/A",
-                    }
-                    holdings.append(holding)
+            funds_data = etf_data.get_funds_data()
 
-        # Get sector breakdown if available
-        sector_data = {}
-        with suppress(Exception):
-            sector_data = etf_data.get_sector_data()
-            if isinstance(sector_data, dict):
-                sector_data = {k: float(v) for k, v in sector_data.items()}
+        if funds_data is not None:
+            with suppress(Exception):
+                top = funds_data.top_holdings
+                if top is not None and not top.empty:
+                    for symbol, row in top.iterrows():
+                        name = row.get("Name")
+                        weight = row.get("Holding Percent")
+                        holdings.append(
+                            {
+                                "symbol": str(symbol),
+                                "name": str(name) if not pd.isna(name) else "N/A",
+                                "weight": float(weight)
+                                if not pd.isna(weight)
+                                else "N/A",
+                            }
+                        )
+            with suppress(Exception):
+                weights = funds_data.sector_weightings
+                if isinstance(weights, dict):
+                    sector_breakdown = {k: float(v) for k, v in weights.items()}
 
         result = {
             "symbol": ticker,
@@ -67,12 +70,13 @@ class YahooFinanceETFHoldingsTool(BaseTool):
             "asset_class": info.get("categoryName", "N/A"),
             "expense_ratio": info.get("annualReportExpenseRatio", "N/A"),
             "aum": info.get("totalAssets", "N/A"),
-            "top_holdings": holdings[:10],  # Top 10 holdings
-            "sector_breakdown": sector_data,
+            "top_holdings": holdings[:10],
+            "sector_breakdown": sector_breakdown,
         }
 
-        final_result = {k: v for k, v in result.items() if v != "N/A" and v != []}
-        return json.dumps(final_result)
+        # Strip empty/placeholder values (including an empty sector_breakdown dict).
+        cleaned = {k: v for k, v in result.items() if v not in ("N/A", [], {})}
+        return ok(cleaned)
 
 
 class YahooFinanceHistoryTool(BaseTool):
@@ -85,16 +89,15 @@ class YahooFinanceHistoryTool(BaseTool):
     )
     args_schema: type[BaseModel] = GetTickerHistoryInput
 
-    @api_tool(provider="YahooFinance", endpoint="History", default_return="{}")
+    @api_tool(provider="YahooFinance", endpoint="History")
     def _run(self, ticker: str, period: str = "1y", interval: str = "1d") -> str:
         """Execute the Yahoo Finance historical data lookup."""
         ticker_data = yf.Ticker(ticker)
         history = ticker_data.history(period=period, interval=interval)
 
         if history.empty:
-            return json.dumps({"error": f"No historical data available for {ticker}"})
+            return ok({"symbol": ticker, "history": [], "message": f"No historical data for {ticker}"})
 
-        # Format the data for easier consumption
         history_list = []
         for date, row in history.iterrows():
             history_list.append(
@@ -116,9 +119,17 @@ class YahooFinanceHistoryTool(BaseTool):
                 }
             )
 
-        # Add summary statistics
         latest = history_list[-1] if history_list else {}
         earliest = history_list[0] if history_list else {}
+        earliest_close = earliest.get("close")
+        latest_close = latest.get("close")
+
+        # Divide by the REAL earliest close; a genuine 0/None earliest yields None
+        # rather than a fabricated percentage from dividing by 1.
+        if earliest_close and latest_close is not None:
+            price_change_percent = round((latest_close / earliest_close - 1) * 100, 2)
+        else:
+            price_change_percent = None
 
         summary = {
             "symbol": ticker,
@@ -126,23 +137,9 @@ class YahooFinanceHistoryTool(BaseTool):
             "interval": interval,
             "start_date": earliest.get("date", "N/A"),
             "end_date": latest.get("date", "N/A"),
-            "price_change": round(latest.get("close", 0) - earliest.get("close", 0), 2),
-            "price_change_percent": round(
-                (
-                    latest.get("close", 0)
-                    / (div if (div := earliest.get("close")) and div != 0 else 1)
-                    - 1
-                )
-                * 100,
-                2,
-            ),
+            "price_change": round((latest_close or 0) - (earliest_close or 0), 2),
+            "price_change_percent": price_change_percent,
             "data_points": len(history_list),
         }
 
-        result = {
-            "summary": summary,
-            "history": history_list[
-                -10:
-            ],  # Return only last 10 data points to avoid overloading
-        }
-        return json.dumps(result)
+        return ok({"summary": summary, "history": history_list[-10:]})

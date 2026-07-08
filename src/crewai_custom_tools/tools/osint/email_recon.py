@@ -1,21 +1,24 @@
 """Email Intelligence OSINT Tools."""
 
-import json
 import logging
 import os
 import re
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, List, Optional
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.models import (
-    HunterIOInput,
     EpieosLookupInput,
     HoleheScanInput,
+    HunterIOInput,
 )
 
 logger = logging.getLogger(__name__)
+
+_EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 
 
 class HunterIOTool(BaseTool):
@@ -27,23 +30,19 @@ class HunterIOTool(BaseTool):
     )
     args_schema: type[BaseModel] = HunterIOInput
 
-    @api_tool(provider="HunterIO", endpoint="DomainSearch", default_return="{}")
+    @api_tool(provider="HunterIO", endpoint="DomainSearch")
     def _run(self, domain: str) -> str:
         """Search for emails via Hunter.io REST endpoint."""
         api_key = os.getenv("HUNTER_API_KEY")
         if not api_key:
-            return json.dumps(
-                {"error": "HUNTER_API_KEY environment variable not configured"}
-            )
+            return err("HUNTER_API_KEY environment variable not configured")
 
         url = "https://api.hunter.io/v2/domain-search"
         params = {"domain": domain, "api_key": api_key}
 
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
-        data = response.json()
-
-        return json.dumps(data.get("data", {}))
+        return ok(response.json().get("data", {}))
 
 
 class SerperEmailSearchInput(BaseModel):
@@ -61,108 +60,59 @@ class SerperEmailSearchTool(BaseTool):
     description: str = "Search Google organic listings for publicly mentioned email addresses related to a company name."
     args_schema: type[BaseModel] = SerperEmailSearchInput
 
-    @api_tool(provider="Serper", endpoint="EmailSearch", default_return="[]")
+    @api_tool(provider="Serper", endpoint="EmailSearch")
     def _run(self, query: str) -> str:
         """Execute web query search and parse email addresses."""
-        api_key = os.getenv("SERPAPI_API_KEY") or os.getenv("SERPER_API_KEY")
+        api_key = os.getenv("SERPER_API_KEY")
         if not api_key:
-            return json.dumps({"error": "SERPER_API_KEY environment variable not set."})
+            return err("SERPER_API_KEY environment variable not set.")
 
-        # Clean query and formulate search string for email listings
         clean_query = query.strip().lower()
-        search_query = f'"{clean_query}" "@"{clean_query.replace(" ", "")} email'
+        # Balanced quotes: the domain-guess must sit INSIDE the quotes.
+        search_query = f'"{clean_query}" "@{clean_query.replace(" ", "")}" email'
 
-        url = "https://google.serper.dev/search"
-        headers = {
-            "X-API-KEY": api_key,
-            "Content-Type": "application/json",
-        }
-        payload = {"q": search_query}
-
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        response = requests.post(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
+            json={"q": search_query},
+            timeout=10,
+        )
         response.raise_for_status()
 
-        results = response.json().get("organic", [])
         emails_found = set()
-        email_regex = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+        for item in response.json().get("organic", []):
+            combined = f"{item.get('title', '')} {item.get('snippet', '')} {item.get('link', '')}"
+            emails_found.update(_EMAIL_RE.findall(combined))
 
-        for item in results:
-            snippet = item.get("snippet", "")
-            title = item.get("title", "")
-            link = item.get("link", "")
-            combined_text = f"{title} {snippet} {link}"
-            emails_found.update(email_regex.findall(combined_text))
-
-        result_list = list(emails_found)
-        if result_list:
-            return json.dumps([{"emails": result_list}])
-        return json.dumps([{"message": "No emails found"}])
+        return ok({"query": query, "emails": sorted(emails_found)})
 
 
 class EpieosEmailLookupTool(BaseTool):
-    """Reverse search an email to find linked Google/social profiles and reviews via Epieos."""
+    """Reverse search an email to find linked Google/social profiles via the Epieos API."""
 
     name: str = "epieos_email_lookup"
     description: str = (
-        "Silent reverse-search on an email to retrieve linked social media accounts, "
-        "Google profiles, avatars, and user reviews via Epieos."
+        "Reverse-search an email via the Epieos API to retrieve linked social media "
+        "accounts, Google profiles, and reviews. Requires EPIEOS_API_KEY."
     )
     args_schema: type[BaseModel] = EpieosLookupInput
 
-    @api_tool(provider="Epieos", endpoint="ReverseLookup", default_return="{}")
+    @api_tool(provider="Epieos", endpoint="ReverseLookup")
     def _run(self, email: str) -> str:
-        """Query Epieos API with keyless web scraping fallback."""
+        """Query the official Epieos API (keyless scraping is not reliable)."""
         api_key = os.getenv("EPIEOS_API_KEY")
+        if not api_key:
+            # The keyless path scraped a JS-rendered SPA and always returned empty
+            # results while reporting success — worse than an honest "unavailable".
+            return err("Epieos keyless lookup unavailable; set EPIEOS_API_KEY")
 
-        # 1. Official API Path
-        if api_key:
-            url = (
-                f"https://api.epieos.com/v1/reverse-lookup?email={email}&key={api_key}"
-            )
-            response = requests.get(url, timeout=15)
-            response.raise_for_status()
-            return json.dumps(response.json())
-
-        # 2. Keyless/Scraped Fallback Path
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            ),
-            "Accept": "application/json",
-        }
-        url = f"https://epieos.com/?q={email}"
-        response = requests.get(url, headers=headers, timeout=15)
+        response = requests.get(
+            "https://api.epieos.com/v1/reverse-lookup",
+            params={"email": email, "key": api_key},
+            timeout=15,
+        )
         response.raise_for_status()
-
-        from bs4 import BeautifulSoup
-
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        links = []
-        for a in soup.find_all("a", href=True):
-            href = a["href"]
-            if any(
-                domain in href
-                for domain in [
-                    "google.com",
-                    "maps",
-                    "youtube",
-                    "twitter",
-                    "facebook",
-                    "linkedin",
-                ]
-            ):
-                links.append(href)
-
-        result = {
-            "email": email,
-            "success": True,
-            "provider": "keyless_fallback",
-            "associated_profiles": list(set(links))[:10],
-            "message": "Keyless fallback run. For full Epieos JSON metadata, please configure EPIEOS_API_KEY.",
-        }
-        return json.dumps(result)
+        return ok(response.json())
 
 
 class HoleheEmailScannerTool(BaseTool):
@@ -175,7 +125,7 @@ class HoleheEmailScannerTool(BaseTool):
     )
     args_schema: type[BaseModel] = HoleheScanInput
 
-    @api_tool(provider="Holehe", endpoint="ScanEmail", default_return="[]")
+    @api_tool(provider="Holehe", endpoint="ScanEmail")
     def _run(self, email: str) -> str:
         """Scan email across 150+ sites using the native in-process trio loop."""
         import trio
@@ -192,12 +142,11 @@ class HoleheEmailScannerTool(BaseTool):
                 csvoutput = False
                 timeout = 10
 
-            args = DummyArgs()
             modules = core.import_submodules("holehe.modules")
-            websites = core.get_functions(modules, args)
+            websites = core.get_functions(modules, DummyArgs())
 
             client = httpx.AsyncClient(timeout=10)
-            out = []
+            out: list = []
             try:
                 async with trio.open_nursery() as nursery:
                     for website in websites:
@@ -210,17 +159,22 @@ class HoleheEmailScannerTool(BaseTool):
 
         try:
             raw_results = trio.run(run_scan)
-            hits = [
-                {
-                    "name": item.get("name"),
-                    "exists": item.get("exists", False),
-                    "rate_limit": item.get("rateLimit", False),
-                    "error": item.get("error", False),
-                }
-                for item in raw_results
-                if item.get("exists") is True
-            ]
-            return json.dumps(hits)
-        except Exception as e:
-            logger.error(f"Holehe scan error: {e}")
-            return json.dumps([])
+        except Exception as e:  # noqa: BLE001 — import/exec failure is NOT "no accounts"
+            logger.error(f"Holehe scan failed: {e}")
+            return err(f"Holehe scan failed: {e}")
+
+        found, undetermined = [], []
+        for item in raw_results:
+            exists = item.get("exists")
+            row = {"name": item.get("name"), "exists": exists}
+            if exists is True:
+                found.append(row)
+            elif exists is None:
+                # holehe sets exists=None on rate-limit/error — surface, don't drop.
+                undetermined.append(
+                    {**row, "rate_limit": item.get("rateLimit", False), "error": item.get("error", False)}
+                )
+
+        return ok(
+            {"email": email, "found": found, "undetermined": undetermined, "checked": len(raw_results)}
+        )

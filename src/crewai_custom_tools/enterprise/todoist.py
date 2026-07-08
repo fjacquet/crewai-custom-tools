@@ -2,14 +2,19 @@
 
 import logging
 import os
-import requests
 from typing import Any, Optional
+
+import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.models.todoist_models import TodoistToolInput
 
 logger = logging.getLogger(__name__)
+
+_BASE_URL = "https://api.todoist.com/rest/v2"
 
 
 class TodoistTool(BaseTool):
@@ -32,11 +37,7 @@ class TodoistTool(BaseTool):
             "Content-Type": "application/json",
         }
 
-    @api_tool(
-        provider="Todoist",
-        endpoint="TaskSync",
-        default_return="Error: Todoist request failed.",
-    )
+    @api_tool(provider="Todoist", endpoint="TaskSync")
     def _run(
         self,
         action: str,
@@ -47,28 +48,22 @@ class TodoistTool(BaseTool):
         priority: Optional[int] = None,
         **kwargs: Any,
     ) -> str:
-        """Run the Todoist tool with specified actions."""
-        base_url = "https://api.todoist.com/rest/v2"
+        """Run the Todoist tool with the specified action."""
         action = action.lower()
 
-        # 1. Action: Get Tasks
         if action == "get_tasks":
-            url = f"{base_url}/tasks"
-            params = {}
-            if project_id:
-                params["project_id"] = project_id
+            params = {"project_id": project_id} if project_id else {}
             response = requests.get(
-                url, headers=self._get_headers(), params=params, timeout=10
+                f"{_BASE_URL}/tasks", headers=self._get_headers(), params=params, timeout=10
             )
             response.raise_for_status()
-            return f"Found {len(response.json())} tasks: {response.json()}"
+            tasks = response.json()
+            return ok({"count": len(tasks), "tasks": tasks})
 
-        # 2. Action: Create Task
         if action == "create_task":
             if not task_content:
-                return "Error: task_content is required for create_task action"
-            url = f"{base_url}/tasks"
-            payload = {"content": task_content}
+                return err("task_content is required for create_task")
+            payload: dict[str, Any] = {"content": task_content}
             if project_id:
                 payload["project_id"] = project_id
             if due_string:
@@ -76,25 +71,29 @@ class TodoistTool(BaseTool):
             if priority:
                 payload["priority"] = priority
             response = requests.post(
-                url, headers=self._get_headers(), json=payload, timeout=10
+                f"{_BASE_URL}/tasks", headers=self._get_headers(), json=payload, timeout=10
             )
             response.raise_for_status()
-            return f"Task created successfully: {response.json()}"
+            return ok({"created": response.json()})
 
-        # 3. Action: Complete Task
         if action == "complete_task":
             if not task_id:
-                return "Error: task_id is required for complete_task action"
-            url = f"{base_url}/tasks/{task_id}/close"
-            response = requests.post(url, headers=self._get_headers(), timeout=10)
+                return err("task_id is required for complete_task")
+            response = requests.post(
+                f"{_BASE_URL}/tasks/{task_id}/close", headers=self._get_headers(), timeout=10
+            )
             response.raise_for_status()
-            return f"Task {task_id} completed successfully"
+            return ok({"completed": task_id})
 
-        # 4. Action: Get Projects
         if action == "get_projects":
-            url = f"{base_url}/projects"
-            response = requests.get(url, headers=self._get_headers(), timeout=10)
+            response = requests.get(
+                f"{_BASE_URL}/projects", headers=self._get_headers(), timeout=10
+            )
             response.raise_for_status()
-            return f"Found {len(response.json())} projects: {response.json()}"
+            projects = response.json()
+            return ok({"count": len(projects), "projects": projects})
 
-        return f"Error: Unknown action '{action}'. Valid actions: get_tasks, create_task, complete_task, get_projects."
+        return err(
+            f"Unknown action '{action}'. Valid actions: get_tasks, create_task, "
+            "complete_task, get_projects."
+        )

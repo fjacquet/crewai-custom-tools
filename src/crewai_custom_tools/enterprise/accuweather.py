@@ -2,13 +2,20 @@
 
 import logging
 import os
+from typing import Optional
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel
+
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.models.accuweather_models import AccuWeatherToolInput
 
 logger = logging.getLogger(__name__)
+
+# HTTPS so the apikey query param is never sent in cleartext.
+_BASE_URL = "https://dataservice.accuweather.com"
 
 
 class AccuWeatherTool(BaseTool):
@@ -22,7 +29,7 @@ class AccuWeatherTool(BaseTool):
 
     def _get_location_key(self, location: str, api_key: str) -> str:
         """Get the location key for a given location name."""
-        url = "http://dataservice.accuweather.com/locations/v1/cities/autocomplete"
+        url = f"{_BASE_URL}/locations/v1/cities/autocomplete"
         params = {"apikey": api_key, "q": location}
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
@@ -31,32 +38,35 @@ class AccuWeatherTool(BaseTool):
             raise ValueError(f"Location '{location}' not found.")
         return str(data[0]["Key"])
 
-    def _get_current_conditions(self, location_key: str, api_key: str) -> str:
+    def _get_current_conditions(
+        self, location_key: str, api_key: str
+    ) -> Optional[dict]:
         """Get the current weather conditions for a given location key."""
-        url = f"http://dataservice.accuweather.com/currentconditions/v1/{location_key}"
+        url = f"{_BASE_URL}/currentconditions/v1/{location_key}"
         params = {"apikey": api_key}
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
         if not data:
-            return "Could not retrieve weather data."
+            return None
 
         weather_info = data[0]
-        temp = weather_info["Temperature"]["Metric"]["Value"]
-        unit = weather_info["Temperature"]["Metric"]["Unit"]
-        weather_text = weather_info["WeatherText"]
-        return f"Current weather in your location: {temp}°{unit}, {weather_text}."
+        metric = weather_info["Temperature"]["Metric"]
+        return {
+            "temperature": metric["Value"],
+            "unit": metric["Unit"],
+            "conditions": weather_info["WeatherText"],
+        }
 
-    @api_tool(
-        provider="AccuWeather",
-        endpoint="CurrentConditions",
-        default_return="Error: Weather lookup failed.",
-    )
+    @api_tool(provider="AccuWeather", endpoint="CurrentConditions")
     def _run(self, location: str) -> str:
         """Run the AccuWeather lookup."""
         api_key = os.getenv("ACCUWEATHER_API_KEY")
         if not api_key:
-            return "Error: ACCUWEATHER_API_KEY environment variable not set."
+            return err("ACCUWEATHER_API_KEY environment variable not set")
 
         location_key = self._get_location_key(location, api_key)
-        return self._get_current_conditions(location_key, api_key)
+        conditions = self._get_current_conditions(location_key, api_key)
+        if conditions is None:
+            return err(f"Could not retrieve weather data for {location!r}")
+        return ok({"location": location, **conditions})

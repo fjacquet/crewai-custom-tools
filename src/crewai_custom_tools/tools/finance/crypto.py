@@ -1,26 +1,26 @@
 """Cryptocurrency Tools: CoinMarketCap & Kraken Exchange."""
 
-import json
-import logging
-import os
-import requests
 import base64
 import hashlib
 import hmac
+import logging
+import os
 import time
 import urllib.parse
+
+import requests
 from crewai.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
 from crewai_custom_tools.core.decorators import api_tool
-
-logger = logging.getLogger(__name__)
-
-
+from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.models import (
     CoinInfoInput,
-    KrakenTickerInfoInput,
     KrakenAssetListInput,
+    KrakenTickerInfoInput,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CoinMarketCapInfoTool(BaseTool):
@@ -34,19 +34,18 @@ class CoinMarketCapInfoTool(BaseTool):
     )
     args_schema: type[BaseModel] = CoinInfoInput
 
-    @api_tool(provider="CoinMarketCap", endpoint="Quotes", default_return="{}")
+    @api_tool(provider="CoinMarketCap", endpoint="Quotes")
     def _run(self, symbol: str) -> str:
         """Retrieve detailed info about a coin."""
-        api_key = os.environ.get("X-CMC_PRO_API_KEY") or os.environ.get(
-            "COINMARKETCAP_API_KEY"
+        # COINMARKETCAP_API_KEY is the primary (shell-settable) name; the header-style
+        # X-CMC_PRO_API_KEY is kept only as a legacy fallback.
+        api_key = os.environ.get("COINMARKETCAP_API_KEY") or os.environ.get(
+            "X-CMC_PRO_API_KEY"
         )
         if not api_key:
-            return json.dumps({"error": "CoinMarketCap API key not configured"})
+            return err("CoinMarketCap API key not configured")
 
-        headers = {
-            "X-CMC_PRO_API_KEY": api_key,
-            "Accept": "application/json",
-        }
+        headers = {"X-CMC_PRO_API_KEY": api_key, "Accept": "application/json"}
         params = {"symbol": symbol.upper(), "convert": "USD"}
         response = requests.get(
             "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest",
@@ -58,29 +57,30 @@ class CoinMarketCapInfoTool(BaseTool):
         data = response.json()
 
         if "data" not in data or symbol.upper() not in data["data"]:
-            return json.dumps({"error": f"No data found for symbol: {symbol}"})
+            return err(f"No data found for symbol: {symbol}")
 
         crypto_data = data["data"][symbol.upper()]
         quote = crypto_data["quote"]["USD"]
 
-        info_dict = {
-            "name": crypto_data.get("name"),
-            "symbol": crypto_data.get("symbol"),
-            "price_usd": quote.get("price"),
-            "market_cap_usd": quote.get("market_cap"),
-            "volume_24h_usd": quote.get("volume_24h"),
-            "percent_change_24h": quote.get("percent_change_24h"),
-            "percent_change_7d": quote.get("percent_change_7d"),
-            "circulating_supply": crypto_data.get("circulating_supply"),
-            "max_supply": crypto_data.get("max_supply"),
-            "cmc_rank": crypto_data.get("cmc_rank"),
-            "last_updated": quote.get("last_updated"),
-            "platform": crypto_data.get("platform", {}).get("name")
-            if crypto_data.get("platform")
-            else None,
-            "tags": crypto_data.get("tags", [])[:5],
-        }
-        return json.dumps(info_dict)
+        return ok(
+            {
+                "name": crypto_data.get("name"),
+                "symbol": crypto_data.get("symbol"),
+                "price_usd": quote.get("price"),
+                "market_cap_usd": quote.get("market_cap"),
+                "volume_24h_usd": quote.get("volume_24h"),
+                "percent_change_24h": quote.get("percent_change_24h"),
+                "percent_change_7d": quote.get("percent_change_7d"),
+                "circulating_supply": crypto_data.get("circulating_supply"),
+                "max_supply": crypto_data.get("max_supply"),
+                "cmc_rank": crypto_data.get("cmc_rank"),
+                "last_updated": quote.get("last_updated"),
+                "platform": crypto_data.get("platform", {}).get("name")
+                if crypto_data.get("platform")
+                else None,
+                "tags": crypto_data.get("tags", [])[:5],
+            }
+        )
 
 
 class KrakenTickerInfoTool(BaseTool):
@@ -90,7 +90,7 @@ class KrakenTickerInfoTool(BaseTool):
     description: str = "Fetches real-time ticker information for a specific cryptocurrency pair from Kraken."
     args_schema: type[BaseModel] = KrakenTickerInfoInput
 
-    @api_tool(provider="Kraken", endpoint="Ticker", default_return="{}")
+    @api_tool(provider="Kraken", endpoint="Ticker")
     def _run(self, pair: str) -> str:
         """Fetch ticker pair data."""
         url = f"https://api.kraken.com/0/public/Ticker?pair={pair}"
@@ -99,14 +99,13 @@ class KrakenTickerInfoTool(BaseTool):
         data = response.json()
 
         if data.get("error"):
-            return f"Error from Kraken API: {data['error']}"
+            return err(f"Kraken API error: {data['error']}")
 
-        result_pair = list(data.get("result", {}).keys())
-        if not result_pair:
-            return f"No data found for pair {pair}. Invalid pair."
+        result_pairs = list(data.get("result", {}).keys())
+        if not result_pairs:
+            return err(f"No data found for pair {pair}. Invalid pair.")
 
-        ticker_data = data["result"][result_pair[0]]
-        return json.dumps(ticker_data)
+        return ok(data["result"][result_pairs[0]])
 
 
 class KrakenAssetListTool(BaseTool):
@@ -122,38 +121,37 @@ class KrakenAssetListTool(BaseTool):
         encoded = (str(data["nonce"]) + postdata).encode()
         message = urlpath.encode() + hashlib.sha256(encoded).digest()
         signature = hmac.new(base64.b64decode(secret), message, hashlib.sha512)
-        sigdigest = base64.b64encode(signature.digest())
-        return sigdigest.decode()
+        return base64.b64encode(signature.digest()).decode()
 
-    @api_tool(provider="Kraken", endpoint="Balance", default_return="[]")
+    @api_tool(provider="Kraken", endpoint="Balance")
     def _run(self, asset_class: str = "currency") -> str:
         """Execute private balance lookup."""
         api_key = os.environ.get("KRAKEN_API_KEY")
         api_secret = os.environ.get("KRAKEN_API_SECRET")
 
         if not api_key or not api_secret:
-            return "Error: Kraken API credentials not configured in environment."
+            return err("Kraken API credentials not configured in environment.")
 
-        url = "https://api.kraken.com/0/private/Balance"
         urlpath = "/0/private/Balance"
-        data = {"nonce": str(int(time.time() * 1000)), "asset": asset_class}
-
+        # The Balance endpoint takes no asset filter, so we sign only the nonce and
+        # filter client-side below (the old `asset` field was silently ignored).
+        data = {"nonce": str(int(time.time() * 1000))}
         headers = {
             "API-Key": api_key,
             "API-Sign": self._get_kraken_signature(urlpath, data, api_secret),
         }
 
-        response = requests.post(url, headers=headers, data=data, timeout=10)
+        response = requests.post(
+            "https://api.kraken.com" + urlpath, headers=headers, data=data, timeout=10
+        )
         response.raise_for_status()
         result = response.json()
 
         if result.get("error"):
-            return f"Error from Kraken API: {result['error']}"
+            return err(f"Kraken API error: {result['error']}")
 
-        assets = result.get("result", {})
         formatted_assets = []
-
-        for asset_code, quantity in assets.items():
+        for asset_code, quantity in result.get("result", {}).items():
             try:
                 qty = float(quantity)
                 if qty <= 0:
@@ -162,4 +160,11 @@ class KrakenAssetListTool(BaseTool):
             except (ValueError, TypeError):
                 formatted_assets.append({"asset": asset_code, "quantity": quantity})
 
-        return json.dumps(formatted_assets)
+        # Filter to a specific asset when requested; "currency"/"all" mean no filter.
+        if asset_class and asset_class.lower() not in ("currency", "all"):
+            wanted = asset_class.upper()
+            formatted_assets = [
+                a for a in formatted_assets if a["asset"].upper() == wanted
+            ]
+
+        return ok(formatted_assets)

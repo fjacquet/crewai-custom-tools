@@ -1,28 +1,34 @@
 """Mock-based unit tests for unified stock, crypto, and market tools."""
 
+import base64
 import json
 import os
-import base64
-import pytest
-import requests
+
 import pandas as pd
-from unittest.mock import MagicMock
+
 from crewai_custom_tools.tools.finance.company_info import YahooFinanceCompanyInfoTool
+from crewai_custom_tools.tools.finance.crypto import (
+    CoinMarketCapInfoTool,
+    KrakenAssetListTool,
+    KrakenTickerInfoTool,
+)
+from crewai_custom_tools.tools.finance.exchange_rate import ExchangeRateTool
+from crewai_custom_tools.tools.finance.fear_greed import FearGreedTool
 from crewai_custom_tools.tools.finance.history_holdings import (
     YahooFinanceETFHoldingsTool,
     YahooFinanceHistoryTool,
 )
-from crewai_custom_tools.tools.finance.crypto import (
-    CoinMarketCapInfoTool,
-    KrakenTickerInfoTool,
-    KrakenAssetListTool,
-)
 from crewai_custom_tools.tools.finance.market_data import (
-    FREDMacroTool,
     AlphaVantageOverviewTool,
+    FREDMacroTool,
 )
-from crewai_custom_tools.tools.finance.fear_greed import FearGreedTool
-from crewai_custom_tools.tools.finance.exchange_rate import ExchangeRateTool
+
+
+def _data(result_str):
+    """Assert the result is a successful envelope and return its data payload."""
+    payload = json.loads(result_str)
+    assert payload["success"] is True, payload
+    return payload["data"]
 
 
 # ==============================================================================
@@ -47,17 +53,15 @@ def test_yfinance_company_info(mocker):
     }
     mocker.patch("yfinance.Ticker", return_value=mock_ticker)
 
-    tool = YahooFinanceCompanyInfoTool()
-    result_str = tool._run(ticker="AAPL")
-    result = json.loads(result_str)
+    data = _data(YahooFinanceCompanyInfoTool()._run(ticker="AAPL"))
 
-    assert result["name"] == "Apple Inc."
-    assert result["industry"] == "Consumer Electronics"
-    assert result["financial_metrics"]["revenue"] == 380000000000
+    assert data["name"] == "Apple Inc."
+    assert data["industry"] == "Consumer Electronics"
+    assert data["financial_metrics"]["revenue"] == 380000000000
 
 
 def test_yfinance_etf_holdings(mocker):
-    """Test Yahoo Finance ETF holdings extraction."""
+    """ETF holdings/sectors populate via the funds_data API (not the removed get_holdings)."""
     mock_ticker = mocker.MagicMock()
     mock_ticker.info = {
         "shortName": "Vanguard Total Stock Market",
@@ -65,28 +69,42 @@ def test_yfinance_etf_holdings(mocker):
         "totalAssets": 1300000000000,
     }
 
-    # Mocking holdings pandas DataFrame
     holdings_df = pd.DataFrame(
         [
-            {"Name": "Microsoft Corp", "% Assets": 0.065, "Shares": 120000000},
-            {"Name": "Apple Inc", "% Assets": 0.058, "Shares": 140000000},
+            {"Name": "Microsoft Corp", "Holding Percent": 0.065},
+            {"Name": "Apple Inc", "Holding Percent": 0.058},
         ],
-        index=["MSFT", "AAPL"],
+        index=pd.Index(["MSFT", "AAPL"], name="Symbol"),
     )
-
-    mock_ticker.get_holdings.return_value = holdings_df
-    mock_ticker.get_sector_data.return_value = {"technology": 0.28, "financials": 0.13}
+    mock_funds = mocker.MagicMock()
+    mock_funds.top_holdings = holdings_df
+    mock_funds.sector_weightings = {"technology": 0.28, "financials": 0.13}
+    mock_ticker.get_funds_data.return_value = mock_funds
 
     mocker.patch("yfinance.Ticker", return_value=mock_ticker)
 
-    tool = YahooFinanceETFHoldingsTool()
-    result_str = tool._run(ticker="VTI")
-    result = json.loads(result_str)
+    data = _data(YahooFinanceETFHoldingsTool()._run(ticker="VTI"))
 
-    assert result["symbol"] == "VTI"
-    assert result["asset_class"] == "Large Blend"
-    assert len(result["top_holdings"]) == 2
-    assert result["top_holdings"][0]["symbol"] == "MSFT"
+    assert data["symbol"] == "VTI"
+    assert data["asset_class"] == "Large Blend"
+    assert len(data["top_holdings"]) == 2
+    assert data["top_holdings"][0]["symbol"] == "MSFT"
+    assert data["top_holdings"][0]["weight"] == 0.065
+    assert data["sector_breakdown"]["technology"] == 0.28
+
+
+def test_yfinance_etf_holdings_non_fund_ticker(mocker):
+    """A ticker with no funds_data returns success with empty holdings, no crash."""
+    mock_ticker = mocker.MagicMock()
+    mock_ticker.info = {"shortName": "Apple Inc."}
+    mock_ticker.get_funds_data.side_effect = Exception("not a fund")
+    mocker.patch("yfinance.Ticker", return_value=mock_ticker)
+
+    data = _data(YahooFinanceETFHoldingsTool()._run(ticker="AAPL"))
+    # Empty holdings list and empty sector dict are stripped from the output.
+    assert "top_holdings" not in data
+    assert "sector_breakdown" not in data
+    assert data["symbol"] == "AAPL"
 
 
 # ==============================================================================
@@ -118,13 +136,19 @@ def test_coinmarketcap_info_success(mocker):
     }
     mocker.patch("requests.get", return_value=mock_response)
 
-    tool = CoinMarketCapInfoTool()
-    result_str = tool._run(symbol="BTC")
-    result = json.loads(result_str)
+    data = _data(CoinMarketCapInfoTool()._run(symbol="BTC"))
 
-    assert result["name"] == "Bitcoin"
-    assert result["price_usd"] == 65000.0
-    assert result["cmc_rank"] == 1
+    assert data["name"] == "Bitcoin"
+    assert data["price_usd"] == 65000.0
+    assert data["cmc_rank"] == 1
+
+
+def test_coinmarketcap_missing_key_returns_error(mocker):
+    """No API key => error envelope (not an empty success)."""
+    mocker.patch.dict(os.environ, {}, clear=True)
+    payload = json.loads(CoinMarketCapInfoTool()._run(symbol="BTC"))
+    assert payload["success"] is False
+    assert "not configured" in payload["error"]
 
 
 def test_kraken_ticker_info(mocker):
@@ -142,12 +166,21 @@ def test_kraken_ticker_info(mocker):
     }
     mocker.patch("requests.get", return_value=mock_response)
 
-    tool = KrakenTickerInfoTool()
-    result_str = tool._run(pair="XXBTZUSD")
-    result = json.loads(result_str)
+    data = _data(KrakenTickerInfoTool()._run(pair="XXBTZUSD"))
 
-    assert "a" in result
-    assert result["a"][0] == "65000.00000"
+    assert "a" in data
+    assert data["a"][0] == "65000.00000"
+
+
+def test_kraken_ticker_api_error_returns_error(mocker):
+    """A Kraken API error surfaces as an error envelope, not an empty object."""
+    mock_response = mocker.MagicMock()
+    mock_response.json.return_value = {"error": ["EQuery:Unknown asset pair"], "result": {}}
+    mocker.patch("requests.get", return_value=mock_response)
+
+    payload = json.loads(KrakenTickerInfoTool()._run(pair="BOGUS"))
+    assert payload["success"] is False
+    assert "Kraken API error" in payload["error"]
 
 
 # ==============================================================================
@@ -166,13 +199,11 @@ def test_fred_macro_success(mocker):
     }
     mocker.patch("requests.get", return_value=mock_response)
 
-    tool = FREDMacroTool()
-    result_str = tool._run(indicator="fed_rate")
-    result = json.loads(result_str)
+    data = _data(FREDMacroTool()._run(indicator="fed_rate"))
 
-    assert result["indicator"] == "fed_rate"
-    assert result["value"] == "5.25"
-    assert result["date"] == "2026-07-01"
+    assert data["indicator"] == "fed_rate"
+    assert data["value"] == "5.25"
+    assert data["date"] == "2026-07-01"
 
 
 def test_fear_greed_sentiment_success(mocker):
@@ -184,13 +215,33 @@ def test_fear_greed_sentiment_success(mocker):
     }
     mocker.patch("requests.get", return_value=mock_response)
 
-    tool = FearGreedTool()
-    result_str = tool._run()
-    result = json.loads(result_str)
+    data = _data(FearGreedTool()._run())
 
-    assert result["score"] == 72.0
-    assert result["sentiment"] == "Greed"
-    assert result["previous_close_score"] == 70.0
+    assert data["score"] == 72.0
+    assert data["sentiment"] == "Greed"
+    assert data["previous_close_score"] == 70.0
+
+
+def test_fear_greed_historical_keys(mocker):
+    """Week/month/year fields read CNN's previous_1_* keys (finding M4)."""
+    mock_response = mocker.MagicMock()
+    mock_response.json.return_value = {
+        "fear_and_greed": {
+            "score": 50.0,
+            "rating": "neutral",
+            "previous_close": 51.0,
+            "previous_1_week": 45.0,
+            "previous_1_month": 60.0,
+            "previous_1_year": 30.0,
+        }
+    }
+    mocker.patch("requests.get", return_value=mock_response)
+
+    data = _data(FearGreedTool()._run())
+
+    assert data["one_week_ago_score"] == 45.0
+    assert data["one_month_ago_score"] == 60.0
+    assert data["one_year_ago_score"] == 30.0
 
 
 # ==============================================================================
@@ -199,7 +250,7 @@ def test_fear_greed_sentiment_success(mocker):
 
 
 def test_exchange_rates_success(mocker):
-    """Test fetching fiat exchange rates from OpenExchangeRates."""
+    """Exchange rates return a JSON envelope with a structured rates map."""
     mocker.patch.dict(os.environ, {"OPENEXCHANGERATES_API_KEY": "test_oer_key"})
 
     mock_response = mocker.MagicMock()
@@ -210,55 +261,56 @@ def test_exchange_rates_success(mocker):
     }
     mocker.patch("requests.get", return_value=mock_response)
 
-    tool = ExchangeRateTool()
-    result = tool._run(base_currency="USD", target_currencies=["EUR", "GBP"])
+    data = _data(ExchangeRateTool()._run(base_currency="USD", target_currencies=["EUR", "GBP"]))
 
-    assert "Exchange rates based on USD" in result
-    assert "EUR" in result
-    assert "0.92" in result
+    assert data["base"] == "USD"
+    assert data["rates"]["EUR"] == 0.92
+    assert "JPY" not in data["rates"]  # filtered to requested targets
 
 
 # ==============================================================================
-# 5. Missing Tools Mock Tests (History, Kraken Balance, Alpha Vantage)
+# 5. History, Kraken Balance, Alpha Vantage
 # ==============================================================================
 
 
 def test_yfinance_history_success(mocker):
     """Test Yahoo Finance Ticker History retrieval and statistics formatting."""
     mock_ticker = mocker.MagicMock()
-
-    # Mocking pandas DataFrame for historical prices
     history_df = pd.DataFrame(
         [
-            {
-                "Open": 100.0,
-                "High": 105.0,
-                "Low": 99.0,
-                "Close": 104.0,
-                "Volume": 1000000,
-            },
-            {
-                "Open": 104.0,
-                "High": 108.0,
-                "Low": 103.0,
-                "Close": 107.0,
-                "Volume": 1500000,
-            },
+            {"Open": 100.0, "High": 105.0, "Low": 99.0, "Close": 104.0, "Volume": 1000000},
+            {"Open": 104.0, "High": 108.0, "Low": 103.0, "Close": 107.0, "Volume": 1500000},
         ],
         index=[pd.Timestamp("2026-07-01"), pd.Timestamp("2026-07-02")],
     )
-
     mock_ticker.history.return_value = history_df
     mocker.patch("yfinance.Ticker", return_value=mock_ticker)
 
-    tool = YahooFinanceHistoryTool()
-    result_str = tool._run(ticker="AAPL")
-    result = json.loads(result_str)
+    data = _data(YahooFinanceHistoryTool()._run(ticker="AAPL"))
 
-    assert result["summary"]["symbol"] == "AAPL"
-    assert result["summary"]["start_date"] == "2026-07-01"
-    assert result["summary"]["price_change"] == 3.0
-    assert len(result["history"]) == 2
+    assert data["summary"]["symbol"] == "AAPL"
+    assert data["summary"]["start_date"] == "2026-07-01"
+    assert data["summary"]["price_change"] == 3.0
+    assert data["summary"]["price_change_percent"] == round((107 / 104 - 1) * 100, 2)
+    assert len(data["history"]) == 2
+
+
+def test_yfinance_history_zero_earliest_close(mocker):
+    """A zero/missing earliest close yields price_change_percent=None (finding L1)."""
+    mock_ticker = mocker.MagicMock()
+    history_df = pd.DataFrame(
+        [
+            {"Open": 0.0, "High": 0.0, "Low": 0.0, "Close": 0.0, "Volume": 0},
+            {"Open": 150.0, "High": 155.0, "Low": 149.0, "Close": 152.0, "Volume": 1000},
+        ],
+        index=[pd.Timestamp("2026-07-01"), pd.Timestamp("2026-07-02")],
+    )
+    mock_ticker.history.return_value = history_df
+    mocker.patch("yfinance.Ticker", return_value=mock_ticker)
+
+    data = _data(YahooFinanceHistoryTool()._run(ticker="ZZ"))
+
+    assert data["summary"]["price_change_percent"] is None
 
 
 def test_kraken_asset_list_success(mocker):
@@ -276,13 +328,38 @@ def test_kraken_asset_list_success(mocker):
     mock_response.json.return_value = {"result": {"ZUSD": "1000.50", "XXBT": "0.15000"}}
     mocker.patch("requests.post", return_value=mock_response)
 
-    tool = KrakenAssetListTool()
-    result_str = tool._run(asset_class="currency")
-    result = json.loads(result_str)
+    data = _data(KrakenAssetListTool()._run(asset_class="currency"))
 
-    assert len(result) == 2
-    assert result[0]["asset"] == "ZUSD"
-    assert result[0]["quantity"] == 1000.50
+    assert len(data) == 2
+    assert data[0]["asset"] == "ZUSD"
+    assert data[0]["quantity"] == 1000.50
+
+
+def test_kraken_asset_list_filters_specific_asset(mocker):
+    """A specific asset_class filters the returned balances client-side (finding L5)."""
+    mocker.patch.dict(
+        os.environ,
+        {
+            "KRAKEN_API_KEY": "test_key",
+            "KRAKEN_API_SECRET": base64.b64encode(b"test_secret").decode(),
+        },
+    )
+    mock_response = mocker.MagicMock()
+    mock_response.json.return_value = {"result": {"ZUSD": "1000.50", "XXBT": "0.15000"}}
+    mocker.patch("requests.post", return_value=mock_response)
+
+    data = _data(KrakenAssetListTool()._run(asset_class="XXBT"))
+
+    assert len(data) == 1
+    assert data[0]["asset"] == "XXBT"
+
+
+def test_kraken_asset_list_missing_creds_returns_error(mocker):
+    """Missing Kraken credentials return an error envelope."""
+    mocker.patch.dict(os.environ, {}, clear=True)
+    payload = json.loads(KrakenAssetListTool()._run())
+    assert payload["success"] is False
+    assert "credentials" in payload["error"]
 
 
 def test_alphavantage_overview_success(mocker):
@@ -302,11 +379,9 @@ def test_alphavantage_overview_success(mocker):
     }
     mocker.patch("requests.get", return_value=mock_response)
 
-    tool = AlphaVantageOverviewTool()
-    result_str = tool._run(ticker="MSFT")
-    result = json.loads(result_str)
+    data = _data(AlphaVantageOverviewTool()._run(ticker="MSFT"))
 
-    assert result["symbol"] == "MSFT"
-    assert result["name"] == "Microsoft Corporation"
-    assert result["return_on_equity_ttm"] == 0.385
-    assert result["debt_to_equity_ratio"] == 0.45
+    assert data["symbol"] == "MSFT"
+    assert data["name"] == "Microsoft Corporation"
+    assert data["return_on_equity_ttm"] == 0.385
+    assert data["debt_to_equity_ratio"] == 0.45
