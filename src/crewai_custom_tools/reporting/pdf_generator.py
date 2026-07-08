@@ -5,6 +5,7 @@ import os
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import ok, err
 
 logger = logging.getLogger(__name__)
 
@@ -42,24 +43,19 @@ class HtmlToPdfTool(BaseTool):
     )
     args_schema: type[BaseModel] = HtmlToPdfToolSchema
 
-    @api_tool(
-        provider="WeasyPrint",
-        endpoint="HTMLToPDF",
-        default_return="Error: PDF conversion failed.",
-    )
+    @api_tool(provider="WeasyPrint", endpoint="HTMLToPDF")
     def _run(self, html_file_path: str, output_pdf_path: str) -> str:
         """Run WeasyPrint to generate PDF from HTML."""
         if not WEASYPRINT_AVAILABLE:
-            return (
-                "Error: WeasyPrint system library is not available. "
-                f"Underlying error: {_weasyprint_error}. "
-                "Please install dependencies on your machine first: \n"
-                "macOS: brew install glib pango cairo weasyprint\n"
+            return err(
+                "WeasyPrint system library is not available. "
+                f"Underlying error: {_weasyprint_error}. Install deps first — "
+                "macOS: brew install glib pango cairo weasyprint; "
                 "Linux: apt-get install libpango-1.0-0 libcairo2"
             )
 
         if not os.path.exists(html_file_path):
-            return f"Error: HTML input file not found at: {html_file_path}"
+            return err(f"HTML input file not found at: {html_file_path}")
 
         # Resolve output directories
         output_dir = os.path.dirname(os.path.abspath(output_pdf_path))
@@ -70,5 +66,10 @@ class HtmlToPdfTool(BaseTool):
         HTML(filename=html_file_path).write_pdf(output_pdf_path)
 
         if os.path.exists(output_pdf_path):
-            return f"Successfully converted '{html_file_path}' to PDF. Output saved at '{output_pdf_path}'."
-        return f"Error: PDF generation failed. File not found at: {output_pdf_path}"
+            return ok(
+                {
+                    "pdf_path": output_pdf_path,
+                    "message": f"Converted '{html_file_path}' to PDF.",
+                }
+            )
+        return err(f"PDF generation failed. File not found at: {output_pdf_path}")

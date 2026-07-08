@@ -22,7 +22,7 @@
     {% for section in sections %}
     <section>
         <h2>{{ section.heading }}</h2>
-        {{ section.content | safe }}
+        <div>{{ section.content }}</div>
     </section>
     {% endfor %}
 

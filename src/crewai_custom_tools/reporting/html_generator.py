@@ -9,6 +9,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field, PrivateAttr
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.results import ok
+from markupsafe import Markup, escape
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,48 @@ def validate_html(html: str, raise_on_error: bool = True) -> bool:
         return False
 
     return True
+
+
+def _sections_to_html(sections: Optional[List[dict]]) -> Markup:
+    """Build a safe HTML body from sections, escaping all caller-supplied text.
+
+    Returned as ``Markup`` so ``{{ report_body }}`` renders the wrapper tags while the
+    heading/content — which may originate from untrusted scraped data — stay escaped.
+    """
+    parts = []
+    for section in sections or []:
+        heading = escape(str(section.get("heading", "")))
+        content = escape(str(section.get("content", "")))
+        parts.append(f"<section><h2>{heading}</h2><div>{content}</div></section>")
+    return Markup("".join(parts))
+
+
+def _build_context(title: str, sections: Optional[List[dict]], **kwargs: Any) -> dict:
+    """Assemble a render context that satisfies every bundled template.
+
+    The standard, professional (PESTEL) and data (financial) templates use different
+    variable names for the same values (``title``/``report_title``,
+    ``date``/``generation_date``/``timestamp``, ``sections``/``report_body``), so we
+    supply all of them plus empty defaults for the data template's optional blocks.
+    """
+    now = _dt.datetime.now()
+    today = now.date().isoformat()
+    return {
+        "title": title,
+        "report_title": title,
+        "date": today,
+        "generation_date": today,
+        "timestamp": now,
+        "description": kwargs.get("description") or "",
+        "sections": sections or [],
+        "report_body": _sections_to_html(sections),
+        "images": kwargs.get("images") or [],
+        "citations": kwargs.get("citations") or [],
+        "kpis": kwargs.get("kpis") or [],
+        "metrics": kwargs.get("metrics") or [],
+        "data_tables": kwargs.get("data_tables") or [],
+        "data_series": kwargs.get("data_series") or [],
+    }
 
 
 class RenderReportToolSchema(BaseModel):
@@ -92,24 +136,11 @@ class RenderReportTool(BaseTool):
         except (ValueError, TypeError):
             return date_str
 
-    @api_tool(
-        provider="Jinja2",
-        endpoint="RenderReport",
-        default_return="Error rendering HTML report.",
-    )
+    @api_tool(provider="Jinja2", endpoint="RenderReport")
     def _run(self, title: str, sections: List[dict], **kwargs: Any) -> str:
-        """Render standard template with context."""
+        """Render the selected template with a context that satisfies every template."""
         template_name = kwargs.get("template_name") or "report_template.html"
         template = self._env.get_template(template_name)
-
-        context = {
-            "title": title,
-            "date": _dt.date.today().isoformat(),
-            "sections": sections,
-            "images": kwargs.get("images") or [],
-            "citations": kwargs.get("citations") or [],
-        }
-
-        html = template.render(**context)
+        html = template.render(**_build_context(title, sections, **kwargs))
         validate_html(html, raise_on_error=True)
-        return html
+        return ok(html)
