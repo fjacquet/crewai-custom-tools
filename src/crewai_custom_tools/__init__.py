@@ -23,6 +23,7 @@ from crewai_custom_tools.tools.web.search_providers import (
     SerpApiTool,
     HybridSearchTool,
 )
+from crewai_custom_tools.tools.web.perplexity_structured import PerplexityStructuredTool
 
 # 2. Stocks & Market Data
 from crewai_custom_tools.tools.finance.yfinance_ticker import YahooFinanceTickerInfoTool
@@ -53,6 +54,14 @@ from crewai_custom_tools.tools.finance.enhanced import (
     EnhancedETFAnalysisTool,
     EnhancedCryptoAnalysisTool,
     DeFiMetricsTool,
+)
+from crewai_custom_tools.tools.finance.indicators import (
+    TwelveDataIndicatorTool,
+    TwelveDataMultiIndicatorTool,
+)
+from crewai_custom_tools.tools.finance.market_extras import (
+    AlphaVantageNewsSentimentTool,
+    ChartImgTool,
 )
 
 # 3. OSINT & Cyber Recon
@@ -99,6 +108,7 @@ __all__ = [
     "TavilyTool",
     "SerpApiTool",
     "HybridSearchTool",
+    "PerplexityStructuredTool",
     # Finance Tools
     "YahooFinanceTickerInfoTool",
     "YahooFinanceNewsTool",
@@ -119,6 +129,10 @@ __all__ = [
     "EnhancedETFAnalysisTool",
     "EnhancedCryptoAnalysisTool",
     "DeFiMetricsTool",
+    "TwelveDataIndicatorTool",
+    "TwelveDataMultiIndicatorTool",
+    "AlphaVantageNewsSentimentTool",
+    "ChartImgTool",
     # OSINT Tools
     "GitHubSearchTool",
     "GitHubOrgSearchTool",
