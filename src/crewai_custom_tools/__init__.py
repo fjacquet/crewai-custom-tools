@@ -76,6 +76,12 @@ from crewai_custom_tools.tools.osint.person_recon import UsernameSearchTool
 from crewai_custom_tools.tools.osint.domain_recon import CrtShTool, RDAPDomainTool
 from crewai_custom_tools.tools.osint.registers import FrenchRegistryTool
 from crewai_custom_tools.tools.osint.corporate_global import OpenCorporatesSearchTool
+from crewai_custom_tools.tools.osint.registers_extra import InseeSireneTool, BodaccTool
+from crewai_custom_tools.tools.osint.signals import GdeltTool, GoogleNewsRssTool
+from crewai_custom_tools.tools.osint.hunter_extra import (
+    HunterEmailFinderTool,
+    HunterEmailVerifierTool,
+)
 
 # 4. Reports & PDFs formatting
 from crewai_custom_tools.reporting.html_generator import RenderReportTool, validate_html
@@ -145,6 +151,12 @@ __all__ = [
     "RDAPDomainTool",
     "FrenchRegistryTool",
     "OpenCorporatesSearchTool",
+    "InseeSireneTool",
+    "BodaccTool",
+    "GdeltTool",
+    "GoogleNewsRssTool",
+    "HunterEmailFinderTool",
+    "HunterEmailVerifierTool",
     # Reporting Tools
     "validate_html",
     "RenderReportTool",
