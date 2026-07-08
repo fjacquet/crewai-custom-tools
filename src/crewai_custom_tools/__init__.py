@@ -43,6 +43,17 @@ from crewai_custom_tools.tools.finance.market_data import (
 )
 from crewai_custom_tools.tools.finance.fear_greed import FearGreedTool
 from crewai_custom_tools.tools.finance.exchange_rate import ExchangeRateTool
+from crewai_custom_tools.tools.finance.coinmarketcap_extras import (
+    CoinMarketCapListTool,
+    CoinMarketCapNewsTool,
+    CoinMarketCapHistoricalTool,
+)
+from crewai_custom_tools.tools.finance.enhanced import (
+    TickerExistenceValidationTool,
+    EnhancedETFAnalysisTool,
+    EnhancedCryptoAnalysisTool,
+    DeFiMetricsTool,
+)
 
 # 3. OSINT & Cyber Recon
 from crewai_custom_tools.tools.osint.github import GitHubSearchTool, GitHubOrgSearchTool
@@ -101,6 +112,13 @@ __all__ = [
     "AlphaVantageOverviewTool",
     "FearGreedTool",
     "ExchangeRateTool",
+    "CoinMarketCapListTool",
+    "CoinMarketCapNewsTool",
+    "CoinMarketCapHistoricalTool",
+    "TickerExistenceValidationTool",
+    "EnhancedETFAnalysisTool",
+    "EnhancedCryptoAnalysisTool",
+    "DeFiMetricsTool",
     # OSINT Tools
     "GitHubSearchTool",
     "GitHubOrgSearchTool",
