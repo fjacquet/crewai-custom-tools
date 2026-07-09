@@ -8,7 +8,8 @@ import json
 import logging
 import math
 import os
-from datetime import datetime, timedelta
+import socket
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -27,37 +28,104 @@ logger = logging.getLogger(__name__)
 # Curated, working RSS feeds by region.
 _RSS_SOURCES: dict[str, list[dict[str, str]]] = {
     "suisse_romande": [
-        {"name": "Le Temps - Tous articles", "url": "https://www.letemps.ch/articles.rss", "language": "fr"},
-        {"name": "Le Temps - Suisse", "url": "https://www.letemps.ch/suisse.rss", "language": "fr"},
-        {"name": "Le Temps - Monde", "url": "https://www.letemps.ch/monde.rss", "language": "fr"},
-        {"name": "Le Temps - Économie", "url": "https://www.letemps.ch/economie.rss", "language": "fr"},
+        {
+            "name": "Le Temps - Tous articles",
+            "url": "https://www.letemps.ch/articles.rss",
+            "language": "fr",
+        },
+        {
+            "name": "Le Temps - Suisse",
+            "url": "https://www.letemps.ch/suisse.rss",
+            "language": "fr",
+        },
+        {
+            "name": "Le Temps - Monde",
+            "url": "https://www.letemps.ch/monde.rss",
+            "language": "fr",
+        },
+        {
+            "name": "Le Temps - Économie",
+            "url": "https://www.letemps.ch/economie.rss",
+            "language": "fr",
+        },
     ],
     "france": [
-        {"name": "Le Monde - À la Une", "url": "https://www.lemonde.fr/rss/une.xml", "language": "fr"},
-        {"name": "Le Monde - International", "url": "https://www.lemonde.fr/international/rss_full.xml", "language": "fr"},
-        {"name": "Le Figaro - À la Une", "url": "https://www.lefigaro.fr/rss/figaro_actualites.xml", "language": "fr"},
-        {"name": "France 24", "url": "https://www.france24.com/fr/rss", "language": "fr"},
-        {"name": "Les Échos", "url": "https://services.lesechos.fr/rss/les-echos-general.xml", "language": "fr"},
+        {
+            "name": "Le Monde - À la Une",
+            "url": "https://www.lemonde.fr/rss/une.xml",
+            "language": "fr",
+        },
+        {
+            "name": "Le Monde - International",
+            "url": "https://www.lemonde.fr/international/rss_full.xml",
+            "language": "fr",
+        },
+        {
+            "name": "Le Figaro - À la Une",
+            "url": "https://www.lefigaro.fr/rss/figaro_actualites.xml",
+            "language": "fr",
+        },
+        {
+            "name": "France 24",
+            "url": "https://www.france24.com/fr/rss",
+            "language": "fr",
+        },
+        {
+            "name": "Les Échos",
+            "url": "https://services.lesechos.fr/rss/les-echos-general.xml",
+            "language": "fr",
+        },
     ],
     "europe": [
-        {"name": "BBC Europe", "url": "https://feeds.bbci.co.uk/news/world/europe/rss.xml", "language": "en"},
+        {
+            "name": "BBC Europe",
+            "url": "https://feeds.bbci.co.uk/news/world/europe/rss.xml",
+            "language": "en",
+        },
         {"name": "Yahoo News", "url": "https://news.yahoo.com/rss/", "language": "en"},
     ],
     "world": [
-        {"name": "BBC World News", "url": "https://feeds.bbci.co.uk/news/world/rss.xml", "language": "en"},
-        {"name": "Yahoo News International", "url": "https://news.yahoo.com/rss/", "language": "en"},
+        {
+            "name": "BBC World News",
+            "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+            "language": "en",
+        },
+        {
+            "name": "Yahoo News International",
+            "url": "https://news.yahoo.com/rss/",
+            "language": "en",
+        },
     ],
-    "belgique": [{"name": "La Libre Belgique", "url": "https://www.lalibre.be/rss", "language": "fr"}],
-    "canada": [{"name": "Radio-Canada", "url": "https://ici.radio-canada.ca/rss", "language": "fr"}],
+    "belgique": [
+        {
+            "name": "La Libre Belgique",
+            "url": "https://www.lalibre.be/rss",
+            "language": "fr",
+        }
+    ],
+    "canada": [
+        {
+            "name": "Radio-Canada",
+            "url": "https://ici.radio-canada.ca/rss",
+            "language": "fr",
+        }
+    ],
 }
 
 
 class RSSFeedInput(BaseModel):
     """Input schema for RSSFeedTool."""
 
-    region: str = Field(..., description="Region key: suisse_romande, france, europe, world, belgique, canada.")
-    max_articles: int = Field(10, ge=1, le=100, description="Maximum number of articles to return.")
-    hours_back: int = Field(24, ge=1, description="How far back to look (approximate; day-granular).")
+    region: str = Field(
+        ...,
+        description="Region key: suisse_romande, france, europe, world, belgique, canada.",
+    )
+    max_articles: int = Field(
+        10, ge=1, le=100, description="Maximum number of articles to return."
+    )
+    hours_back: int = Field(
+        24, ge=1, description="How far back to look (approximate; day-granular)."
+    )
 
 
 class RSSFeedTool(BaseTool):
@@ -75,7 +143,9 @@ class RSSFeedTool(BaseTool):
         """Aggregate recent entries from every curated feed for the region."""
         sources = self.RSS_SOURCES.get(region)
         if not sources:
-            return err(f"No RSS sources for region '{region}'. Options: {sorted(self.RSS_SOURCES)}")
+            return err(
+                f"No RSS sources for region '{region}'. Options: {sorted(self.RSS_SOURCES)}"
+            )
 
         days = max(1, math.ceil(hours_back / 24))
         parser = RssFeedParserTool()
@@ -85,16 +155,32 @@ class RSSFeedTool(BaseTool):
             if not payload["success"]:
                 continue
             for entry in payload["data"]:
-                articles.append({**entry, "source": source["name"], "language": source.get("language")})
+                articles.append(
+                    {
+                        **entry,
+                        "source": source["name"],
+                        "language": source.get("language"),
+                    }
+                )
 
-        return ok({"region": region, "count": min(len(articles), max_articles), "articles": articles[:max_articles]})
+        return ok(
+            {
+                "region": region,
+                "count": min(len(articles), max_articles),
+                "articles": articles[:max_articles],
+            }
+        )
 
 
 class UnifiedRssToolInput(BaseModel):
     """Input schema for UnifiedRssTool."""
 
-    opml_file_path: str = Field(..., description="Path to an OPML file listing RSS feed sources.")
-    days: int = Field(7, ge=1, description="Number of past days of entries to include per feed.")
+    opml_file_path: str = Field(
+        ..., description="Path to an OPML file listing RSS feed sources."
+    )
+    days: int = Field(
+        7, ge=1, description="Number of past days of entries to include per feed."
+    )
     output_file_path: str | None = Field(
         None,
         description="Optional path to write the aggregated RssFeeds JSON. When set, the written file is the primary output.",
@@ -103,6 +189,11 @@ class UnifiedRssToolInput(BaseModel):
         None,
         description="Optional path to write the list of feeds that errored or yielded no articles.",
     )
+
+
+# Bound each feed fetch so a slow or hanging server can't stall the whole run
+# (feedparser has no timeout arg; it honours the default socket timeout).
+FEED_FETCH_TIMEOUT_S = 20.0
 
 
 class UnifiedRssTool(BaseTool):
@@ -139,13 +230,18 @@ class UnifiedRssTool(BaseTool):
         feed_urls = opml_payload["data"]
         invalid_sources: set[str] = set()
         # Inclusive, day-granular cutoff: normalise to 00:00 so any hour that day is kept.
-        cutoff_date = (datetime.now() - timedelta(days=days)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        # Use naive-UTC to match entry dates: feedparser's *_parsed struct_times are UTC,
+        # and _entry_pub_date normalises string dates to UTC too. datetime.now() (naive
+        # local) would skew the boundary by the server's UTC offset on non-UTC hosts.
+        cutoff_date = (
+            datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
+        ).replace(hour=0, minute=0, second=0, microsecond=0)
 
         all_feeds: list[FeedWithArticles] = []
         for feed_url in feed_urls:
-            articles = self._fetch_and_filter_articles(feed_url, cutoff_date, invalid_sources)
+            articles = self._fetch_and_filter_articles(
+                feed_url, cutoff_date, invalid_sources
+            )
             if articles:
                 all_feeds.append(FeedWithArticles(feed_url=feed_url, articles=articles))
             else:
@@ -168,7 +264,9 @@ class UnifiedRssTool(BaseTool):
                 Path(output_dir).mkdir(parents=True, exist_ok=True)
             with open(output_file_path, "w", encoding="utf-8") as fh:
                 json.dump(rss_feeds.model_dump(), fh, ensure_ascii=False, indent=2)
-            logger.info(f"UnifiedRssTool wrote {len(all_feeds)} feeds to {output_file_path}")
+            logger.info(
+                f"UnifiedRssTool wrote {len(all_feeds)} feeds to {output_file_path}"
+            )
 
         if invalid_sources and invalid_sources_file_path:
             inv_dir = os.path.dirname(invalid_sources_file_path)
@@ -178,7 +276,7 @@ class UnifiedRssTool(BaseTool):
                 json.dump(
                     {
                         "invalid_sources": sorted(invalid_sources),
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "total_invalid": len(invalid_sources),
                     },
                     fh,
@@ -204,7 +302,15 @@ class UnifiedRssTool(BaseTool):
     ) -> list[Article]:
         """Fetch a feed and return Articles newer than ``cutoff_date``; track invalid feeds."""
         try:
-            feed = feedparser.parse(feed_url)
+            # Bound the network fetch: feedparser has no timeout arg but honours the
+            # default socket timeout. A slow/hanging feed then raises (caught below and
+            # marked invalid) instead of stalling the whole aggregation run.
+            previous_timeout = socket.getdefaulttimeout()
+            socket.setdefaulttimeout(FEED_FETCH_TIMEOUT_S)
+            try:
+                feed = feedparser.parse(feed_url)
+            finally:
+                socket.setdefaulttimeout(previous_timeout)
 
             status = getattr(feed, "status", None)
             if status is not None:
@@ -241,19 +347,28 @@ class UnifiedRssTool(BaseTool):
 
     @staticmethod
     def _entry_pub_date(entry: Any) -> datetime | None:
-        """Best-effort naive publication date: struct_time fields first, then string fields."""
+        """Best-effort naive-UTC publication date: struct_time fields first, then strings.
+
+        feedparser normalises ``*_parsed`` struct_times to UTC, so ``datetime(*parsed[:6])``
+        is already naive-UTC. String dates may carry any offset, so convert tz-aware values
+        to UTC before dropping tzinfo; naive strings are assumed UTC. This keeps every
+        returned datetime comparable to the naive-UTC cutoff.
+        """
         for attr in ("published_parsed", "updated_parsed"):
             parsed = getattr(entry, attr, None)
             if parsed:
                 try:
-                    return datetime(*parsed[:6])
+                    return datetime(*parsed[:6])  # struct_time is UTC -> naive-UTC
                 except (TypeError, ValueError):
                     pass
         for attr in ("published", "updated"):
             value = getattr(entry, attr, None)
             if value:
                 try:
-                    return date_parser.parse(value).replace(tzinfo=None)
+                    dt = date_parser.parse(value)
+                    if dt.tzinfo is not None:
+                        dt = dt.astimezone(timezone.utc)
+                    return dt.replace(tzinfo=None)
                 except (TypeError, ValueError):
                     pass
         return None

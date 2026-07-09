@@ -4,6 +4,22 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.3.1] - 2026-07-09
+
+### Fixed
+
+- **`UnifiedRssTool` timezone-consistent date filtering** (#3): the day-granular cutoff was
+  built from `datetime.now()` (naive local time) but compared against feed entry dates that
+  feedparser normalises to UTC, skewing the boundary by the host's UTC offset on non-UTC
+  servers. The cutoff is now naive-UTC, and `_entry_pub_date` converts tz-aware string dates
+  to UTC before dropping tzinfo, so every date is directly comparable.
+- **`UnifiedRssTool` bounded feed fetch** (#4): `feedparser.parse` had no network timeout, so
+  a slow or hanging feed could stall the whole aggregation run. Each fetch now runs under a
+  default socket timeout (`FEED_FETCH_TIMEOUT_S`, 20s), restored afterwards; a timing-out feed
+  is caught and recorded as an invalid source instead of blocking.
+
+---
+
 ## [0.3.0] - 2026-07-08
 
 ### Fixed

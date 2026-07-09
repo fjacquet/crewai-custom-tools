@@ -1,9 +1,15 @@
 """Offline tests for the UnifiedRssTool OPML -> RssFeeds JSON pipeline."""
 
 import json
+import socket
+import time
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 
-from crewai_custom_tools.tools.web.rss_aggregator import UnifiedRssTool
+from crewai_custom_tools.tools.web.rss_aggregator import (
+    FEED_FETCH_TIMEOUT_S,
+    UnifiedRssTool,
+)
 
 _OPML = """<?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
@@ -91,7 +97,11 @@ def test_unified_rss_scrapes_article_content(tmp_path, mocker):
         return_value=json.dumps(
             {
                 "success": True,
-                "data": {"provider": "standard", "title": "t", "content": "FULL SCRAPED BODY " * 10},
+                "data": {
+                    "provider": "standard",
+                    "title": "t",
+                    "content": "FULL SCRAPED BODY " * 10,
+                },
                 "error": None,
             }
         ),
@@ -124,3 +134,67 @@ def test_unified_rss_writes_invalid_sources_file(tmp_path, mocker):
     data = json.loads(inv_file.read_text())
     assert "https://rss.example/ai" in data["invalid_sources"]
     assert data["total_invalid"] == 1
+
+
+# --- #3: timezone-consistent date handling -------------------------------------
+
+
+def test_entry_pub_date_normalizes_tz_aware_string_to_naive_utc():
+    """A string date with a non-UTC offset is converted to UTC before tzinfo is dropped."""
+    entry = SimpleNamespace(
+        published_parsed=None,
+        updated_parsed=None,
+        published="Mon, 01 Jan 2026 12:00:00 +0500",  # 12:00 at +05:00 == 07:00 UTC
+        updated=None,
+    )
+    dt = UnifiedRssTool._entry_pub_date(entry)
+    assert dt == datetime(2026, 1, 1, 7, 0, 0)
+    assert dt.tzinfo is None
+
+
+def test_entry_pub_date_struct_time_is_naive_utc():
+    """published_parsed (feedparser's UTC struct_time) is returned as a naive-UTC datetime."""
+    entry = SimpleNamespace(
+        published_parsed=time.struct_time((2026, 1, 2, 8, 30, 0, 0, 0, 0)),
+        updated_parsed=None,
+        published=None,
+        updated=None,
+    )
+    dt = UnifiedRssTool._entry_pub_date(entry)
+    assert dt == datetime(2026, 1, 2, 8, 30, 0)
+    assert dt.tzinfo is None
+
+
+# --- #4: feed fetch timeout ----------------------------------------------------
+
+
+def test_feed_fetch_bounds_and_restores_socket_timeout(mocker):
+    """The feed fetch runs under FEED_FETCH_TIMEOUT_S, then restores the prior default."""
+    seen = {}
+
+    def fake_parse(_url):
+        seen["timeout"] = socket.getdefaulttimeout()
+        return SimpleNamespace(bozo=False, status=200, entries=[])
+
+    mocker.patch("feedparser.parse", side_effect=fake_parse)
+    before = socket.getdefaulttimeout()
+
+    UnifiedRssTool()._fetch_and_filter_articles(
+        "https://rss.example/ai", datetime(2020, 1, 1), set()
+    )
+
+    assert seen["timeout"] == FEED_FETCH_TIMEOUT_S
+    assert socket.getdefaulttimeout() == before  # restored, even on the happy path
+
+
+def test_feed_timeout_marks_source_invalid_without_crashing(mocker):
+    """A timing-out feed is caught, recorded invalid, and yields no articles (no hang/crash)."""
+    mocker.patch("feedparser.parse", side_effect=TimeoutError("slow feed"))
+    invalid: set[str] = set()
+
+    result = UnifiedRssTool()._fetch_and_filter_articles(
+        "https://slow.example/feed", datetime(2020, 1, 1), invalid
+    )
+
+    assert result == []
+    assert "https://slow.example/feed" in invalid
