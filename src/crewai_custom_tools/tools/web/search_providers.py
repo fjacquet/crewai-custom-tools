@@ -161,13 +161,21 @@ class HybridSearchTool(BaseTool):
         from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool
         from crewai_custom_tools.tools.web.serper import SerperSearchTool
 
-        providers = [
-            ("perplexity", PerplexitySearchTool()),
-            ("brave", BraveSearchTool()),
-            ("serper", SerperSearchTool()),
+        provider_classes = [
+            ("perplexity", PerplexitySearchTool),
+            ("brave", BraveSearchTool),
+            ("serper", SerperSearchTool),
         ]
         errors = []
-        for name, tool in providers:
+        for name, cls in provider_classes:
+            try:
+                tool = cls()
+            except ValueError as e:
+                # Fail-fast tools (e.g. PerplexitySearchTool) raise at construction
+                # when unconfigured; treat that the same as a soft provider failure
+                # so the cascade still falls through to the next provider.
+                errors.append(f"{name}: {e}")
+                continue
             payload = json.loads(tool._run(query))
             if payload.get("success") and payload.get("data"):
                 return ok({"query": query, "provider": name, "results": payload["data"]})
