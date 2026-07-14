@@ -1,17 +1,22 @@
 """Perplexity Sonar tool with optional JSON-schema structured output."""
 
 import json
+import logging
 import os
-from typing import Optional
+from typing import Optional, TypeVar
 
+import httpx
 import requests
 from crewai.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from crewai_custom_tools.core.decorators import api_tool
+from crewai_custom_tools.core.keys import require_api_key
 from crewai_custom_tools.core.results import err, ok
 
-_PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions"
+logger = logging.getLogger(__name__)
+
+_PERPLEXITY_URL = os.getenv("PPLX_BASE_URL", "https://api.perplexity.ai/chat/completions")
 _DEFAULT_SYSTEM = (
     "You are a research assistant. Provide concise, evidence-grounded answers with citations."
 )
@@ -97,3 +102,75 @@ class PerplexityStructuredTool(BaseTool):
                 # Model didn't return valid JSON — surface the raw content honestly.
                 return ok({"content": content, "citations": citations, "schema_parsed": False})
         return ok({"content": content, "citations": citations})
+
+
+T = TypeVar("T", bound=BaseModel)
+
+_DEFAULT_STRUCTURED_SYSTEM = (
+    "You are a research assistant. Provide concise, evidence-grounded answers with citations."
+)
+
+
+async def perplexity_structured(
+    *,
+    prompt: str,
+    schema: type[T],
+    system: str = _DEFAULT_STRUCTURED_SYSTEM,
+    model: str = "sonar-pro",
+    search_recency_filter: str | None = "month",
+    timeout: float = 60.0,
+    api_key: str | None = None,
+) -> T | None:
+    """Call Perplexity Sonar with JSON-schema structured output.
+
+    Returns a validated ``schema`` instance, or ``None`` if the call or parse
+    failed (callers treat research as best-effort). Raises ``ValueError`` when
+    no API key is configured.
+    """
+    key = api_key or require_api_key("PERPLEXITY_API_KEY", "PPLX_API_KEY", tool_name="perplexity_structured")
+    payload: dict = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"schema": schema.model_json_schema()},
+        },
+        "return_citations": True,
+    }
+    if search_recency_filter:
+        payload["search_recency_filter"] = search_recency_filter
+
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(_PERPLEXITY_URL, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+    except httpx.HTTPStatusError as exc:
+        logger.warning(f"Perplexity HTTP {exc.response.status_code} for {schema.__name__}")
+        return None
+    except (TimeoutError, httpx.HTTPError) as exc:
+        logger.warning(f"Perplexity transport error for {schema.__name__}: {exc}")
+        return None
+    except ValueError as exc:
+        logger.warning(f"Perplexity returned non-JSON for {schema.__name__}: {exc}")
+        return None
+
+    try:
+        content = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError):
+        logger.warning(f"Perplexity response missing content for {schema.__name__}")
+        return None
+
+    try:
+        return schema.model_validate_json(content)
+    except ValidationError:
+        try:
+            return schema.model_validate(json.loads(content))
+        except (json.JSONDecodeError, ValidationError) as exc:
+            logger.warning(f"Perplexity output unrecoverable for {schema.__name__}: {exc}")
+            return None
