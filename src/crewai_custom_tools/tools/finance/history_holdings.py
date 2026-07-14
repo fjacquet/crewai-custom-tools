@@ -2,6 +2,8 @@
 
 import logging
 from contextlib import suppress
+from datetime import UTC, datetime
+from typing import Any
 
 import pandas as pd
 import yfinance as yf
@@ -90,8 +92,13 @@ class YahooFinanceHistoryTool(BaseTool):
     args_schema: type[BaseModel] = GetTickerHistoryInput
 
     @api_tool(provider="YahooFinance", endpoint="History")
-    def _run(self, ticker: str, period: str = "1y", interval: str = "1d") -> str:
+    def _run(self, ticker: str, period: str = "1y", interval: str = "1d", prefetched_data: dict | None = None) -> str:
         """Execute the Yahoo Finance historical data lookup."""
+        if prefetched_data is not None and ticker in prefetched_data:
+            cached_history: dict[str, Any] = dict(prefetched_data[ticker])
+            cached_history["data_source"] = "prefetched"
+            return ok(cached_history)
+
         ticker_data = yf.Ticker(ticker)
         history = ticker_data.history(period=period, interval=interval)
 
@@ -142,4 +149,17 @@ class YahooFinanceHistoryTool(BaseTool):
             "data_points": len(history_list),
         }
 
-        return ok({"summary": summary, "history": history_list[-10:]})
+        payload: dict[str, Any] = {
+            "summary": summary,
+            "history": history_list[-10:],
+            "timestamp": datetime.now(UTC).isoformat(),
+            "data_source": "live_api",
+        }
+        if history_list:
+            try:
+                payload["data_time"] = (
+                    datetime.strptime(history_list[-1]["date"], "%Y-%m-%d").replace(tzinfo=UTC).isoformat()
+                )
+            except ValueError:
+                logger.warning(f"Could not parse latest bar date for {ticker}")
+        return ok(payload)
