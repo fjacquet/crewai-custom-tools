@@ -8,6 +8,7 @@ from typing import Any, Callable
 
 import requests
 
+from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.core.results import err
 
 logger = logging.getLogger("crewai_custom_tools.decorators")
@@ -47,6 +48,7 @@ def api_tool(
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
+                get_rate_limiter().acquire(provider)
                 return _run_with_timeout(func, args, kwargs, timeout)
             except concurrent.futures.TimeoutError:
                 logger.warning(f"{provider} {endpoint} timed out after {timeout}s")
@@ -56,6 +58,7 @@ def api_tool(
                     logger.warning(f"Rate limited by {provider} {endpoint}; retrying once")
                     sleep(2.0)
                     try:
+                        get_rate_limiter().acquire(provider)
                         return _run_with_timeout(func, args, kwargs, timeout)
                     except Exception as retry_err:  # noqa: BLE001
                         logger.error(f"{provider} {endpoint} retry failed: {retry_err}")

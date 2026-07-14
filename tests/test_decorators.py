@@ -113,3 +113,18 @@ def test_api_tool_unexpected_exception_returns_error_envelope():
     payload = _envelope(broken_tool())
     assert payload["success"] is False
     assert "Generic DB error" in payload["error"]
+
+
+def test_api_tool_acquires_rate_limit_token(mocker):
+    """The api_tool decorator acquires a rate-limit token from the registry."""
+    from crewai_custom_tools.core import decorators
+
+    registry = mocker.Mock()
+    mocker.patch.object(decorators, "get_rate_limiter", return_value=registry)
+
+    @decorators.api_tool(provider="DemoProvider", endpoint="DemoEndpoint")
+    def sample() -> str:
+        return "done"
+
+    assert sample() == "done"
+    registry.acquire.assert_called_once_with("DemoProvider")
