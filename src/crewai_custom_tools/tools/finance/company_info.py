@@ -1,6 +1,8 @@
 """Yahoo Finance Company Info Tools."""
 
 import logging
+from typing import Any
+
 import yfinance as yf
 from crewai.tools import BaseTool
 from pydantic import BaseModel
@@ -27,6 +29,26 @@ class YahooFinanceCompanyInfoTool(BaseTool):
         ticker_data = yf.Ticker(ticker)
         info = ticker_data.info
 
+        # Calculate revenue growth from actual financials (more reliable than
+        # info["revenueGrowth"]); fall back to the info field on any failure.
+        revenue_growth: Any = "N/A"
+        try:
+            financials = ticker_data.financials
+            if not financials.empty and "Total Revenue" in financials.index:
+                revenues = financials.loc["Total Revenue"].sort_index(ascending=False)
+                if len(revenues) >= 2:
+                    latest, previous = revenues.iloc[0], revenues.iloc[1]
+                    revenue_growth = (latest - previous) / previous if previous != 0 else "N/A"
+        except (KeyError, ValueError, TypeError, AttributeError, IndexError) as exc:
+            logger.warning(f"Failed to calculate revenue growth for {ticker}: {exc}")
+        if revenue_growth == "N/A":
+            revenue_growth = info.get("revenueGrowth", "N/A")
+
+        # yfinance returns debtToEquity as a percentage (152.41 = 152.41%);
+        # convert to a ratio (1.52) like every other metric here.
+        raw_dte = info.get("debtToEquity")
+        debt_to_equity = raw_dte / 100 if isinstance(raw_dte, (int, float)) else "N/A"
+
         # Create a focused company profile
         company_info = {
             "symbol": ticker,
@@ -41,9 +63,9 @@ class YahooFinanceCompanyInfoTool(BaseTool):
                 "revenue": info.get("totalRevenue", "N/A"),
                 "profit_margin": info.get("profitMargins", "N/A"),
                 "ebitda": info.get("ebitda", "N/A"),
-                "debt_to_equity": info.get("debtToEquity", "N/A"),
+                "debt_to_equity": debt_to_equity,
                 "return_on_equity": info.get("returnOnEquity", "N/A"),
-                "revenue_growth": info.get("revenueGrowth", "N/A"),
+                "revenue_growth": revenue_growth,
                 "earnings_growth": info.get("earningsGrowth", "N/A"),
             },
             "valuation_metrics": {

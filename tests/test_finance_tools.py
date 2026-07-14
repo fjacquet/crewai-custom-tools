@@ -62,6 +62,43 @@ def test_yfinance_company_info(mocker):
     assert data["financial_metrics"]["revenue"] == 380000000000
 
 
+def _company_info_mock(mocker, info, financials):
+    from crewai_custom_tools.tools.finance import company_info
+
+    ticker = mocker.Mock(info=info)
+    ticker.financials = financials
+    mocker.patch.object(company_info.yf, "Ticker", return_value=ticker)
+    return company_info.YahooFinanceCompanyInfoTool()
+
+
+def test_company_info_calculates_revenue_growth_from_financials(mocker):
+    import pandas as pd
+
+    financials = pd.DataFrame(
+        {"2026": [200.0], "2025": [100.0]}, index=["Total Revenue"]
+    )
+    tool = _company_info_mock(
+        mocker,
+        info={"longName": "Apple", "debtToEquity": 152.41, "revenueGrowth": 0.99},
+        financials=financials,
+    )
+    data = parse_tool_result(tool._run(ticker="AAPL"))
+    assert data["financial_metrics"]["revenue_growth"] == 1.0  # (200-100)/100, NOT info's 0.99
+    assert data["financial_metrics"]["debt_to_equity"] == pytest.approx(1.5241)
+
+
+def test_company_info_falls_back_to_info_field(mocker):
+    import pandas as pd
+
+    tool = _company_info_mock(
+        mocker,
+        info={"longName": "Apple", "revenueGrowth": 0.15},
+        financials=pd.DataFrame(),
+    )
+    data = parse_tool_result(tool._run(ticker="AAPL"))
+    assert data["financial_metrics"]["revenue_growth"] == 0.15
+
+
 def test_yfinance_etf_holdings(mocker):
     """ETF holdings/sectors populate via the funds_data API (not the removed get_holdings)."""
     mock_ticker = mocker.MagicMock()
