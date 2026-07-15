@@ -8,7 +8,7 @@ from typing import Any, Callable
 
 import requests
 
-from crewai_custom_tools.core.rate_limiter import get_rate_limiter
+from crewai_custom_tools.core.rate_limiter import RateLimitExceeded, get_rate_limiter
 from crewai_custom_tools.core.results import err
 
 logger = logging.getLogger("crewai_custom_tools.decorators")
@@ -53,6 +53,9 @@ def api_tool(
             except concurrent.futures.TimeoutError:
                 logger.warning(f"{provider} {endpoint} timed out after {timeout}s")
                 return err(f"{provider} {endpoint}: timed out after {timeout}s")
+            except RateLimitExceeded as e:
+                logger.warning(f"{provider} {endpoint} rate-limit budget exhausted: {e}")
+                return err(f"{provider} {endpoint}: {e}")
             except requests.exceptions.HTTPError as e:
                 if getattr(e.response, "status_code", None) == 429:
                     logger.warning(f"Rate limited by {provider} {endpoint}; retrying once")

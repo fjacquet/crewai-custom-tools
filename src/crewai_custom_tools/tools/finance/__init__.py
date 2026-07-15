@@ -18,6 +18,27 @@ from crewai_custom_tools.tools.finance.market_data import (
 )
 from crewai_custom_tools.tools.finance.fear_greed import FearGreedTool
 from crewai_custom_tools.tools.finance.exchange_rate import ExchangeRateTool
+from crewai_custom_tools.tools.finance.enhanced import (
+    TickerExistenceValidationTool,
+    EnhancedETFAnalysisTool,
+    EnhancedCryptoAnalysisTool,
+    DeFiMetricsTool,
+)
+from crewai_custom_tools.tools.finance.sec import EnhancedSECAnalysisTool
+from crewai_custom_tools.tools.finance.risk import StandardizedRiskScoringTool
+from crewai_custom_tools.tools.finance.sentiment import (
+    StandardizedSentimentAnalysisTool,
+    CrossAssetSentimentComparatorTool,
+)
+from crewai_custom_tools.tools.finance.indicators import (
+    TwelveDataIndicatorTool,
+    TwelveDataMultiIndicatorTool,
+)
+from crewai_custom_tools.tools.finance.market_extras import (
+    AlphaVantageNewsSentimentTool,
+    ChartImgTool,
+)
+from crewai_custom_tools.tools.finance.screening import MarketScreeningTool
 
 __all__ = [
     "YahooFinanceTickerInfoTool",
@@ -32,4 +53,17 @@ __all__ = [
     "AlphaVantageOverviewTool",
     "FearGreedTool",
     "ExchangeRateTool",
+    "TickerExistenceValidationTool",
+    "EnhancedETFAnalysisTool",
+    "EnhancedCryptoAnalysisTool",
+    "DeFiMetricsTool",
+    "EnhancedSECAnalysisTool",
+    "StandardizedRiskScoringTool",
+    "StandardizedSentimentAnalysisTool",
+    "CrossAssetSentimentComparatorTool",
+    "TwelveDataIndicatorTool",
+    "TwelveDataMultiIndicatorTool",
+    "AlphaVantageNewsSentimentTool",
+    "ChartImgTool",
+    "MarketScreeningTool",
 ]

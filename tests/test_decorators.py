@@ -128,3 +128,22 @@ def test_api_tool_acquires_rate_limit_token(mocker):
 
     assert sample() == "done"
     registry.acquire.assert_called_once_with("DemoProvider")
+
+
+def test_api_tool_converts_rate_limit_exceeded_to_err(mocker):
+    import json
+
+    from crewai_custom_tools.core import decorators
+    from crewai_custom_tools.core.rate_limiter import RateLimitExceeded
+
+    registry = mocker.Mock()
+    registry.acquire.side_effect = RateLimitExceeded("DemoProvider: rate-limit wait exceeded 0.0s")
+    mocker.patch.object(decorators, "get_rate_limiter", return_value=registry)
+
+    @decorators.api_tool(provider="DemoProvider", endpoint="DemoEndpoint")
+    def sample() -> str:
+        return "never reached"
+
+    payload = json.loads(sample())
+    assert payload["success"] is False
+    assert "rate-limit" in payload["error"]

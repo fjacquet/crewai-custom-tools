@@ -4,6 +4,20 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.5.0] - 2026-07-15
+
+### Added
+
+- Rate limiter: bounded waits (`CREWAI_TOOLS_RATE_LIMIT_MAX_WAIT`, default 120s) surfacing as `err()` envelopes via `RateLimitExceeded`; WARNING log for waits >5s; new provider limits for `TickerValidation`, `CoinGecko`, `DeFiLlama`.
+- `crewai_custom_tools.tools.finance` subpackage now re-exports the full finance tool set (previously top-level only).
+
+### Fixed
+
+- SEC tool's rate-limit provider key (`SEC-EDGAR` → `SECEdgar`) — SEC calls were unthrottled.
+- `YahooFinanceCompanyInfoTool` falls back to `info["revenueGrowth"]` on ANY financials-fetch failure (network errors previously errored the whole call).
+
+---
+
 ## [0.4.0] - 2026-07-14
 
 ### Breaking

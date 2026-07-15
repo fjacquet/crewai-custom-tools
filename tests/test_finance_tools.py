@@ -454,3 +454,13 @@ def test_alphavantage_overview_success(mocker):
     assert data["name"] == "Microsoft Corporation"
     assert data["return_on_equity_ttm"] == 0.385
     assert data["debt_to_equity_ratio"] == 0.45
+
+
+def test_company_info_survives_financials_network_error(mocker):
+    from crewai_custom_tools.tools.finance import company_info
+
+    ticker = mocker.Mock(info={"longName": "Apple", "revenueGrowth": 0.15})
+    type(ticker).financials = mocker.PropertyMock(side_effect=ConnectionError("edgar down"))
+    mocker.patch.object(company_info.yf, "Ticker", return_value=ticker)
+    data = parse_tool_result(company_info.YahooFinanceCompanyInfoTool()._run(ticker="AAPL"))
+    assert data["financial_metrics"]["revenue_growth"] == 0.15

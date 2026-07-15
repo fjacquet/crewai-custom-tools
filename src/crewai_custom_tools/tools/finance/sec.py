@@ -74,7 +74,7 @@ class EnhancedSECAnalysisTool(BaseTool):
     )
     args_schema: type[BaseModel] = SECAnalysisInput
 
-    @api_tool(provider="SEC-EDGAR", endpoint="Filings", timeout=45.0)
+    @api_tool(provider="SECEdgar", endpoint="Filings", timeout=45.0)
     def _run(self, ticker: str, filing_count: int = 5) -> str:
         cik = _ticker_to_cik(ticker)
         if cik is None:

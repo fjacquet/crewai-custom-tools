@@ -6,10 +6,20 @@ sync ``@api_tool`` wrapper needs: a token bucket per provider, blocking
 Set ``CREWAI_TOOLS_RATE_LIMIT_DISABLED=1`` to bypass entirely (tests, CI).
 """
 
+import logging
 import os
 import threading
 import time
 from dataclasses import dataclass
+
+logger = logging.getLogger("crewai_custom_tools.rate_limiter")
+
+_WARN_WAIT_SECONDS = 5.0
+_DEFAULT_MAX_WAIT = 120.0
+
+
+class RateLimitExceeded(RuntimeError):
+    """Raised when acquiring a token would exceed the caller's max_wait budget."""
 
 
 @dataclass(frozen=True)
@@ -32,6 +42,9 @@ DEFAULT_RATE_LIMITS: dict[str, RateLimit] = {
     "Perplexity": RateLimit(requests_per_minute=30, burst=5),
     "FRED": RateLimit(requests_per_minute=120, burst=20),
     "FearGreed": RateLimit(requests_per_minute=10, burst=2),
+    "TickerValidation": RateLimit(requests_per_minute=120, burst=10),
+    "CoinGecko": RateLimit(requests_per_minute=30, burst=5),
+    "DeFiLlama": RateLimit(requests_per_minute=60, burst=10),
 }
 
 # env var -> (provider, premium limit); mirrors finwiz's premium-tier switches
@@ -49,7 +62,10 @@ class _TokenBucket:
         self._updated = time.monotonic()
         self._lock = threading.Lock()
 
-    def acquire(self) -> None:
+    def acquire(self, provider: str, max_wait: float | None = None) -> None:
+        deadline = None if max_wait is None else time.monotonic() + max_wait
+        waited = 0.0
+        warned = False
         while True:
             with self._lock:
                 now = time.monotonic()
@@ -59,7 +75,13 @@ class _TokenBucket:
                     self._tokens -= 1.0
                     return
                 wait = (1.0 - self._tokens) / self._refill_per_sec
+            if deadline is not None and time.monotonic() + wait > deadline:
+                raise RateLimitExceeded(f"{provider}: rate-limit wait would exceed {max_wait:.1f}s (waited {waited:.1f}s)")
+            if not warned and waited + wait > _WARN_WAIT_SECONDS:
+                logger.warning(f"{provider}: rate-limited, waiting {wait:.1f}s for a token (total wait so far {waited:.1f}s)")
+                warned = True
             time.sleep(wait)
+            waited += wait
 
 
 class RateLimiterRegistry:
@@ -76,12 +98,15 @@ class RateLimiterRegistry:
     def limit_for(self, provider: str) -> RateLimit | None:
         return self._limits.get(provider)
 
-    def acquire(self, provider: str) -> None:
+    def acquire(self, provider: str, max_wait: float | None = None) -> None:
         if os.getenv("CREWAI_TOOLS_RATE_LIMIT_DISABLED", "").lower() in ("1", "true"):
             return
         bucket = self._buckets.get(provider)
-        if bucket is not None:
-            bucket.acquire()
+        if bucket is None:
+            return
+        if max_wait is None:
+            max_wait = float(os.getenv("CREWAI_TOOLS_RATE_LIMIT_MAX_WAIT", str(_DEFAULT_MAX_WAIT)))
+        bucket.acquire(provider, max_wait)
 
 
 _registry: RateLimiterRegistry | None = None
