@@ -445,6 +445,12 @@ def test_alphavantage_overview_success(mocker):
         "QuarterlyRevenueGrowthYOY": "0.12",
         "ProfitMargin": "0.26",
         "PERatio": "35.2",
+        "Sector": "TECHNOLOGY",
+        "Industry": "SOFTWARE",
+        "MarketCapitalization": "3100000000000",
+        "EPS": "11.8",
+        "RevenueTTM": "245000000000",
+        "Description": "Microsoft Corporation develops and licenses software.",
     }
     mocker.patch("requests.get", return_value=mock_response)
 
@@ -454,6 +460,41 @@ def test_alphavantage_overview_success(mocker):
     assert data["name"] == "Microsoft Corporation"
     assert data["return_on_equity_ttm"] == 0.385
     assert data["debt_to_equity_ratio"] == 0.45
+    assert data["sector"] == "TECHNOLOGY"
+    assert data["industry"] == "SOFTWARE"
+    assert data["market_cap"] == 3100000000000.0
+    assert data["eps"] == 11.8
+    assert data["revenue_ttm"] == 245000000000.0
+    assert data["description"] == "Microsoft Corporation develops and licenses software."
+
+
+def test_alphavantage_overview_missing_fields_are_none_safe(mocker):
+    """Alpha Vantage returns the literal strings 'None'/'-' for missing fields; the new
+    payload keys must degrade to None rather than leak those sentinel strings."""
+    mocker.patch.dict(os.environ, {"ALPHA_VANTAGE_API_KEY": "test_av_key"})
+
+    mock_response = mocker.MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "Symbol": "SMALLCAP",
+        "Name": "Small Cap Co",
+        "Sector": "None",
+        "Industry": "-",
+        "MarketCapitalization": "None",
+        "EPS": "-",
+        "RevenueTTM": "None",
+        "Description": "None",
+    }
+    mocker.patch("requests.get", return_value=mock_response)
+
+    data = _data(AlphaVantageOverviewTool()._run(ticker="SMALLCAP"))
+
+    assert data["sector"] is None
+    assert data["industry"] is None
+    assert data["market_cap"] is None
+    assert data["eps"] is None
+    assert data["revenue_ttm"] is None
+    assert data["description"] is None
 
 
 def test_company_info_survives_financials_network_error(mocker):

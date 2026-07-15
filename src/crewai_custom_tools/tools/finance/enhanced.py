@@ -295,6 +295,7 @@ class EnhancedCryptoAnalysisTool(BaseTool):
             "name": raw.get("name", "Unknown"),
             "current_price_usd": market.get("current_price", {}).get("usd"),
             "market_cap_usd": market.get("market_cap", {}).get("usd"),
+            "volume_24h": market.get("total_volume", {}).get("usd"),
             "market_cap_rank": market.get("market_cap_rank"),
             "price_change_24h": market.get("price_change_percentage_24h"),
             "price_change_7d": market.get("price_change_percentage_7d"),

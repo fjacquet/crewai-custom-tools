@@ -131,6 +131,11 @@ class AlphaVantageOverviewTool(BaseTool):
             except (ValueError, TypeError):
                 return None
 
+        def _safe_str(val_str: Optional[str]) -> Optional[str]:
+            if val_str is None or val_str in ("None", "-", ""):
+                return None
+            return val_str
+
         return ok(
             {
                 "symbol": data.get("Symbol"),
@@ -143,6 +148,12 @@ class AlphaVantageOverviewTool(BaseTool):
                 "profit_margin": _safe_float(data.get("ProfitMargin")),
                 "pe_ratio": _safe_float(data.get("PERatio")),
                 "dividend_yield": _safe_float(data.get("DividendYield")),
+                "sector": _safe_str(data.get("Sector")),
+                "industry": _safe_str(data.get("Industry")),
+                "market_cap": _safe_float(data.get("MarketCapitalization")),
+                "eps": _safe_float(data.get("EPS")),
+                "revenue_ttm": _safe_float(data.get("RevenueTTM")),
+                "description": _safe_str(data.get("Description")),
                 "source": "AlphaVantage",
             }
         )

@@ -172,6 +172,44 @@ def test_enhanced_crypto_success(mocker):
     assert payload["success"] is True
     assert payload["data"]["risk_assessment"]["level"] in {"Low", "Medium", "High", "Very High"}
     assert payload["data"]["investment_thesis"]
+    # No "total_volume" in the mocked market_data — volume_24h must degrade to None,
+    # not raise, and not be silently omitted from the envelope.
+    assert payload["data"]["crypto_data"]["volume_24h"] is None
+
+
+def test_enhanced_crypto_includes_volume_and_supply_fields(mocker):
+    """volume_24h is populated from market_data.total_volume.usd (previously omitted,
+    forcing consumers into a second HTTP call). Also confirms current_price/market_cap
+    (as *_usd) and the supply fields are carried through from the same response."""
+    mocker.patch(
+        "requests.get",
+        return_value=_resp(
+            mocker,
+            json_data={
+                "name": "Bitcoin",
+                "categories": ["Cryptocurrency"],
+                "market_data": {
+                    "current_price": {"usd": 65000},
+                    "market_cap": {"usd": 1.2e12},
+                    "market_cap_rank": 1,
+                    "price_change_percentage_24h": 2.0,
+                    "total_volume": {"usd": 32000000000},
+                    "circulating_supply": 19700000,
+                    "total_supply": 19700000,
+                    "max_supply": 21000000,
+                },
+            },
+        ),
+    )
+    payload = _payload(EnhancedCryptoAnalysisTool()._run("BTC"))
+    assert payload["success"] is True
+    crypto_data = payload["data"]["crypto_data"]
+    assert crypto_data["volume_24h"] == 32000000000
+    assert crypto_data["current_price_usd"] == 65000
+    assert crypto_data["market_cap_usd"] == 1.2e12
+    assert crypto_data["circulating_supply"] == 19700000
+    assert crypto_data["total_supply"] == 19700000
+    assert crypto_data["max_supply"] == 21000000
 
 
 def test_enhanced_crypto_not_found(mocker):

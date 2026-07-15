@@ -4,6 +4,14 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.5.1] - 2026-07-15
+
+### Added
+
+- `AlphaVantageOverviewTool` payload gains `sector`/`industry`/`market_cap`/`eps`/`revenue_ttm`/`description`; `EnhancedCryptoAnalysisTool` payload gains `volume_24h` (`current_price_usd`/`market_cap_usd`/`circulating_supply`/`total_supply`/`max_supply` were already present and are unchanged). Additive; no signatures changed.
+
+---
+
 ## [0.5.0] - 2026-07-15
 
 ### Added
