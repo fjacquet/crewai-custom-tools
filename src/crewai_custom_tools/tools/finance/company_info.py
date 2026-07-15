@@ -39,7 +39,7 @@ class YahooFinanceCompanyInfoTool(BaseTool):
                 if len(revenues) >= 2:
                     latest, previous = revenues.iloc[0], revenues.iloc[1]
                     revenue_growth = (latest - previous) / previous if previous != 0 else "N/A"
-        except (KeyError, ValueError, TypeError, AttributeError, IndexError) as exc:
+        except Exception as exc:  # noqa: BLE001 — any failure here must fall back, not kill the call
             logger.warning(f"Failed to calculate revenue growth for {ticker}: {exc}")
         if revenue_growth == "N/A":
             revenue_growth = info.get("revenueGrowth", "N/A")
