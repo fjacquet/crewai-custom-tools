@@ -1,9 +1,9 @@
 """Pydantic models for the analytics tools (valuation, ETF metrics, regulatory
-compliance, position sizing, price targets).
+compliance, position sizing, price targets, A+ grading/screening).
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -132,3 +132,137 @@ class PriceTargets(BaseModel):
     confidence_level: float = Field(ge=0.0, le=1.0, default=0.5)
     data_as_of: datetime
     data_sources: list[str] = Field(default_factory=list)
+
+
+# --------------------------------------------------------------------------- #
+# A+ grading cluster (Wave 3 Task 4)
+#
+# Port note: ported verbatim from finwiz's ``schemas/tools/inputs.py``
+# (``MarketScreeningInput``, ``MarketScreeningResult``, ``APlusScoringInput``,
+# ``MarketRegime``, ``ScoringCriteria``, ``APlusScore``). Two renames per the
+# porting brief, to avoid colliding with this package's existing, simpler
+# ``tools/finance/screening.py::MarketScreeningTool``/``MarketScreeningInput``
+# (live-yfinance ticker screener):
+#   - finwiz's ``MarketScreeningInput`` -> ``APlusScreeningInput``
+#   - finwiz's ``MarketScreeningTool``  -> ``APlusScreeningTool`` (tools/analytics/aplus_screening.py)
+# ``MarketScreeningResult`` keeps its name (no collision — finance/screening.py
+# has no result model, it returns a plain envelope dict).
+# --------------------------------------------------------------------------- #
+
+
+class APlusScreeningInput(BaseModel):
+    """Input schema for the A+ Screening Tool.
+
+    Port note: renamed from finwiz's ``MarketScreeningInput`` (see module
+    section header above).
+    """
+
+    asset_type: Literal["etf", "stock", "crypto"] = Field(..., description="Type of assets to screen")
+    screening_criteria: dict[str, Any] = Field(default_factory=dict, description="Custom screening criteria (overrides defaults)")
+    market_region: str = Field(default="global", description="Market region to screen (global, us, eu, etc.)")
+    max_candidates: int = Field(default=50, ge=1, le=500, description="Maximum number of candidates to return")
+    min_a_plus_score: float = Field(default=0.85, ge=0.0, le=1.0, description="Minimum A+ score threshold")
+    include_detailed_analysis: bool = Field(default=False, description="Whether to include detailed A+ analysis for each candidate")
+
+
+class MarketScreeningResult(BaseModel):
+    """Result from an A+ market screening operation.
+
+    Port note: ported from finwiz's ``MarketScreeningResult``, which was
+    missing ``screening_timestamp``/``data_sources`` fields even though
+    ``market_screening_tool.py`` always constructed it with both (silently
+    dropped under Pydantic's default ``extra="ignore"``). Both fields are
+    declared here so the port doesn't reproduce that data loss.
+    """
+
+    asset_type: Literal["etf", "stock", "crypto"]
+    screening_criteria: dict[str, Any]
+    market_region: str
+    total_screened: int
+    candidates_found: int
+    a_plus_candidates: int
+    candidates: list[Any]  # ScreeningCandidate at runtime (tools/analytics/screening_ranking.py)
+    screening_timestamp: Any = None  # datetime
+    data_sources: list[str] = Field(default_factory=list)
+
+
+class APlusScoringInput(BaseModel):
+    """Input schema for the A+ Investment Scoring Tool.
+
+    Port note: ported verbatim from finwiz's ``schemas/tools/inputs.py::APlusScoringInput``.
+    """
+
+    symbol: str = Field(..., description="Investment symbol (e.g., AAPL, SPY, BTC-USD)")
+    asset_type: Literal["etf", "stock", "crypto"] = Field(..., description="Type of asset to score")
+    fundamental_data: dict[str, Any] = Field(default_factory=dict, description="Fundamental data for the investment")
+    market_context: dict[str, Any] = Field(default_factory=dict, description="Current market context and conditions")
+    custom_criteria: dict[str, float] = Field(default_factory=dict, description="Custom scoring criteria weights")
+
+
+class MarketRegime(BaseModel):
+    """Current market regime assessment.
+
+    Port note: ported verbatim from finwiz's ``schemas/tools/inputs.py::MarketRegime``.
+    """
+
+    regime_type: Literal["bull", "bear", "sideways", "volatile"] = "sideways"
+    vix_level: float = Field(default=20.0, ge=0.0, le=100.0)
+    inflation_rate: float = Field(default=3.0, ge=-5.0, le=20.0)
+    interest_rate_trend: Literal["rising", "falling", "stable"] = "stable"
+    market_stress_level: Literal["low", "medium", "high"] = "medium"
+
+
+class ScoringCriteria(BaseModel):
+    """Dynamic A+ scoring criteria that adapt to market conditions.
+
+    Port note: ported verbatim from finwiz's ``schemas/tools/inputs.py::ScoringCriteria``.
+    """
+
+    # ETF Criteria
+    etf_max_expense_ratio: float = Field(default=0.15, ge=0.0, le=2.0)
+    etf_min_aum: float = Field(default=1e9, ge=1e6, le=1e12)
+    etf_max_tracking_error: float = Field(default=0.002, ge=0.0, le=0.1)
+    etf_min_history_years: int = Field(default=3, ge=1, le=20)
+
+    # Stock Criteria
+    stock_min_roe: float = Field(default=0.20, ge=0.0, le=1.0)
+    stock_min_revenue_growth: float = Field(default=0.15, ge=-0.5, le=2.0)
+    stock_max_debt_to_equity: float = Field(default=0.3, ge=0.0, le=5.0)
+    stock_min_market_cap: float = Field(default=1e9, ge=1e6, le=1e13)
+
+    # Crypto Criteria
+    crypto_min_market_cap: float = Field(default=10e9, ge=1e6, le=1e13)
+    crypto_min_daily_volume: float = Field(default=500e6, ge=1e6, le=1e12)
+    crypto_min_age_months: int = Field(default=36, ge=1, le=200)
+
+
+class APlusScore(BaseModel):
+    """Comprehensive A+ score with detailed breakdown.
+
+    Port note: ported verbatim from finwiz's ``schemas/tools/inputs.py::APlusScore``.
+    ``grade_info`` stays ``Any`` (finwiz's own annotation) since ``GradeInfo``
+    (``tools/analytics/grading.py``) is a plain ``dataclass``, not a Pydantic
+    model.
+    """
+
+    symbol: str
+    asset_type: Literal["etf", "stock", "crypto"]
+    composite_score: float = Field(ge=0.0, le=1.0)
+    grade_info: Any  # GradeInfo dataclass (tools/analytics/grading.py)
+
+    # Component scores
+    fundamental_score: float = Field(ge=0.0, le=1.0)
+    technical_score: float = Field(ge=0.0, le=1.0)
+    quality_score: float = Field(ge=0.0, le=1.0)
+    risk_score: float = Field(ge=0.0, le=1.0)
+
+    # Analysis details
+    strengths: list[str] = Field(default_factory=list)
+    weaknesses: list[str] = Field(default_factory=list)
+    a_plus_rationale: str = ""
+    confidence_level: float = Field(default=0.5, ge=0.0, le=1.0)
+
+    # Context
+    market_regime: MarketRegime
+    scoring_criteria: ScoringCriteria
+    analysis_timestamp: Any  # datetime
