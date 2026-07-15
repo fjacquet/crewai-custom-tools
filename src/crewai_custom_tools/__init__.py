@@ -1,6 +1,6 @@
 """Centralized CrewAI custom tools library."""
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"
 
 # 1. Web Search & Scraping
 from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool
@@ -126,7 +126,21 @@ from crewai_custom_tools.enterprise.airtable import AirtableReaderTool, Airtable
 from crewai_custom_tools.enterprise.accuweather import AccuWeatherTool
 from crewai_custom_tools.enterprise.rag_tools import SaveToRagTool
 
-# 6. Core helpers (programmatic consumers)
+# 6. Files
+from crewai_custom_tools.tools.files import FileReadTool, DirectoryReadTool
+
+# 7. Analytics (valuation, ETF, regulatory, position sizing, A+ grading/screening)
+from crewai_custom_tools.tools.analytics import (
+    ValuationTool,
+    ETFAnalysisTool,
+    RegulatoryComplianceTool,
+    PositionSizingTool,
+    PriceTargetCalculator,
+    APlusScoringTool,
+    APlusScreeningTool,
+)
+
+# 8. Core helpers (programmatic consumers)
 from crewai_custom_tools.core.keys import require_api_key
 from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.core.results import ToolResultError, ok, err, parse_tool_result
@@ -226,6 +240,17 @@ __all__ = [
     "AirtableTool",
     "AccuWeatherTool",
     "SaveToRagTool",
+    # File Tools
+    "FileReadTool",
+    "DirectoryReadTool",
+    # Analytics Tools (plain classes noted: not BaseTool, so not on the MCP surface)
+    "ValuationTool",
+    "ETFAnalysisTool",
+    "RegulatoryComplianceTool",
+    "PositionSizingTool",  # plain class — programmatic API only
+    "PriceTargetCalculator",  # plain class — programmatic API only
+    "APlusScoringTool",
+    "APlusScreeningTool",
     # Core helpers
     "require_api_key",
     "get_rate_limiter",

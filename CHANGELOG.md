@@ -4,6 +4,21 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.6.0] - 2026-07-15
+
+### Added
+
+- New `tools/files/` surface: `FileReadTool` / `DirectoryReadTool`, ported from finwiz. Deliberate exception to the package-wide `ok()`/`err()` JSON envelope — both return **plain strings** (the file/listing content an agent reads), not the standard envelope.
+- New `tools/analytics/` surface: `ValuationTool`, `ETFAnalysisTool`, `RegulatoryComplianceTool`, `PositionSizingTool`, `PriceTargetCalculator`, `APlusScoringTool`, `APlusScreeningTool`. All are pure computation over caller-supplied or static-lookup-table data — none call yfinance or any other network API, so none carry the `@api_tool` rate-limit decorator used by network-backed tools elsewhere in this package.
+  - `PositionSizingTool` and `PriceTargetCalculator` are **plain classes**, not `BaseTool` subclasses — they're programmatic APIs for callers like finwiz's rebalancing crew (returning typed pydantic models directly) and are therefore exported but do **not** register on the MCP tool surface. `ValuationTool`, `ETFAnalysisTool`, `RegulatoryComplianceTool`, `APlusScoringTool`, and `APlusScreeningTool` are `BaseTool`s and register automatically.
+  - `APlusScreeningTool` is finwiz's `MarketScreeningTool` **renamed** (MCP/tool name `"aplus_screening"`) to avoid colliding with this package's pre-existing, simpler `tools/finance/screening.py::MarketScreeningTool` (tool name `"market_screening"`).
+
+### Fixed
+
+- `composite_score` fallback bug: finwiz's raw score dict put the composite score only under `analysis_summary.composite_score`, but downstream consumers (e.g. `ScreeningRanking`) read `score_result.get("composite_score", 0.5)` at the top level — silently defaulting every candidate to 0.5. `APlusScoringTool` now also emits `composite_score` at the top level of its result, alongside the existing nested copy.
+
+---
+
 ## [0.5.1] - 2026-07-15
 
 ### Added
