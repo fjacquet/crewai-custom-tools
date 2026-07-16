@@ -4,6 +4,19 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.6.1] - 2026-07-16
+
+### Fixed
+
+- `mkdocs.yml` nav referenced two spec/plan files with a filename typo (`crewai-custom-tools-universal-monolith*` instead of the actual `crew-custom-tools-universal-monolith*`), which aborted `mkdocs build --strict`. Also added 3 previously-orphaned docs pages (OSINTFR plan/spec, the 2026-07-08 centralization plan) to the nav.
+- Refreshed stale counts/links left over from the wave3-analytics merge: tool count (87→93, plus the new Files category) and test count (224→423) in `README.md` and `CLAUDE.md`; release version references (v0.1.1→v0.6.0) in `README.md` and `docs/USER_GUIDE.md`.
+
+### Changed
+
+- Refreshed `uv.lock` transitive dependency versions (e.g. `anyio` 4.14.1→4.14.2, `cffi` 2.0.0→2.1.0); `pyproject.toml` unchanged.
+
+---
+
 ## [0.6.0] - 2026-07-15
 
 ### Added
