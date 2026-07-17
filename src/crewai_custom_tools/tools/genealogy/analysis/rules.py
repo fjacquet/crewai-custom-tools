@@ -95,3 +95,60 @@ def check_person(person: PersonFacts) -> list[Anomaly]:
                          "Aucune source ni citation rattachée."))
 
     return out
+
+
+DAYS_9_MONTHS = 280
+
+
+def _fanom(rule, p: PersonFacts, message, **detail) -> Anomaly:
+    return Anomaly(rule=rule, severity="haute", gramps_id=p.gramps_id,
+                   handle=p.handle, message=message, detail=detail)
+
+
+def check_family(family: FamilyFacts, persons: dict[str, PersonFacts]) -> list[Anomaly]:
+    """Run family-scoped rules (R3, R4, R5). Missing handles are skipped."""
+    out: list[Anomaly] = []
+    father = persons.get(family.father_handle) if family.father_handle else None
+    mother = persons.get(family.mother_handle) if family.mother_handle else None
+    children = [persons[h] for h in family.child_handles if h in persons]
+
+    # R3 — parent age at each child's birth
+    for child in children:
+        if not is_valid(child.birth):
+            continue
+        for parent, lo, hi, label in (
+            (mother, 13, 55, "mère"),
+            (father, 13, 80, "père"),
+        ):
+            if parent and is_valid(parent.birth):
+                age = years_between(parent.birth, child.birth)
+                if age < lo or age > hi:
+                    out.append(_fanom("R3", child,
+                        f"Âge de la {label} à la naissance : {age:.0f} ans (hors [{lo}, {hi}]).",
+                        parent_gramps_id=parent.gramps_id, parent_age=round(age, 1)))
+
+    # R4 — marriage before age 13 (each dated spouse)
+    if is_valid(family.marriage):
+        for spouse in (mother, father):
+            if spouse and is_valid(spouse.birth):
+                age = years_between(spouse.birth, family.marriage)
+                if age < 13:
+                    out.append(_fanom("R4", spouse,
+                        f"Mariage à {age:.0f} ans (< 13).",
+                        marriage_year=family.marriage.year))
+
+    # R5 — child born after a parent's death
+    for child in children:
+        if not is_valid(child.birth):
+            continue
+        if mother and is_valid(mother.death) and child.birth.sortval > mother.death.sortval:
+            out.append(_fanom("R5", child,
+                "Naissance postérieure au décès de la mère.",
+                mother_gramps_id=mother.gramps_id))
+        if father and is_valid(father.death) and \
+                child.birth.sortval > father.death.sortval + DAYS_9_MONTHS:
+            out.append(_fanom("R5", child,
+                "Naissance plus de 9 mois après le décès du père.",
+                father_gramps_id=father.gramps_id))
+
+    return out
