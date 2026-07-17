@@ -32,11 +32,11 @@ def find_duplicates(
     keyed = [(p, _key(p), p.birth.year if p.birth else None) for p in people]
     for i in range(len(keyed)):
         pa, ka, ya = keyed[i]
-        if ya is None:
+        if ya is None or not ka:
             continue
         for j in range(i + 1, len(keyed)):
             pb, kb, yb = keyed[j]
-            if yb is None or abs(ya - yb) > BIRTH_YEAR_WINDOW:
+            if yb is None or not kb or abs(ya - yb) > BIRTH_YEAR_WINDOW:
                 continue
             score = SequenceMatcher(None, ka, kb).ratio()
             if score >= threshold:

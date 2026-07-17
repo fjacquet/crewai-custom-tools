@@ -43,3 +43,12 @@ def test_ignores_persons_without_birth_year():
     p2 = PersonFacts(gramps_id="I2", handle="I2", name="Jean Dupont",
                      surname="Dupont", given="Jean", sex="M", has_any_citation=True)
     assert find_duplicates([p1, p2]) == []
+
+
+def test_ignores_blank_name_persons():
+    def _blank(gid, year):
+        return PersonFacts(gramps_id=gid, handle=gid, name="", surname="", given="",
+                           sex="U",
+                           birth=EventFact(type="Birth", sortval=year * 366, year=year),
+                           has_any_citation=True)
+    assert find_duplicates([_blank("I1", 1850), _blank("I2", 1851)]) == []

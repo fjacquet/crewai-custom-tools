@@ -54,6 +54,13 @@ def test_r6_burial_after_death_is_not_flagged():
     assert "R6" not in _rules(check_person(p))
 
 
+def test_r6_postmortem_event_before_birth_is_flagged():
+    p = _p(birth=EventFact(type="Birth", sortval=2400000, year=1850),
+           death=EventFact(type="Death", sortval=2420000, year=1905),
+           events=[EventFact(type="Cremation", sortval=2390000, year=1820)])
+    assert "R6" in _rules(check_person(p))
+
+
 def test_r7_baptism_before_birth():
     p = _p(birth=EventFact(type="Birth", sortval=2400000, year=1850),
            events=[EventFact(type="Baptism", sortval=2399990, year=1849)])
@@ -88,6 +95,12 @@ def test_r8_undated_event_not_flagged():
     # événement sans date : dateval [0,0,0], year 0, sortval 0 → PAS d'anomalie
     p = _p(events=[EventFact(type="Residence", sortval=0, year=0, dateval=[0, 0, 0, False])])
     assert "R8" not in _rules(check_person(p))
+
+
+def test_r8_aberrant_modifier_or_quality_is_flagged():
+    p = _p(events=[EventFact(type="Birth", sortval=2400000, year=1850,
+                             dateval=[1, 1, 1850, False], modifier=99, quality=0)])
+    assert "R8" in _rules(check_person(p))
 
 
 def test_r8_real_date_but_unsortable_is_flagged():

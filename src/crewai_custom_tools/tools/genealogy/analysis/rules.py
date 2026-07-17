@@ -54,15 +54,13 @@ def check_person(person: PersonFacts) -> list[Anomaly]:
 
     # R6 — life event outside the person's lifespan
     for ev in person.events:
-        if ev.type in POSTMORTEM_TYPES or ev.type in {"Birth", "Death"}:
-            continue
-        if not is_valid(ev):
+        if ev.type in {"Birth", "Death"} or not is_valid(ev):
             continue
         if is_valid(b) and ev.sortval < b.sortval:
             out.append(_anom("R6", "moyenne", person,
                              f"Événement « {ev.type} » ({ev.year}) daté avant la naissance.",
                              event_type=ev.type, event_year=ev.year, birth_year=b.year))
-        elif is_valid(d) and ev.sortval > d.sortval:
+        elif ev.type not in POSTMORTEM_TYPES and is_valid(d) and ev.sortval > d.sortval:
             out.append(_anom("R6", "moyenne", person,
                              f"Événement « {ev.type} » ({ev.year}) daté après le décès.",
                              event_type=ev.type, event_year=ev.year, death_year=d.year))
@@ -89,7 +87,8 @@ def check_person(person: PersonFacts) -> list[Anomaly]:
         out_of_bounds = (len(ev.dateval) >= 2
                          and isinstance(ev.dateval[0], int) and isinstance(ev.dateval[1], int)
                          and (ev.dateval[0] > 31 or ev.dateval[1] > 12))
-        if out_of_bounds or (has_real_date and ev.sortval == 0):
+        aberrant_meta = ev.modifier not in range(0, 7) or ev.quality not in range(0, 3)
+        if out_of_bounds or aberrant_meta or (has_real_date and ev.sortval == 0):
             out.append(_anom("R8", "basse", person,
                              f"Date malformée ou non interprétable sur « {ev.type} ».",
                              event_type=ev.type, dateval=ev.dateval))
