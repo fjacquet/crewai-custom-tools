@@ -80,11 +80,16 @@ def check_person(person: PersonFacts) -> list[Anomaly]:
 
     # R8 — malformed date
     for ev in person.events:
-        has_date = bool(ev.dateval) or ev.year is not None
+        has_real_date = (
+            (ev.year is not None and ev.year != 0)
+            or (len(ev.dateval) >= 3
+                and all(isinstance(x, int) for x in ev.dateval[:3])
+                and any(ev.dateval[:3]))
+        )
         out_of_bounds = (len(ev.dateval) >= 2
                          and isinstance(ev.dateval[0], int) and isinstance(ev.dateval[1], int)
                          and (ev.dateval[0] > 31 or ev.dateval[1] > 12))
-        if out_of_bounds or (has_date and ev.sortval == 0):
+        if out_of_bounds or (has_real_date and ev.sortval == 0):
             out.append(_anom("R8", "basse", person,
                              f"Date malformée ou non interprétable sur « {ev.type} ».",
                              event_type=ev.type, dateval=ev.dateval))
@@ -117,14 +122,14 @@ def check_family(family: FamilyFacts, persons: dict[str, PersonFacts]) -> list[A
         if not is_valid(child.birth):
             continue
         for parent, lo, hi, label in (
-            (mother, 13, 55, "mère"),
-            (father, 13, 80, "père"),
+            (mother, 13, 55, "de la mère"),
+            (father, 13, 80, "du père"),
         ):
             if parent and is_valid(parent.birth):
                 age = years_between(parent.birth, child.birth)
                 if age < lo or age > hi:
                     out.append(_fanom("R3", child,
-                        f"Âge de la {label} à la naissance : {age:.0f} ans (hors [{lo}, {hi}]).",
+                        f"Âge {label} à la naissance : {age:.0f} ans (hors [{lo}, {hi}]).",
                         parent_gramps_id=parent.gramps_id, parent_age=round(age, 1)))
 
     # R4 — marriage before age 13 (each dated spouse)

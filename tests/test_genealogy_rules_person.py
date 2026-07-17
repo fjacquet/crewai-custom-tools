@@ -82,3 +82,15 @@ def test_r9_no_citation():
 def test_r9_absent_when_cited():
     p = _p(has_any_citation=True)
     assert "R9" not in _rules(check_person(p))
+
+
+def test_r8_undated_event_not_flagged():
+    # événement sans date : dateval [0,0,0], year 0, sortval 0 → PAS d'anomalie
+    p = _p(events=[EventFact(type="Residence", sortval=0, year=0, dateval=[0, 0, 0, False])])
+    assert "R8" not in _rules(check_person(p))
+
+
+def test_r8_real_date_but_unsortable_is_flagged():
+    # vraie date (année renseignée) mais non triable (sortval 0) → R8
+    p = _p(events=[EventFact(type="Death", sortval=0, year=1850, dateval=[0, 0, 1850, False])])
+    assert "R8" in _rules(check_person(p))
