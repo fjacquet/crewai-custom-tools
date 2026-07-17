@@ -1,6 +1,6 @@
 """Centralized CrewAI custom tools library."""
 
-__version__ = "0.6.2"
+__version__ = "0.7.0"
 
 # 1. Web Search & Scraping
 from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool
@@ -101,7 +101,16 @@ from crewai_custom_tools.tools.osint.cli_providers import (
 )
 from crewai_custom_tools.tools.osint.email_delegator import DelegatingEmailSearchTool
 
-# 4. Reports & PDFs formatting
+# 4. Genealogy
+from crewai_custom_tools.tools.genealogy.gramps.read_tools import (
+    GrampsGetObjectTool,
+    GrampsListPeopleTool,
+    GrampsSearchTool,
+    GrampsTimelineTool,
+    GrampsTreeStatsTool,
+)
+
+# 5. Reports & PDFs formatting
 from crewai_custom_tools.reporting.html_generator import RenderReportTool, validate_html
 from crewai_custom_tools.reporting.pdf_generator import HtmlToPdfTool
 from crewai_custom_tools.reporting.template_renderers import (
@@ -120,16 +129,16 @@ from crewai_custom_tools.reporting.data_centric import (
 )
 from crewai_custom_tools.reporting.html_builder import HtmlGeneratorTool
 
-# 5. Workspace Enterprise integrations
+# 6. Workspace Enterprise integrations
 from crewai_custom_tools.enterprise.todoist import TodoistTool
 from crewai_custom_tools.enterprise.airtable import AirtableReaderTool, AirtableTool
 from crewai_custom_tools.enterprise.accuweather import AccuWeatherTool
 from crewai_custom_tools.enterprise.rag_tools import SaveToRagTool
 
-# 6. Files
+# 7. Files
 from crewai_custom_tools.tools.files import FileReadTool, DirectoryReadTool
 
-# 7. Analytics (valuation, ETF, regulatory, position sizing, A+ grading/screening)
+# 8. Analytics (valuation, ETF, regulatory, position sizing, A+ grading/screening)
 from crewai_custom_tools.tools.analytics import (
     ValuationTool,
     ETFAnalysisTool,
@@ -140,7 +149,7 @@ from crewai_custom_tools.tools.analytics import (
     APlusScreeningTool,
 )
 
-# 8. Core helpers (programmatic consumers)
+# 9. Core helpers (programmatic consumers)
 from crewai_custom_tools.core.keys import require_api_key
 from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.core.results import ToolResultError, ok, err, parse_tool_result
@@ -221,6 +230,12 @@ __all__ = [
     "MaigretTool",
     "TheHarvesterTool",
     "NetReconTool",
+    # Genealogy Tools
+    "GrampsGetObjectTool",
+    "GrampsListPeopleTool",
+    "GrampsSearchTool",
+    "GrampsTimelineTool",
+    "GrampsTreeStatsTool",
     # Reporting Tools
     "validate_html",
     "RenderReportTool",
