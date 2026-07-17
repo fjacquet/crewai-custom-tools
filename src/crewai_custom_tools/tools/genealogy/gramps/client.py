@@ -85,7 +85,11 @@ class GrampsClient:
     def count_objects(self, object_type: str) -> int:
         response = self.request("GET", f"/{object_type}/", params={"pagesize": 1})
         total = response.headers.get("X-Total-Count")
-        return int(total) if total is not None else len(response.json())
+        if total is None:
+            raise RuntimeError(
+                f"Gramps Web response for /{object_type}/ lacks the X-Total-Count header"
+            )
+        return int(total)
 
     def get_tree_info(self) -> dict:
         trees = self.get_json("/trees/")

@@ -84,6 +84,17 @@ def test_count_objects_uses_total_count_header():
     assert client.count_objects("people") == 1234
 
 
+def test_count_objects_missing_header_raises():
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        return httpx.Response(200, json=[{}])
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    with pytest.raises(RuntimeError, match="X-Total-Count"):
+        client.count_objects("people")
+
+
 def test_find_by_gramps_id_returns_single_object():
     def handler(request):
         if request.url.path == "/api/token/":
