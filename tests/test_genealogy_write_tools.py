@@ -3,11 +3,18 @@
 import json
 
 import httpx
+import pytest
 
 from crewai_custom_tools.tools.genealogy.gramps.client import GrampsClient, GrampsConfig
 from crewai_custom_tools.tools.genealogy.gramps.write_tools import GrampsUpdateNameTool
 
 CONFIG = GrampsConfig(api_url="http://g.test/api", username="u", password="p")
+
+
+@pytest.fixture(autouse=True)
+def _no_global_dry_run(monkeypatch):
+    """Tests déterministes : neutralise un GENECREW_DRY_RUN ambiant (sauf test dédié)."""
+    monkeypatch.delenv("GENECREW_DRY_RUN", raising=False)
 
 PERSON = {
     "handle": "h1", "gramps_id": "I0001", "gender": 1,
@@ -147,3 +154,21 @@ def test_update_name_all_incomplete_no_put(mocker):
     _mock(mocker, handler)
     payload = json.loads(GrampsUpdateNameTool()._run(handle="h4"))
     assert payload["success"] is True and payload["data"]["changes"] == []
+
+
+def test_env_dry_run_forces_simulation(mocker, monkeypatch):
+    # GENECREW_DRY_RUN=true force la simulation même si le paramètre dry_run est False.
+    monkeypatch.setenv("GENECREW_DRY_RUN", "true")
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return httpx.Response(200, json={"access_token": "t"})
+        if request.method == "GET":
+            return httpx.Response(200, json=PERSON)
+        raise AssertionError("aucun PUT : GENECREW_DRY_RUN=true force la simulation")
+
+    _mock(mocker, handler)
+    payload = json.loads(GrampsUpdateNameTool()._run(handle="h1"))   # dry_run param = False
+    assert payload["success"] is True
+    assert payload["data"]["dry_run"] is True          # mode effectif = simulation
+    assert payload["data"]["changes"]                   # les changements sont calculés, mais pas écrits

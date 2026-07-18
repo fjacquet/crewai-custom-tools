@@ -6,6 +6,7 @@ casing change (the invariant), so it can never re-spell a name.
 """
 
 import logging
+import os
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -37,12 +38,17 @@ class GrampsUpdateNameTool(BaseTool):
     description: str = (
         "Normalizes the capitalization of one person's primary name (first name and "
         "surnames) in Gramps. Only changes casing — refuses any change that alters the "
-        "letters. Writes directly unless dry_run is set."
+        "letters, and never touches incomplete names. Writes directly unless dry_run is "
+        "set or the global GENECREW_DRY_RUN env var is enabled."
     )
     args_schema: type[BaseModel] = GrampsUpdateNameInput
 
     @api_tool(provider="GrampsWeb", endpoint="UpdateName")
     def _run(self, handle: str, dry_run: bool = False) -> str:
+        # Interrupteur de sécurité GLOBAL : GENECREW_DRY_RUN=true force la simulation,
+        # quel que soit le paramètre. Il ne peut que rendre l'appel PLUS sûr, jamais forcer
+        # une écriture réelle (un --dry-run explicite gagne toujours vers la sécurité).
+        dry_run = dry_run or os.environ.get("GENECREW_DRY_RUN", "").strip().lower() in ("1", "true", "yes")
         client = get_client()
         person = client.get_object("people", handle)
         name = person.get("primary_name") or {}
