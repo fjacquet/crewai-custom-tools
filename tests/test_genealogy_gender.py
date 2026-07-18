@@ -37,7 +37,8 @@ TABLE = {
 @pytest.mark.parametrize("raw, expected", [
     ("josé", "JOSE"),
     ("Jean-Marie", "JEAN-MARIE"),
-    ("D'Abbadie", "D'ABBADIE"),         # apostrophe typographique U+2019
+    ("D’Abbadie", "D'ABBADIE"),    # apostrophe typographique U+2019
+    ("OʼBrien", "O'BRIEN"),        # apostrophe modificative U+02BC
     ("saint‑affrique", "SAINT-AFFRIQUE"),  # trait insécable U+2011
     ("  Anne  ", "ANNE"),
 ])
@@ -59,6 +60,21 @@ def test_normkey(raw, expected):
 ])
 def test_infer_sex(given, sex):
     assert infer_sex(given, TABLE).sex == sex
+
+
+@pytest.mark.parametrize("n_f, n_m, expect_sex", [
+    (48, 2, "F"),      # total=50, ratio=0.96 -> pile au seuil MIN_TOTAL, au-dessus du ratio -> propose
+    (49, 0, None),     # total=49 (ratio 1.0) -> sous MIN_TOTAL=50 -> abstention
+    (95, 5, "F"),      # total=100, ratio=0.95 pile -> propose (>=)
+    (94, 6, None),     # total=100, ratio=0.94 -> sous MIN_RATIO=0.95 -> abstention
+])
+def test_infer_sex_thresholds(n_f, n_m, expect_sex):
+    table = {"SEUIL": (n_f, n_m)}
+    result = infer_sex("Seuil", table)
+    if expect_sex is None:
+        assert result.sex is None
+    else:
+        assert result.sex == expect_sex
 
 
 def test_infer_sex_details():

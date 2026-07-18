@@ -19,7 +19,7 @@ DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "prenoms_sexe.csv"
 MIN_TOTAL = 50
 MIN_RATIO = 0.95
 
-_APOSTROPHES = "''ʼ"
+_APOSTROPHES = "'’ʼ"
 _HYPHENS = "-‐‑‒–—"
 
 
