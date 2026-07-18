@@ -98,6 +98,22 @@ def check_person(person: PersonFacts) -> list[Anomaly]:
         out.append(_anom("R9", "basse", person,
                          "Aucune source ni citation rattachée."))
 
+    # D1 — aucune date vitale (complétude)
+    if not is_valid(b) and not is_valid(d):
+        out.append(_anom("D1", "basse", person,
+                         "Aucune date de naissance ni de décès."))
+
+    # D2 — date en texte libre (modifier 6 = non triable)
+    for ev in person.events:
+        if ev.modifier == 6:
+            out.append(_anom("D2", "basse", person,
+                             f"Date en texte libre (non exploitable) sur « {ev.type} ».",
+                             event_type=ev.type))
+
+    # D3 — genre non renseigné
+    if person.sex not in ("M", "F"):
+        out.append(_anom("D3", "basse", person, "Genre non renseigné."))
+
     return out
 
 
