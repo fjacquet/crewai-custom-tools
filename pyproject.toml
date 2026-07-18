@@ -58,3 +58,4 @@ crewai-custom-tools-mcp = "crewai_custom_tools.mcp_server:run"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+pythonpath = ["scripts"]
