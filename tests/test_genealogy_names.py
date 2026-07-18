@@ -19,10 +19,19 @@ from crewai_custom_tools.tools.genealogy.standardize.names import (
     ("MACRON", "Macron"),
     ("O'BRIEN", "O'Brien"),
     ("DE LA TOUR", "de la Tour"),
+    ("D’ABBADIE D’ARRAST", "d’Abbadie d’Arrast"),   # apostrophe typographique U+2019
+    ("SAINT‑AFFRIQUE", "Saint‑Affrique"),           # trait d'union non-sécable U+2011
+    ("O’BRIEN", "O’Brien"),                          # apostrophe typographique, non-particule
     ("", ""),
 ])
 def test_normalize_case(raw, expected):
     assert normalize_case(raw) == expected
+
+
+def test_unicode_separators_are_case_only_changes():
+    # l'invariant accepte : seul le caractère de casse change, l'apostrophe/tiret est préservé
+    assert is_case_only_change("D’ABBADIE", normalize_case("D’ABBADIE")) is True
+    assert is_case_only_change("SAINT‑AFFRIQUE", normalize_case("SAINT‑AFFRIQUE")) is True
 
 
 @pytest.mark.parametrize("name, expected", [

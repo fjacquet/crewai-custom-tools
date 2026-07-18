@@ -19,15 +19,22 @@ def _cap(word: str) -> str:
     return word[:1].upper() + word[1:].lower() if word else word
 
 
+_APOSTROPHES = "'’ʼ"                       # ' ’ ʼ
+_HYPHENS = "-‐‑‒–—"         # - ‐ ‑ ‒ – —
+
+
 def _recase_token(token: str) -> str:
-    """Recase one space-delimited token, handling hyphens and apostrophes."""
-    if "-" in token:
-        return "-".join(_recase_token(part) for part in token.split("-"))
-    if "'" in token:
-        prefix, _, rest = token.partition("'")
-        if prefix.lower() in ("d", "l"):          # particule élidée d'/l'
-            return prefix.lower() + "'" + _recase_token(rest)
-        return _cap(prefix) + "'" + _recase_token(rest)   # O'Brien
+    """Recase one space-delimited token, handling hyphen and apostrophe variants
+    (ASCII and common Unicode), preserving the exact separator character."""
+    for hyphen in _HYPHENS:
+        if hyphen in token:
+            return hyphen.join(_recase_token(part) for part in token.split(hyphen))
+    for apo in _APOSTROPHES:
+        if apo in token:
+            prefix, _, rest = token.partition(apo)
+            if prefix.lower() in ("d", "l"):          # particule élidée d'/l'
+                return prefix.lower() + apo + _recase_token(rest)
+            return _cap(prefix) + apo + _recase_token(rest)   # O'Brien
     return _cap(token)
 
 
