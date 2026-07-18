@@ -107,3 +107,30 @@ def test_r8_real_date_but_unsortable_is_flagged():
     # vraie date (année renseignée) mais non triable (sortval 0) → R8
     p = _p(events=[EventFact(type="Death", sortval=0, year=1850, dateval=[0, 0, 1850, False])])
     assert "R8" in _rules(check_person(p))
+
+
+def test_d1_no_vital_date_flagged():
+    assert "D1" in _rules(check_person(_p()))
+
+
+def test_d1_absent_when_birth_present():
+    p = _p(birth=EventFact(type="Birth", sortval=2400000, year=1850))
+    assert "D1" not in _rules(check_person(p))
+
+
+def test_d2_free_text_date_flagged():
+    p = _p(events=[EventFact(type="Death", sortval=0, year=0, modifier=6, dateval=[0, 0, 0, False])])
+    assert "D2" in _rules(check_person(p))
+
+
+def test_d2_absent_for_normal_date():
+    p = _p(events=[EventFact(type="Death", sortval=2400000, year=1850, modifier=0)])
+    assert "D2" not in _rules(check_person(p))
+
+
+def test_d3_unknown_gender_flagged():
+    assert "D3" in _rules(check_person(_p(sex="U")))
+
+
+def test_d3_absent_for_known_gender():
+    assert "D3" not in _rules(check_person(_p(sex="F")))
