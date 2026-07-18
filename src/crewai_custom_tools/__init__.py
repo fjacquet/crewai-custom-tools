@@ -1,6 +1,6 @@
 """Centralized CrewAI custom tools library."""
 
-__version__ = "0.8.1"
+__version__ = "0.9.0"
 
 # 1. Web Search & Scraping
 from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool
@@ -109,6 +109,7 @@ from crewai_custom_tools.tools.genealogy.gramps.read_tools import (
     GrampsTimelineTool,
     GrampsTreeStatsTool,
 )
+from crewai_custom_tools.tools.genealogy.gramps.write_tools import GrampsUpdateNameTool
 
 # 5. Reports & PDFs formatting
 from crewai_custom_tools.reporting.html_generator import RenderReportTool, validate_html
@@ -236,6 +237,7 @@ __all__ = [
     "GrampsSearchTool",
     "GrampsTimelineTool",
     "GrampsTreeStatsTool",
+    "GrampsUpdateNameTool",
     # Reporting Tools
     "validate_html",
     "RenderReportTool",
