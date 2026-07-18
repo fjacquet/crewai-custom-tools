@@ -84,3 +84,42 @@ class GrampsUpdateNameTool(BaseTool):
         if changes and not dry_run:
             client.request("PUT", f"/people/{handle}", json=person)
         return ok(result)
+
+
+class GrampsUpdateGenderInput(BaseModel):
+    """Input schema for GrampsUpdateGenderTool."""
+
+    handle: str = Field(..., description="Handle of the person whose gender to set.")
+    gender: int = Field(..., description="Gender integer: 0=F, 1=M, 2=U.")
+    dry_run: bool = Field(False, description="If true, compute the change but do not write.")
+
+
+class GrampsUpdateGenderTool(BaseTool):
+    """Set a person's gender (0=F, 1=M, 2=U) in Gramps — a bounded, high-confidence fact write."""
+
+    name: str = "gramps_update_gender"
+    description: str = (
+        "Sets one person's gender in Gramps (0=F, 1=M, 2=U). This writes a fact, so it is "
+        "meant for high-confidence, human-authorized corrections. No-op when the gender is "
+        "already the requested value. Writes directly unless dry_run is set or the global "
+        "GENECREW_DRY_RUN env var is enabled."
+    )
+    args_schema: type[BaseModel] = GrampsUpdateGenderInput
+
+    @api_tool(provider="GrampsWeb", endpoint="UpdateGender")
+    def _run(self, handle: str, gender: int, dry_run: bool = False) -> str:
+        # Interrupteur GLOBAL : GENECREW_DRY_RUN=true force la simulation (ne peut que rendre
+        # l'appel PLUS sûr ; un dry_run explicite gagne toujours vers la sécurité).
+        dry_run = dry_run or os.environ.get("GENECREW_DRY_RUN", "").strip().lower() in ("1", "true", "yes")
+        client = get_client()
+        person = client.get_object("people", handle)
+        old = person.get("gender", 2)
+        change = {"handle": handle, "gramps_id": person.get("gramps_id"),
+                  "old": old, "new": gender, "dry_run": dry_run, "noop": False}
+        if gender == old:
+            change["noop"] = True
+            return ok(change)
+        person["gender"] = gender
+        if not dry_run:
+            client.request("PUT", f"/people/{handle}", json=person)
+        return ok(change)

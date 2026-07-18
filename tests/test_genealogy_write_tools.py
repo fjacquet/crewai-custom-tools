@@ -6,7 +6,10 @@ import httpx
 import pytest
 
 from crewai_custom_tools.tools.genealogy.gramps.client import GrampsClient, GrampsConfig
-from crewai_custom_tools.tools.genealogy.gramps.write_tools import GrampsUpdateNameTool
+from crewai_custom_tools.tools.genealogy.gramps.write_tools import (
+    GrampsUpdateGenderTool,
+    GrampsUpdateNameTool,
+)
 
 CONFIG = GrampsConfig(api_url="http://g.test/api", username="u", password="p")
 
@@ -172,3 +175,67 @@ def test_env_dry_run_forces_simulation(mocker, monkeypatch):
     assert payload["success"] is True
     assert payload["data"]["dry_run"] is True          # mode effectif = simulation
     assert payload["data"]["changes"]                   # les changements sont calculés, mais pas écrits
+
+
+def test_update_gender_writes(mocker):
+    puts = []
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return httpx.Response(200, json={"access_token": "t"})
+        if request.method == "GET":
+            return httpx.Response(200, json=PERSON)
+        if request.method == "PUT":
+            puts.append(json.loads(request.content))
+            return httpx.Response(200, json={})
+        return httpx.Response(404)
+
+    _mock(mocker, handler)
+    payload = json.loads(GrampsUpdateGenderTool()._run(handle="h1", gender=0))
+    assert payload["success"] is True
+    assert payload["data"]["old"] == 1 and payload["data"]["new"] == 0
+    assert payload["data"]["noop"] is False and payload["data"]["dry_run"] is False
+    assert puts and puts[0]["gender"] == 0
+
+
+def test_update_gender_dry_run_does_not_put(mocker):
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return httpx.Response(200, json={"access_token": "t"})
+        if request.method == "GET":
+            return httpx.Response(200, json=PERSON)
+        raise AssertionError("aucun PUT attendu en dry_run")
+
+    _mock(mocker, handler)
+    payload = json.loads(GrampsUpdateGenderTool()._run(handle="h1", gender=0, dry_run=True))
+    assert payload["success"] is True and payload["data"]["dry_run"] is True
+    assert payload["data"]["new"] == 0
+
+
+def test_update_gender_noop_when_unchanged(mocker):
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return httpx.Response(200, json={"access_token": "t"})
+        if request.method == "GET":
+            return httpx.Response(200, json=PERSON)
+        raise AssertionError("aucun PUT : genre déjà correct")
+
+    _mock(mocker, handler)
+    payload = json.loads(GrampsUpdateGenderTool()._run(handle="h1", gender=1))  # PERSON gender == 1
+    assert payload["success"] is True and payload["data"]["noop"] is True
+
+
+def test_env_dry_run_forces_gender_simulation(mocker, monkeypatch):
+    monkeypatch.setenv("GENECREW_DRY_RUN", "true")
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return httpx.Response(200, json={"access_token": "t"})
+        if request.method == "GET":
+            return httpx.Response(200, json=PERSON)
+        raise AssertionError("aucun PUT : GENECREW_DRY_RUN force la simulation")
+
+    _mock(mocker, handler)
+    payload = json.loads(GrampsUpdateGenderTool()._run(handle="h1", gender=0))  # dry_run param = False
+    assert payload["success"] is True and payload["data"]["dry_run"] is True
+    assert payload["data"]["new"] == 0
