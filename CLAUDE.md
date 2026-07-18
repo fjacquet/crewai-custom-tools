@@ -45,12 +45,18 @@ Each tool is a `crewai.tools.BaseTool` subclass paired with a Pydantic `BaseMode
 
 ### Directory layout (`src/crewai_custom_tools/`)
 - `tools/{web,finance,osint}/` — the tool implementations, grouped by domain.
+- `tools/genealogy/` — the Gramps/genealogy domain, consumed by the sibling `genecrew` project: `gramps/` (httpx+JWT client, read + write tools), `models/` (generated from the Gramps OpenAPI + hand-written `domain.py`), `analysis/` (pure consistency rules R1–R10 + D1–D3 and a duplicate finder — no I/O, imported by module path), `standardize/` (name casing). Only `BaseTool` subclasses go in `__all__`; the pure functions do not.
 - `enterprise/` — Todoist, Airtable, AccuWeather, RAG tools (same BaseTool pattern).
 - `reporting/` — Jinja2 HTML renderers + WeasyPrint PDF compiler.
 - `models/` — Pydantic input/output schemas, kept separate from tool logic.
 - `core/decorators.py`, `config/cache.py` — the resiliency + caching infrastructure.
 - `core/results.py`, `core/decorators.py`, `core/cli_runner.py`, `config/cache.py` — the envelope + resiliency + subprocess + caching infrastructure.
 - `mcp_server.py` — FastMCP wrapper that **auto-registers every exported tool** from `__all__`, deriving each MCP tool's params from the tool's `args_schema`.
+
+### Gramps data notes (for genealogy tools)
+- Fetch people efficiently: `GET /api/people/?profile=all&extend=event_ref_list` returns human strings + citation counts (`profile`) AND raw dates (`extended.events`) in one call per page.
+- Dates: compare via the integer `sortval` (Julian day; `0` = unknown/unsortable). Undated events come back as `dateval=[0,0,0,False]`, `year=0`, `sortval=0` (not empty). Text-only dates have `modifier==6`; `quality` valid 0–2, `modifier` valid 0–6. Gender int: `0=F, 1=M, 2=U`.
+- Write policy: casing/whitespace = *form* → direct write OK, guarded by a case-only invariant (`is_case_only_change`); anything asserting a *fact* needs a source → proposal. `GENECREW_DRY_RUN`/`dry_run` params gate writes.
 
 ### Two-surface exposure
 Every tool is reachable two ways:
