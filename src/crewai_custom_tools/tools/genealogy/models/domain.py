@@ -67,3 +67,18 @@ class DuplicateCandidate(BaseModel):
     gramps_id_b: str
     score: float
     reason: str
+
+
+class Proposition(BaseModel):
+    """One proposal for human review — a FACT change is never written directly."""
+
+    type: str                       # "genre_inconnu" | "genre_contradiction"
+    gramps_id: str
+    handle: str
+    personne: str                   # nom lisible
+    champ: str = "gender"
+    valeur_actuelle: str            # "U" | "M" | "F"
+    valeur_proposee: str            # "M" | "F"
+    preuve: str
+    confiance: str                  # "haute" | "moyenne"
+    priorite: str                   # "haute" | "moyenne"

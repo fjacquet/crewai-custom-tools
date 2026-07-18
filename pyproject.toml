@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crewai-custom-tools"
-version = "0.9.0"
+version = "0.10.0"
 description = "Centralized, resilient tools for CrewAI multi-agent systems"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -45,6 +45,7 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crewai_custom_tools"]
+artifacts = ["src/crewai_custom_tools/tools/genealogy/data/*.csv"]
 
 [tool.uv]
 # crewai pins json-repair~=0.25.2, which is vulnerable to GHSA-xf7x-x43h-rpqh
@@ -58,3 +59,4 @@ crewai-custom-tools-mcp = "crewai_custom_tools.mcp_server:run"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+pythonpath = ["scripts"]
