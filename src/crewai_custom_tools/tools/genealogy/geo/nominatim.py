@@ -5,7 +5,7 @@ from __future__ import annotations
 import httpx
 
 from crewai_custom_tools.core.rate_limiter import get_rate_limiter
-from crewai_custom_tools.tools.genealogy.geo.score import fuzzy_score, is_ambiguous
+from crewai_custom_tools.tools.genealogy.geo.score import best_similarity, is_ambiguous
 from crewai_custom_tools.tools.genealogy.models.domain import (
     DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
 )
@@ -27,8 +27,8 @@ def map_nominatim(results: list[dict], parsed: ParsedPlace) -> ResolvedPlace | N
     candidate with the best name-similarity score, not Nominatim's raw importance order."""
     if not results:
         return None
-    scores = [fuzzy_score(float(r.get("importance", 0.0)), parsed.commune,
-                          r.get("display_name", "").split(",")[0]) for r in results]
+    scores = [best_similarity(parsed.commune, r.get("display_name", "").split(",")[0])
+              for r in results]
     best = max(range(len(results)), key=lambda i: scores[i])
     top = results[best]
     levels = []
