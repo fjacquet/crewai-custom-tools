@@ -3,6 +3,7 @@
 import logging
 import urllib.parse
 from enum import StrEnum
+from typing import Literal
 
 import requests
 from crewai.tools import BaseTool
@@ -53,11 +54,16 @@ class WikipediaSearchTool(BaseTool):
 
 
 class WikipediaArticleToolInput(BaseModel):
-    """Input model for the WikipediaArticleTool."""
+    """Input model for the WikipediaArticleTool.
+
+    `action` is a Literal (not the ArticleAction enum): enum classes render as schema
+    references, which strict providers (Mistral) reject in function-call schemas —
+    a Literal stays inline.
+    """
 
     title: str = Field(..., description="The title of the Wikipedia article.")
-    action: ArticleAction = Field(
-        default=ArticleAction.GET_SUMMARY,
+    action: Literal["get_summary", "get_article", "get_sections"] = Field(
+        default="get_summary",
         description="The action to perform on the article.",
     )
 
