@@ -4,6 +4,20 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.12.0] - 2026-07-19
+
+### Added
+
+- **Place-standardization domain** (`tools/genealogy/geo/` + `standardize/places.py` + place models). Parses flat GEDCOM-imported place strings and resolves them to a canonical modern name, a typed parent hierarchy, and WGS84 coordinates, via a **country-routed resolver chain**:
+  - Pure `standardize/places.py` — `parse_pname` (positional parser with shift detection, index-based segment handling) and `normalize_country`; dataset-agnostic, offline.
+  - `geo/registry.py` routes a `ParsedPlace` to a country resolver, falling back to a worldwide geocoder; `decide_action` maps the resolution score to `ecrire` / `proposition` / `indecidable`. Adding a country = one registry entry.
+  - Resolvers (each a thin monkeypatchable httpx wrapper + a pure mapper returning the `ResolvedPlace` contract): `france.py` (authoritative INSEE code → `geo.api.gouv.fr`, score 1.0), `suisse.py` (swisstopo GeoAdmin — reads WGS84 `lat`/`lon`, never the LV95 `x`/`y` grid), `nominatim.py` (worldwide OSM fallback, selects the best fuzzy-score candidate). `geo/score.py` provides `similarity`/`fuzzy_score` + an ambiguity guard.
+  - **Data-driven temporal transitions** (`geo/transitions.py` + `data/transitions.csv`): emits two dated parent chains (before/after a sovereignty change) + a dated alt name when a dataset row matches — the code contains no country-specific logic (empty dataset → single undated chain).
+  - Place domain models: `ParsedPlace`, `PlaceLevel`, `DatedChain`, `DatedName`, `ResolvedPlace` (the resolver contract), `PlaceProposition`, `PlaceMergeProposition`.
+- **Place write tools** (`gramps/write_tools.py`): `GrampsCreatePlaceTool` (creates a parent/leaf place; synthetic `DRYRUN:<name>` handle in dry-run), `GrampsUpdatePlaceTool` (enriches a leaf in place — name/type/WGS84 lat-long/code/placerefs/alt-names — no-op when already conforming), `GrampsMergePlacesTool` (human-triggered leaf merge via the native `/merge/` endpoint). `date_qualifier_to_gramps_date` converts `"avant/après YYYY-MM-DD"` placeref qualifiers into real Gramps `Date` objects. All gated by `effective_dry_run`.
+
+---
+
 ## [0.11.1] - 2026-07-19
 
 ### Fixed
