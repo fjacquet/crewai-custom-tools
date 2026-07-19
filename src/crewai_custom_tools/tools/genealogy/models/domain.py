@@ -158,3 +158,27 @@ class PlaceMergeProposition(BaseModel):
     handle_merge: str
     canonical: str
     reason: str
+
+
+class PropositionAudit(BaseModel):
+    """One precise, human-applicable correction proposal (confidence capped at 2/4).
+
+    Shared vocabulary: emitted by the pure D-rules and by the LLM crew alike.
+    """
+
+    type: str = Field(description="date | lieu | relation | nom | source | doublon | autre")
+    gramps_id: str
+    handle: str
+    personne: str
+    cible: str = Field(description="Objet Gramps visé (ex. 'événement E0607 de I0010').")
+    action: str = Field(description="Le changement exact à appliquer, en une phrase.")
+    preuve_url: str = Field(default="", description="URL/référence de la preuve, si preuve.")
+    preuve_detail: str = Field(default="", description="Ce que la preuve établit.")
+    priorite: str = Field(description="haute | moyenne | basse")
+    confiance: int = Field(ge=1, le=2, description="1 plausible, 2 preuve concordante.")
+
+
+class PropositionsLot(BaseModel):
+    """Structured batch of propositions."""
+
+    propositions: list[PropositionAudit] = Field(default_factory=list)
