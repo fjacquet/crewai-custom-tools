@@ -24,8 +24,8 @@ MAX_DUPLICATE_SCOPE = 500  # hard bound: never the full-tree O(n²) from an agen
 class GenealogyCheckPersonInput(BaseModel):
     """Input schema for GenealogyCheckPersonTool."""
 
-    handle: str | None = Field(None, description="Internal Gramps handle of the person.")
-    gramps_id: str | None = Field(None, description="Human-readable ID (I0042...).")
+    handle: str = Field("", description="Internal Gramps handle (empty if using gramps_id).")
+    gramps_id: str = Field("", description="Human-readable ID (I0042...).")
 
 
 class GenealogyCheckPersonTool(BaseTool):
@@ -40,7 +40,7 @@ class GenealogyCheckPersonTool(BaseTool):
     args_schema: type[BaseModel] = GenealogyCheckPersonInput
 
     @api_tool(provider="GrampsWeb", endpoint="CheckPerson")
-    def _run(self, handle: str | None = None, gramps_id: str | None = None) -> str:
+    def _run(self, handle: str = "", gramps_id: str = "") -> str:
         client = get_client()
         if not handle:
             if not gramps_id:
@@ -76,8 +76,8 @@ class GenealogyCheckPersonTool(BaseTool):
 class GenealogyFindDuplicatesInput(BaseModel):
     """Input schema for GenealogyFindDuplicatesTool."""
 
-    surname: str | None = Field(
-        None, description="Restrict the search to people matching this surname."
+    surname: str = Field(
+        "", description="Restrict the search to people matching this surname (empty = all)."
     )
     limit: int = Field(
         200, description=f"Max people compared (bounded at {MAX_DUPLICATE_SCOPE})."
@@ -96,7 +96,7 @@ class GenealogyFindDuplicatesTool(BaseTool):
     args_schema: type[BaseModel] = GenealogyFindDuplicatesInput
 
     @api_tool(provider="GrampsWeb", endpoint="FindDuplicates", timeout=60.0)
-    def _run(self, surname: str | None = None, limit: int = 200,
+    def _run(self, surname: str = "", limit: int = 200,
              threshold: float = 0.85) -> str:
         limit = min(limit, MAX_DUPLICATE_SCOPE)
         client = get_client()

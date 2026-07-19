@@ -3,7 +3,6 @@
 import logging
 import urllib.parse
 from enum import StrEnum
-from typing import Optional
 
 import requests
 from crewai.tools import BaseTool
@@ -27,7 +26,7 @@ class WikipediaSearchToolInput(BaseModel):
     """Input model for the WikipediaSearchTool."""
 
     query: str = Field(..., description="The search query for Wikipedia.")
-    limit: Optional[int] = Field(
+    limit: int = Field(
         default=5, description="The maximum number of results to return."
     )
 

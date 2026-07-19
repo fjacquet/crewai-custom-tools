@@ -392,8 +392,8 @@ class GrampsEnsureTagTool(BaseTool):
 
 class GrampsAttachInput(BaseModel):
     handle: str = Field(..., description="Handle of the person to annotate.")
-    note_handle: str | None = Field(None, description="Note handle to append to note_list.")
-    tag_handle: str | None = Field(None, description="Tag handle to append to tag_list.")
+    note_handle: str = Field("", description="Note handle to append to note_list (empty = none).")
+    tag_handle: str = Field("", description="Tag handle to append to tag_list (empty = none).")
     dry_run: bool = Field(False, description="If true, compute the change but do not PUT.")
 
 

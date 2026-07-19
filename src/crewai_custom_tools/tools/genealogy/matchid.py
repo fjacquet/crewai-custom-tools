@@ -43,11 +43,11 @@ class InseeDecesSearchInput(BaseModel):
     """Input model for the InseeDecesSearchTool."""
 
     last_name: str = Field(..., description="Surname to search (INSEE death records).")
-    first_name: str | None = Field(None, description="First name (improves matching).")
-    birth_date: str | None = Field(
-        None, description="Birth date or year: YYYY or DD/MM/YYYY or YYYYMMDD."
+    first_name: str = Field("", description="First name (improves matching; empty = any).")
+    birth_date: str = Field(
+        "", description="Birth date or year: YYYY or DD/MM/YYYY or YYYYMMDD (empty = any)."
     )
-    birth_city: str | None = Field(None, description="Birth city (optional filter).")
+    birth_city: str = Field("", description="Birth city (empty = any).")
     limit: int = Field(10, description="Max matches returned.")
 
 
@@ -63,8 +63,8 @@ class InseeDecesSearchTool(BaseTool):
     args_schema: type[BaseModel] = InseeDecesSearchInput
 
     @api_tool(provider="MatchID", endpoint="DecesSearch", timeout=30.0)
-    def _run(self, last_name: str, first_name: str | None = None,
-             birth_date: str | None = None, birth_city: str | None = None,
+    def _run(self, last_name: str, first_name: str = "",
+             birth_date: str = "", birth_city: str = "",
              limit: int = 10) -> str:
         params = {"lastName": last_name}
         if first_name:

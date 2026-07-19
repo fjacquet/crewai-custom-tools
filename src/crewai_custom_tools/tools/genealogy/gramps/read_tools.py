@@ -52,8 +52,8 @@ class GrampsGetObjectInput(BaseModel):
         description="Gramps object type: people, families, events, places, sources, "
         "citations, repositories, media or notes.",
     )
-    handle: str | None = Field(None, description="Internal Gramps handle.")
-    gramps_id: str | None = Field(None, description="Human-readable ID (I0042, F0007...).")
+    handle: str = Field("", description="Internal Gramps handle (empty if using gramps_id).")
+    gramps_id: str = Field("", description="Human-readable ID (I0042, F0007...).")
 
 
 class GrampsGetObjectTool(BaseTool):
@@ -70,8 +70,8 @@ class GrampsGetObjectTool(BaseTool):
     def _run(
         self,
         object_type: str,
-        handle: str | None = None,
-        gramps_id: str | None = None,
+        handle: str = "",
+        gramps_id: str = "",
     ) -> str:
         if handle:
             return ok(get_client().get_object(object_type, handle))
