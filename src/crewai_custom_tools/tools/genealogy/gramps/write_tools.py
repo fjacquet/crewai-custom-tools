@@ -7,6 +7,7 @@ casing change (the invariant), so it can never re-spell a name.
 
 import logging
 import os
+import uuid
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -156,6 +157,24 @@ class GrampsUpdateGenderTool(BaseTool):
         return ok(change)
 
 
+def _created_handle(data) -> str | None:
+    """Extract the created object's handle from a Gramps Web POST response.
+
+    POST /api/places/ returns a 201 *transaction array* (e.g. [{"type": "add",
+    "_class": "Place", "handle": "...", "new": {...}}]), not a bare dict — so we
+    scan the items for a top-level (or nested "new") handle.
+    """
+    items = data if isinstance(data, list) else [data]
+    for item in items:
+        if isinstance(item, dict):
+            if item.get("handle"):
+                return item["handle"]
+            new = item.get("new")
+            if isinstance(new, dict) and new.get("handle"):
+                return new["handle"]
+    return None
+
+
 class GrampsCreatePlaceInput(BaseModel):
     name: str = Field(..., description="Place name value.")
     place_type: str = Field(..., description="Gramps place type (Country, Region, Department…).")
@@ -188,8 +207,9 @@ class GrampsCreatePlaceTool(BaseTool):
             if gdate is not None:
                 ref["date"] = gdate
             placeref_list.append(ref)
-        payload = {"_class": "Place", "name": {"value": name}, "place_type": place_type,
-                   "placeref_list": placeref_list}
+        gen_handle = uuid.uuid4().hex
+        payload = {"_class": "Place", "handle": gen_handle, "name": {"value": name},
+                   "place_type": place_type, "placeref_list": placeref_list}
         if lat:
             payload["lat"] = lat
         if long:
@@ -199,7 +219,10 @@ class GrampsCreatePlaceTool(BaseTool):
         if dry_run:
             return ok({"handle": f"DRYRUN:{name}", "dry_run": True, "created": False})
         resp = get_client().request("POST", "/places/", json=payload)
-        handle = resp.json().get("handle") if resp.content else None
+        data = resp.json() if resp.content else None
+        # Gramps Web returns a 201 transaction ARRAY (not a dict); take the created
+        # place's handle from it, falling back to the client-generated handle we sent.
+        handle = _created_handle(data) or gen_handle
         return ok({"handle": handle, "dry_run": False, "created": True})
 
 

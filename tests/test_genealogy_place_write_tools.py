@@ -24,7 +24,8 @@ def _client(on_put=None, on_post=None, existing=None):
         if request.method == "GET" and request.url.path.startswith("/api/places/"):
             return httpx.Response(200, json=existing or {})
         if request.method == "POST" and request.url.path == "/api/places/":
-            return on_post(request) if on_post else httpx.Response(201, json={"handle": "NEW"})
+            return on_post(request) if on_post else httpx.Response(
+                201, json=[{"type": "add", "_class": "Place", "handle": "NEW"}])
         if request.method == "PUT":
             return on_put(request) if on_put else httpx.Response(200, json={})
         return httpx.Response(404)
@@ -43,12 +44,36 @@ def test_create_place_writes_and_returns_handle(mocker):
 
     def on_post(request):
         posts.append(json.loads(request.content))
-        return httpx.Response(201, json={"handle": "H_FR"})
+        # Gramps Web returns a 201 transaction ARRAY, not a {"handle": ...} dict:
+        return httpx.Response(201, json=[{"type": "add", "_class": "Place", "handle": "H_FR"}])
 
     mocker.patch.object(write_tools, "get_client", return_value=_client(on_post=on_post))
     data = json.loads(GrampsCreatePlaceTool()._run(name="France", place_type="Country"))
-    assert data["data"]["handle"] == "H_FR" and len(posts) == 1
+    assert data["data"]["handle"] == "H_FR" and len(posts) == 1   # handle read from the array
     assert posts[0]["place_type"] == "Country"
+    assert posts[0]["handle"]                                     # a client handle was also sent
+
+
+def test_create_place_falls_back_to_client_handle_when_response_has_none(mocker):
+    posts = []
+
+    def on_post(request):
+        posts.append(json.loads(request.content))
+        return httpx.Response(201, json=[])           # server returns no parseable handle
+
+    mocker.patch.object(write_tools, "get_client", return_value=_client(on_post=on_post))
+    data = json.loads(GrampsCreatePlaceTool()._run(name="France", place_type="Country"))
+    assert data["data"]["handle"] == posts[0]["handle"]   # falls back to the handle we sent
+    assert data["data"]["handle"] and data["data"]["created"] is True
+
+
+def test_created_handle_extracts_from_transaction_array():
+    from crewai_custom_tools.tools.genealogy.gramps.write_tools import _created_handle
+    assert _created_handle([{"type": "add", "_class": "Place", "handle": "H1"}]) == "H1"
+    assert _created_handle([{"type": "add", "new": {"handle": "H2"}}]) == "H2"
+    assert _created_handle([]) is None
+    assert _created_handle({"handle": "H3"}) == "H3"      # tolerate a bare dict too
+    assert _created_handle(None) is None
 
 
 def test_update_place_noop_when_conforming(mocker):
