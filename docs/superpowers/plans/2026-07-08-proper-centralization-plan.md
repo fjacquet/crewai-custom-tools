@@ -5,6 +5,7 @@
 **Status:** COMPLETE (2026-07-08)
 
 ## Final outcome
+
 - Phase 0 (foundation), Phase 1 (37 existing tools fixed), Phase 2 (41 new tools
   centralized), Phase 3 (MCP parity, docs, v0.2.0), Phase 4 (6 deferred tools rebuilt
   fresh) — all done. Opened as PR #1.
@@ -26,6 +27,7 @@ the CrewAI tools that live across three authoritative source repos:
 - `~/Projects/crews/epic_news` — web + enterprise + reporting + finance (`src/epic_news/tools/`)
 
 Two axes of work:
+
 1. **Fix** all ~37 currently-centralized tools (a full review on 2026-07-08 found ~50 defects).
 2. **Centralize** the ~45 genuinely-reusable tools that were never ported.
 
@@ -40,6 +42,7 @@ true regressions where the source is correct and can be lifted directly:
 - `WikipediaArticleTool.get_sections` — epic_news uses the library's `page.sections` property.
 
 Correct reference implementations that DO exist upstream:
+
 - ETF holdings via `yf.Ticker(t).get_funds_data().top_holdings` — `finwiz/src/finwiz/discovery/universe_provider.py:122-156`.
 - Perplexity resilience shape — `finwiz/src/finwiz/tools/perplexity_search_tool.py` (`@api_tool`, returns full payload, never indexes `choices[0]`).
 - History %-change — `finwiz/src/finwiz/tools/yahoo_finance_history_tool.py:85` (divide by real earliest close).
@@ -62,10 +65,12 @@ split, personne-morale officers, OpenCorporates/Epieos keyless behavior — all 
 ## Foundational design
 
 ### `core/results.py` (DONE)
+
 `ToolResult` frozen dataclass + `ok(data)` / `err(message, data=None)` pure helpers returning the
 canonical JSON string. Every tool adopts this.
 
 ### `core/decorators.py` `@api_tool` rework
+
 - On any failure (timeout / HTTPError / exception) return `err(f"{provider} {endpoint}: {e}")`
   instead of the current empty `default_return` (`"{}"`/`"[]"`), so failure is always
   distinguishable and JSON-shaped (fixes S1).
@@ -73,6 +78,7 @@ canonical JSON string. Every tool adopts this.
 - Require inner per-request `requests` timeouts in tools so the abandoned-thread window is bounded (S4).
 
 ### Template packaging (H1)
+
 Move `templates/` → `src/crewai_custom_tools/reporting/templates/`, load via
 `importlib.resources`, and include as package data in `pyproject.toml`
 (`[tool.hatch.build.targets.wheel.force-include]` or package-data). Fix resolvers in
@@ -81,15 +87,18 @@ Move `templates/` → `src/crewai_custom_tools/reporting/templates/`, load via
 ## Phased roadmap
 
 ### Phase 0 — Foundation ✅ DONE (commit 9e90923)
+
 - [x] Create branch, `core/results.py`, this plan.
 - [x] Rework `@api_tool` to the error envelope; update `tests/test_decorators.py`.
 - [x] Package templates properly; fix resolvers; packaging test (verified in built wheel).
 - [x] Green baseline: full `pytest` passes on the reworked foundation.
 
 ### Phase 1 — Fix existing tools (envelope + per-tool defects) ✅ DONE
+
 Committed per domain: finance (bbde848), web (06db04c), osint (0aa60fc),
 reporting (e463555), enterprise (ddbe527). Full suite green (121 passed).
 Convert each tool to `ok()/err()` and fix its specific findings. By domain:
+
 - **Web:** perplexity (wire or drop `focus`, guard parse, `@api_tool`, read key in `_run`);
   serper (only `SERPER_API_KEY`); scraper (firecrawl SDK object, uniform schema, `title` default);
   wikipedia (`page.sections`, JSON everywhere); rss (OPML→JSON, UTC-aware dates);
@@ -108,7 +117,9 @@ Convert each tool to `ok()/err()` and fix its specific findings. By domain:
   (parse body once), rag (port correct failure handling from epic_news).
 
 ### Phase 2 — Centralize missing tools (~45)
+
 Group + register in `__init__.py` `__all__` and the MCP server.
+
 - **epic_news:** Brave/Tavily/SerpApi/Hybrid search; standalone ScrapeNinja/Firecrawl/BatchArticleScraper;
   CoinMarketCap list/news/historical; Geoapify; TechStack; data-centric (Metrics/KPI/DataViz/StructuredReport);
   HtmlGeneratorTool + TemplateManager pipeline; UniversalReport/Reporting; RSSFeed/UnifiedRss;
@@ -120,6 +131,7 @@ Group + register in `__init__.py` `__all__` and the MCP server.
   (port `cli_runner` vs skip); HTTP ones port cleanly with the envelope.
 
 ### Phase 3 — Docs, tests, verification
+
 - Port/adapt source tests (epic_news `tests/tools/`, finwiz `tests/unit/tools/`, osint_tools
   `tests/providers/`) — mock the single network/CLI boundary.
 - Fix README (test count 87→actual; caching claim; MCP subset note); regenerate CLAUDE.md;
@@ -127,11 +139,13 @@ Group + register in `__init__.py` `__all__` and the MCP server.
 - Full `pytest` green; add a MCP parity check; `verify` the reporting/render path end-to-end.
 
 ## Testing strategy
+
 - Offline/mocked (`pytest-mock`); mock the single network boundary per tool.
 - Every fixed tool gets a success-path + failure-path (envelope `success:false`) test.
 - Adopt source fixtures where they exist; author fresh tests for the fresh fixes.
 
 ## Risks
+
 - Envelope change touches every tool + all 91 existing tests → do it behind the `@api_tool` rework
   first, then migrate domain-by-domain to keep the suite green incrementally.
 - Some ⚠️ finance/OSINT fixes depend on live API/library behavior (yfinance `funds_data`, CNN keys,
