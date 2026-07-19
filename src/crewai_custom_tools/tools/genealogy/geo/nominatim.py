@@ -1,0 +1,48 @@
+"""Worldwide fallback resolver: Nominatim/OSM (ODbL, 1 req/s, User-Agent)."""
+
+from __future__ import annotations
+
+import httpx
+
+from crewai_custom_tools.tools.genealogy.geo.score import fuzzy_score, is_ambiguous
+from crewai_custom_tools.tools.genealogy.models.domain import (
+    DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
+)
+
+_URL = "https://nominatim.openstreetmap.org/search"
+_UA = "genecrew/1.0 (genealogy place standardizer; +https://github.com/)"
+
+
+def _http_get(params: dict) -> list:
+    resp = httpx.get(_URL, params=params, headers={"User-Agent": _UA}, timeout=15.0)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def map_nominatim(results: list[dict], parsed: ParsedPlace) -> ResolvedPlace | None:
+    """Pure map of Nominatim results → ResolvedPlace (worldwide, fuzzy)."""
+    if not results:
+        return None
+    scores = [fuzzy_score(float(r.get("importance", 0.0)), parsed.commune,
+                          r.get("display_name", "").split(",")[0]) for r in results]
+    top = results[0]
+    levels = []
+    if parsed.country:
+        levels.append(PlaceLevel(name=parsed.country, place_type="Country"))
+    return ResolvedPlace(
+        name=top.get("display_name", parsed.commune).split(",")[0].strip(),
+        place_type="Municipality",
+        lat=str(top["lat"]), long=str(top["lon"]),
+        chains=[DatedChain(levels=levels)],
+        alt_names=[DatedName(value=parsed.raw)],
+        score=scores[0], ambiguous=is_ambiguous(scores),
+        source="Nominatim/OSM", query=f"{parsed.commune}, {parsed.country}".strip(", "),
+    )
+
+
+def resolve_world(parsed: ParsedPlace) -> ResolvedPlace | None:
+    """Resolve any place by name via Nominatim. None if nothing to search."""
+    if not parsed.commune:
+        return None
+    q = f"{parsed.commune}, {parsed.country}".strip(", ")
+    return map_nominatim(_http_get({"q": q, "format": "jsonv2", "limit": 5}), parsed)
