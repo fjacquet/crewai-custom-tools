@@ -8,6 +8,7 @@ matches the resolved country. Empty dataset → single undated chain (generic).
 from __future__ import annotations
 
 import csv
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -29,6 +30,7 @@ class Transition(BaseModel):
     date: str                      # ISO YYYY-MM-DD
 
 
+@lru_cache(maxsize=1)
 def load_transitions() -> list[Transition]:
     """Load transitions from the embedded CSV (empty/missing → [])."""
     if not _DATA.exists():

@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import httpx
 
+from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.tools.genealogy.models.domain import (
     DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
 )
 
 _BASE = "https://geo.api.gouv.fr"
 _FIELDS = "nom,code,centre,departement,region"
+_PROVIDER = "GeoApiGouvFr"
 
 
 def _http_get(path: str, params: dict) -> dict:
     """Thin HTTP GET (monkeypatched in tests). WGS84 GeoJSON out."""
+    get_rate_limiter().acquire(_PROVIDER)
     resp = httpx.get(f"{_BASE}{path}", params=params, timeout=15.0)
     resp.raise_for_status()
     return resp.json()

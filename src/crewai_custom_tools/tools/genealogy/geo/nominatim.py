@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import httpx
 
+from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.tools.genealogy.geo.score import fuzzy_score, is_ambiguous
 from crewai_custom_tools.tools.genealogy.models.domain import (
     DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
@@ -11,9 +12,11 @@ from crewai_custom_tools.tools.genealogy.models.domain import (
 
 _URL = "https://nominatim.openstreetmap.org/search"
 _UA = "genecrew/1.0 (genealogy place standardizer; +https://github.com/)"
+_PROVIDER = "Nominatim"
 
 
 def _http_get(params: dict) -> list:
+    get_rate_limiter().acquire(_PROVIDER)
     resp = httpx.get(_URL, params=params, headers={"User-Agent": _UA}, timeout=15.0)
     resp.raise_for_status()
     return resp.json()

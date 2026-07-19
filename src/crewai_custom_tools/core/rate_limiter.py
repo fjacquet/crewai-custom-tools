@@ -45,6 +45,10 @@ DEFAULT_RATE_LIMITS: dict[str, RateLimit] = {
     "TickerValidation": RateLimit(requests_per_minute=120, burst=10),
     "CoinGecko": RateLimit(requests_per_minute=30, burst=5),
     "DeFiLlama": RateLimit(requests_per_minute=60, burst=10),
+    # Genealogy geo resolvers (crewai_custom_tools/tools/genealogy/geo/*)
+    "Nominatim": RateLimit(requests_per_minute=60, burst=1),   # ODbL: max 1 req/s, no burst
+    "Swisstopo": RateLimit(requests_per_minute=600, burst=10),  # ~10 req/s, conservative
+    "GeoApiGouvFr": RateLimit(requests_per_minute=600, burst=10),  # ~10 req/s, conservative
 }
 
 # env var -> (provider, premium limit); mirrors finwiz's premium-tier switches

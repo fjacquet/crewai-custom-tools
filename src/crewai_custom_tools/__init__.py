@@ -112,6 +112,9 @@ from crewai_custom_tools.tools.genealogy.gramps.read_tools import (
 from crewai_custom_tools.tools.genealogy.gramps.write_tools import (
     GrampsUpdateGenderTool,
     GrampsUpdateNameTool,
+    GrampsCreatePlaceTool,
+    GrampsUpdatePlaceTool,
+    GrampsMergePlacesTool,
 )
 
 # 5. Reports & PDFs formatting
@@ -242,6 +245,9 @@ __all__ = [
     "GrampsTreeStatsTool",
     "GrampsUpdateNameTool",
     "GrampsUpdateGenderTool",
+    "GrampsCreatePlaceTool",
+    "GrampsUpdatePlaceTool",
+    "GrampsMergePlacesTool",
     # Reporting Tools
     "validate_html",
     "RenderReportTool",

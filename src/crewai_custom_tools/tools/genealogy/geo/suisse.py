@@ -6,6 +6,7 @@ import re
 
 import httpx
 
+from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.tools.genealogy.geo.score import fuzzy_score, is_ambiguous
 from crewai_custom_tools.tools.genealogy.models.domain import (
     DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
@@ -13,9 +14,11 @@ from crewai_custom_tools.tools.genealogy.models.domain import (
 
 _URL = "https://api3.geo.admin.ch/rest/services/api/SearchServer"
 _TAG = re.compile(r"<[^>]+>")
+_PROVIDER = "Swisstopo"
 
 
 def _http_get(url: str, params: dict) -> dict:
+    get_rate_limiter().acquire(_PROVIDER)
     resp = httpx.get(url, params=params, timeout=15.0)
     resp.raise_for_status()
     return resp.json()
