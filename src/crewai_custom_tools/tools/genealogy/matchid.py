@@ -44,15 +44,18 @@ def search_deces(last_name: str, first_name: str = "", birth_date: str = "",
 def _birth_concordance(birth_iso: str, match_birth: str) -> float:
     """Concordance of tree birth ('1922-09-29' or '1922') vs INSEE 'YYYYMMDD'. Pure.
 
-    1.0 exact full date, 0.7 same year (either side year-only), 0.0 mismatch.
+    1.0 exact full date, 0.5 same year only, 0.0 mismatch. Year-only concordance is
+    deliberately capped so it can NEVER cross the proposal threshold by itself: with a
+    27M-record national file, "same common name + same birth year" is a near-certain
+    homonym (real alive-person false positives were produced at 0.7).
     """
     tree = birth_iso.replace("-", "").strip()
     insee = (match_birth or "").strip()
     if not tree or not insee:
         return 0.0
     if len(tree) == 8 and len(insee) == 8:
-        return 1.0 if tree == insee else (0.7 if tree[:4] == insee[:4] else 0.0)
-    return 0.7 if tree[:4] == insee[:4] else 0.0
+        return 1.0 if tree == insee else (0.5 if tree[:4] == insee[:4] else 0.0)
+    return 0.5 if tree[:4] == insee[:4] else 0.0
 
 
 def score_deces_match(surname: str, given: str, birth_iso: str, match: dict) -> float:

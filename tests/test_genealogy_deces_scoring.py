@@ -19,9 +19,11 @@ def test_exact_full_date_scores_one():
     assert s == 1.0                                            # 0.5 + 0.2 + 0.3
 
 
-def test_year_only_scores_high_but_below_exact():
+def test_year_only_caps_below_proposal_threshold():
+    # L'année seule plafonne à 0.85 : elle ne peut JAMAIS franchir le seuil 0.90 seule
+    # (retour terrain: des vivants proposés décédés sur homonymes même-nom-même-année).
     s = score_deces_match("Rippert", "Odette", "1922", ODETTE)
-    assert 0.90 <= s < 1.0                                     # concordance 0.7
+    assert s == 0.85                                           # 0.5 + 0.2 + 0.15
 
 
 def test_divergent_birth_eliminates():
