@@ -7,7 +7,7 @@ import re
 import httpx
 
 from crewai_custom_tools.core.rate_limiter import get_rate_limiter
-from crewai_custom_tools.tools.genealogy.geo.score import fuzzy_score, is_ambiguous
+from crewai_custom_tools.tools.genealogy.geo.score import best_similarity, is_ambiguous
 from crewai_custom_tools.tools.genealogy.models.domain import (
     DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
 )
@@ -29,16 +29,17 @@ def map_swiss(payload: dict, parsed: ParsedPlace) -> ResolvedPlace | None:
     results = payload.get("results") or []
     if not results:
         return None
-    scores = [fuzzy_score(1.0, parsed.commune, _TAG.sub("", r["attrs"].get("label", "")))
-              for r in results]
-    attrs = results[0]["attrs"]
-    name = _TAG.sub("", attrs.get("label", "")).strip()
+    labels = [_TAG.sub("", r["attrs"].get("label", "")).strip() for r in results]
+    scores = [best_similarity(parsed.commune, lbl) for lbl in labels]
+    best = max(range(len(results)), key=lambda i: scores[i])
+    attrs = results[best]["attrs"]
+    name = labels[best]
     return ResolvedPlace(
         name=name or parsed.commune, place_type="Municipality",
         lat=str(attrs["lat"]), long=str(attrs["lon"]),     # WGS84 ; jamais x/y (LV95)
         chains=[DatedChain(levels=[PlaceLevel(name="Suisse", place_type="Country")])],
         alt_names=[DatedName(value=parsed.raw)],
-        score=scores[0], ambiguous=is_ambiguous(scores),
+        score=scores[best], ambiguous=is_ambiguous(scores),
         source="swisstopo", query=parsed.commune,
     )
 
@@ -48,5 +49,5 @@ def resolve_ch(parsed: ParsedPlace) -> ResolvedPlace | None:
     if not parsed.commune:
         return None
     payload = _http_get(_URL, {"searchText": parsed.commune, "type": "locations",
-                               "sr": "4326", "limit": 5})
+                               "origins": "gg25", "sr": "4326", "limit": 5})
     return map_swiss(payload, parsed)
