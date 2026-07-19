@@ -54,7 +54,7 @@ for _name, _usps in _STATE_NAMES.items():
 _LSAD_SUFFIXES = (
     "consolidated government", "metropolitan government", "unified government",
     "municipality", "corporation", "township", "borough", "village",
-    "town", "city", "CDP",
+    "plantation", "location", "town", "city", "CDP", "gore", "grant",
 )
 
 
@@ -86,30 +86,61 @@ def _display_bare_name(name: str) -> str:
 
 @lru_cache(maxsize=1)
 def load_us_gazetteer(path: Path = DATA_PATH) -> dict[tuple[str, str], dict]:
-    """Load {(lookup_key(name), state_usps): {"name","geoid","lat","long"}} (cached).
+    """Load {(lookup_key(name), state_usps): {"name","geoid","lat","long","ambiguous"}} (cached).
 
     Raises FileNotFoundError if the data file is missing (explicit failure).
     Callers must not mutate the returned dict (shared, cached instance).
+
+    Two Census places can share the same (state, stripped-name) key (e.g. two
+    Springfields in the same state under different LSADs). A later row must
+    not silently overwrite an earlier one — the surviving entry is instead
+    marked `"ambiguous": True` so `resolve_us` reports a proposition rather
+    than a confidently wrong write.
     """
     table: dict[tuple[str, str], dict] = {}
     with open(path, encoding="utf-8", newline="") as fh:
         for row in csv.DictReader(fh):
             key = (_lookup_key(row["name"]), row["state"].strip().upper())
+            if key in table:
+                table[key]["ambiguous"] = True
+                continue
             table[key] = {
                 "name": row["name"],
                 "geoid": row["geoid"],
                 "lat": row["lat"],
                 "long": row["long"],
+                "ambiguous": False,
             }
     return table
 
 
-def _find_state(raw: str) -> str | None:
-    """Scan comma-separated tokens of a raw place string for a US state (full name or abbr)."""
-    for token in raw.split(","):
-        key = token.strip().lower()
-        if key in _STATES:
-            return _STATES[key]
+def _norm(s: str) -> str:
+    return s.strip().lower()
+
+
+def _find_state(parsed: ParsedPlace) -> str | None:
+    """Find the US state (full name or abbr) for a parsed place.
+
+    US counties are commonly named after states (Washington County in ~30
+    states, Delaware County in 5), so a blind left-to-right scan of
+    `parsed.raw` lets the county hijack state detection. The positional
+    parser already puts the state in `parsed.region` (the county lands in
+    `parsed.departement`) — prefer that. Fall back to scanning `raw`'s
+    segments from the country end backward, excluding the county segment, so
+    a county named after a state still can't hijack detection.
+    """
+    if parsed.region:
+        code = _STATES.get(_norm(parsed.region))
+        if code:
+            return code
+    county = _norm(parsed.departement) if parsed.departement else None
+    segs = [s.strip() for s in parsed.raw.split(",") if s.strip()]
+    for seg in reversed(segs):
+        if county is not None and _norm(seg) == county:
+            continue
+        code = _STATES.get(_norm(seg))
+        if code:
+            return code
     return None
 
 
@@ -122,7 +153,7 @@ def resolve_us(parsed: ParsedPlace, table: dict | None = None) -> ResolvedPlace 
     """
     if table is None:
         table = load_us_gazetteer()
-    state = _find_state(parsed.raw)
+    state = _find_state(parsed)
     if state is None:
         return None
     entry = table.get((_lookup_key(parsed.commune), state))
@@ -142,6 +173,9 @@ def resolve_us(parsed: ParsedPlace, table: dict | None = None) -> ResolvedPlace 
         chains=[DatedChain(levels=levels)],
         alt_names=[DatedName(value=parsed.raw)],
         score=fuzzy_score(1.0, parsed.commune, _display_bare_name(entry["name"])),
-        ambiguous=False,          # a resolved state narrows the lookup to one key
+        # A resolved state narrows the lookup to one key, UNLESS that key
+        # itself collided at load time (two Census rows, same stripped name
+        # + state) — propagate the gazetteer's own ambiguity flag.
+        ambiguous=entry.get("ambiguous", False),
         source=_SOURCE, query=f"{parsed.commune}, {state}",
     )

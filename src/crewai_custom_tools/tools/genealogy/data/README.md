@@ -36,3 +36,32 @@ Il écrit directement `src/crewai_custom_tools/tools/genealogy/data/prenoms_sexe
 
 Les fichiers bruts ne sont pas versionnés ; seul `prenoms_sexe.csv` l'est. Les
 éditions sont épinglées (à bumper au fil des rééditions).
+
+# Table lieux US (Census Gazetteer)
+
+`us_places.csv` — colonnes `state` (USPS 2 lettres), `name` (forme officielle
+Census, LSAD inclus — ex. « Springfield city »), `geoid` (FIPS du lieu),
+`lat`/`long` (point interne, WGS84). **Versionné et embarqué**, l'analogue US
+de la table INSEE : résolution par (nom, état) sans code embarqué dans la
+chaîne de lieu généalogique.
+
+## Génération / rafraîchissement — une seule commande
+
+```bash
+uv run python scripts/build_us_gazetteer.py                 # télécharge et bâtit la table
+uv run python scripts/build_us_gazetteer.py --local <fichier .txt déjà extrait>
+```
+
+Il écrit directement `src/crewai_custom_tools/tools/genealogy/data/us_places.csv`.
+
+## Source (souveraine, open data)
+
+- **US Census Bureau — Gazetteer Files, national Places file** (2024,
+  repli sur 2023 si l'URL 2024 répond 404). Domaine public (œuvre du
+  gouvernement fédéral américain). Zip contenant un fichier tabulé avec
+  en-tête ; colonnes retenues : `USPS` (état 2 lettres), `GEOID` (FIPS du
+  lieu), `NAME` (nom officiel avec LSAD), `INTPTLAT`/`INTPTLONG` (point
+  interne, WGS84).
+  <https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html>
+
+Le fichier brut n'est pas versionné ; seul `us_places.csv` l'est.
