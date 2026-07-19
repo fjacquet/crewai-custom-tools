@@ -31,8 +31,14 @@ def _norm(s: str) -> str:
     return " ".join(s.lower().split())
 
 
-def query_militaires(surname: str, *, db: Path | None = None, limit: int = 50) -> list[dict]:
-    """All register rows whose normalized surname matches. Offline."""
+def query_militaires(surname: str, *, db: Path | None = None,
+                     limit: int = 2000) -> list[dict]:
+    """All register rows whose normalized surname matches. Offline.
+
+    The limit is a safety net, not a page: common surnames have hundreds of rows and
+    an arbitrary LIMIT 50 silently dropped the right one (real case: Léon Clavier,
+    row ~150 of 200, exact birth match missed).
+    """
     path = db or db_path()
     if not Path(path).exists():
         raise FileNotFoundError(

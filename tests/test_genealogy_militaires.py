@@ -67,6 +67,26 @@ def test_match_scores_and_orders(db):
     assert all(r["prenom"] != "Alexis" for r, _ in scored)
 
 
+def test_query_returns_all_rows_for_common_surnames(tmp_path):
+    # régression Léon Clavier: LIMIT 50 arbitraire perdait la bonne ligne (200 homonymes)
+    import sqlite3 as _sq
+    path = tmp_path / "big.sqlite"
+    con = _sq.connect(path)
+    con.execute("""CREATE TABLE deces_militaires (
+        base TEXT, nom TEXT, nom_normalise TEXT, prenom TEXT,
+        naissance_date TEXT, naissance_lieu TEXT, naissance_departement TEXT,
+        naissance_pays TEXT, deces_date TEXT, deces_lieu TEXT, deces_pays TEXT,
+        unite TEXT, reference TEXT, lien_ark TEXT, source_fichier TEXT)""")
+    rows = [("b", "CLAVIER", "clavier", f"Louis {i}", "1889-01-01", "", "", "",
+             "1915-01-01", "", "", "", "", "", "f") for i in range(199)]
+    rows.append(("b", "CLAVIER", "clavier", "Léon", "1891-08-31", "St-Martin", "", "",
+                 "1914-10-01", "", "", "", "", "https://ark/leon", "f"))
+    con.executemany("INSERT INTO deces_militaires VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
+    con.commit(); con.close()
+    scored = match_militaires("Clavier", "Léon", "1891-08-31", db=path)
+    assert scored and scored[0][0]["prenom"] == "Léon" and scored[0][1] == 1.0
+
+
 def test_missing_db_raises_explicit_error(tmp_path):
     with pytest.raises(FileNotFoundError):
         query_militaires("X", db=tmp_path / "absent.sqlite")
