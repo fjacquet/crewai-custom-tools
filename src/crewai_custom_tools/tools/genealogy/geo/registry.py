@@ -28,18 +28,20 @@ def decide_action(resolved: ResolvedPlace | None, min_score: float) -> str:
     """Map a resolution to 'ecrire' | 'proposition' | 'indecidable'."""
     if resolved is None:
         return "indecidable"
+    if resolved.ambiguous:
+        return "proposition"                 # ambiguity wins over any score, incl. 1.0
     if resolved.score >= 1.0:
         return "ecrire"
-    if resolved.score >= min_score and not resolved.ambiguous:
+    if resolved.score >= min_score:
         return "ecrire"
     return "proposition"
 
 
-def confiance_of(resolved: ResolvedPlace | None) -> str:
-    if resolved is None:
+def confiance_of(resolved: ResolvedPlace | None, min_score: float = 0.90) -> str:
+    if resolved is None or resolved.ambiguous:
         return "basse"
     if resolved.score >= 1.0:
         return "haute"
-    if resolved.score >= 0.90 and not resolved.ambiguous:
+    if resolved.score >= min_score:
         return "moyenne"
     return "basse"

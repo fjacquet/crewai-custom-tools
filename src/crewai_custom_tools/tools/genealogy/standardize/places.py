@@ -13,7 +13,8 @@ import unicodedata
 
 from crewai_custom_tools.tools.genealogy.models.domain import ParsedPlace
 
-INSEE_RE = re.compile(r"^(?:\d{5}|2[AB]\d{3})$")     # 18033, 2A004
+CORSICA_RE = re.compile(r"^2[AB]\d{3}$")             # 2A004 : unambiguously INSEE
+FIVE_DIGIT_RE = re.compile(r"^\d{5}$")               # 18033 or 18000 : INSEE or postal, ambiguous alone
 POSTAL_RE = re.compile(r"^\d{4,5}$")
 
 # Table de normalisation des pays : variantes (casse/langue/accent/parasite) → label FR.
@@ -48,8 +49,20 @@ def parse_pname(raw: str) -> ParsedPlace:
     country_idx = nonempty_idx[-1] if nonempty_idx else None
     country = normalize_country(segments[country_idx]) if country_idx is not None else ""
 
-    insee = next((s for s in segments if INSEE_RE.match(s)), None)
-    insee_idx = segments.index(insee) if insee is not None else None
+    # Code detection: a Corsica-shaped segment (2A/2B + 3 digits) is unambiguously INSEE.
+    # A plain 5-digit segment is ambiguous alone (postal codes are also 5 digits) — only
+    # trust it as INSEE when a second plain 5-digit segment is present (Geneanet order:
+    # INSEE then postal). With exactly one, treat it as the postal and leave insee unset
+    # so France falls through to fuzzy resolution instead of a wrong authoritative write.
+    corsica_idx = next((i for i, s in enumerate(segments) if CORSICA_RE.match(s)), None)
+    five_digit_idx = [i for i, s in enumerate(segments) if FIVE_DIGIT_RE.match(s)]
+    if corsica_idx is not None:
+        insee_idx = corsica_idx
+    elif len(five_digit_idx) >= 2:
+        insee_idx = five_digit_idx[0]
+    else:
+        insee_idx = None
+    insee = segments[insee_idx] if insee_idx is not None else None
     postal_idx = next((i for i, s in enumerate(segments)
                        if i != insee_idx and POSTAL_RE.match(s)), None)
     postal = segments[postal_idx] if postal_idx is not None else None

@@ -30,3 +30,9 @@ def test_decide_action_thresholds():
     assert registry.decide_action(_rp(0.92, ambiguous=True), 0.90) == "proposition"
     assert registry.decide_action(_rp(0.80), 0.90) == "proposition"
     assert registry.decide_action(None, 0.90) == "indecidable"
+
+
+def test_ambiguous_forces_proposition_even_at_score_1():
+    rp = _rp(1.0, ambiguous=True)
+    assert registry.decide_action(rp, 0.90) == "proposition"
+    assert registry.confiance_of(rp) == "basse"
