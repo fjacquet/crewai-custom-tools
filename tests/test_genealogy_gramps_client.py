@@ -3,6 +3,7 @@
 import json
 import os
 import time
+from pathlib import Path
 
 import httpx
 import pytest
@@ -176,3 +177,112 @@ def test_expired_cached_token_triggers_relogin(tmp_path):
     refreshed = json.loads(cache.read_text())
     assert refreshed["token"] == "tok-1"
     assert refreshed["exp"] > past_exp
+
+
+def test_token_cache_created_atomically_with_0600(tmp_path, mocker):
+    # Regression: the cache file must never exist at a world/group-readable
+    # mode, even momentarily. Spy on Path.chmod to prove the implementation
+    # creates the file pre-locked (os.open with mode=0o600) rather than
+    # write_text() followed by a separate chmod() call.
+    cache = tmp_path / "sub" / "token.json"
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        return httpx.Response(200, json={"ok": True})
+
+    chmod_spy = mocker.spy(Path, "chmod")
+    client = GrampsClient(CONFIG, transport=_transport(handler), token_cache=cache)
+    assert client.get_json("/people/") == {"ok": True}
+
+    assert (cache.stat().st_mode & 0o777) == 0o600
+    chmod_spy.assert_not_called()
+
+
+def test_non_dict_cached_json_does_not_crash(tmp_path):
+    cache = tmp_path / "token.json"
+    cache.write_text("null")
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        assert request.headers["Authorization"] == "Bearer tok-1"
+        return httpx.Response(200, json={"ok": True})
+
+    # Must not raise (previously: TypeError from "token" not in None).
+    client = GrampsClient(CONFIG, transport=_transport(handler), token_cache=cache)
+    assert client.get_json("/people/") == {"ok": True}
+
+
+def test_non_dict_cached_json_number_does_not_crash(tmp_path):
+    cache = tmp_path / "token.json"
+    cache.write_text("42")
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler), token_cache=cache)
+    assert client.get_json("/people/") == {"ok": True}
+
+
+def test_401_with_cache_invalidates_and_relogs_in(tmp_path):
+    cache = tmp_path / "token.json"
+    cache.write_text(json.dumps({"token": "stale-tok", "exp": int(time.time()) + 3600}))
+
+    state = {"tokens": 0, "data_calls": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            state["tokens"] += 1
+            return httpx.Response(200, json={"access_token": f"tok-{state['tokens']}"})
+        state["data_calls"] += 1
+        if state["data_calls"] == 1:
+            assert request.headers["Authorization"] == "Bearer stale-tok"
+            return httpx.Response(401)
+        assert request.headers["Authorization"] == "Bearer tok-1"
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler), token_cache=cache)
+    assert client.get_json("/people/") == {"ok": True}
+
+    # Cached (stale) token used first with no eager relogin; exactly one
+    # relogin happens after the 401, and the cache is rewritten with it.
+    assert state["tokens"] == 1
+    refreshed = json.loads(cache.read_text())
+    assert refreshed["token"] == "tok-1"
+
+
+# -- 429 login throttle retry -----------------------------------------------
+
+
+def test_fetch_token_retries_once_on_429_then_succeeds():
+    calls = {"tokens": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            calls["tokens"] += 1
+            if calls["tokens"] == 1:
+                return httpx.Response(429, headers={"Retry-After": "0"})
+            return _token_response()
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    assert client.get_json("/people/") == {"ok": True}
+    assert calls["tokens"] == 2
+
+
+def test_fetch_token_raises_after_exhausting_429_retries():
+    calls = {"tokens": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            calls["tokens"] += 1
+            return httpx.Response(429, headers={"Retry-After": "0"})
+        raise AssertionError("must not reach a data request without a token")
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    with pytest.raises(httpx.HTTPStatusError):
+        client.get_json("/people/")
+    assert calls["tokens"] == 3

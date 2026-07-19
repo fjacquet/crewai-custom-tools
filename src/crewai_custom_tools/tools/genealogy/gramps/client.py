@@ -78,17 +78,21 @@ def _load_token_cache(path: Path) -> dict[str, Any] | None:
     """
     try:
         data = json.loads(path.read_text())
-    except (OSError, ValueError):
+    except (OSError, ValueError, TypeError):
         return None
-    if "token" not in data or "exp" not in data:
+    if not isinstance(data, dict) or "token" not in data or "exp" not in data:
         return None
     return data
 
 
 def _write_token_cache(path: Path, token: str, exp: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"token": token, "exp": exp}))
-    path.chmod(0o600)  # credential on disk: owner read/write only
+    # Create the file pre-locked (owner read/write only) instead of writing at
+    # the umask's default mode and chmod-ing after: that would leave a window
+    # where the bearer token is world/group-readable on disk.
+    fd = os.open(path, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(json.dumps({"token": token, "exp": exp}))
 
 
 def _invalidate_token_cache(path: Path) -> None:
@@ -122,15 +126,29 @@ class GrampsClient:
                 self._token = cached["token"]
 
     def _fetch_token(self) -> str:
-        response = self._http.post(
-            "/token/",
-            json={"username": self._config.username, "password": self._config.password},
-        )
-        response.raise_for_status()
-        token = response.json()["access_token"]
-        if self._token_cache is not None:
-            _write_token_cache(self._token_cache, token, _decode_jwt_exp(token))
-        return token
+        # Gramps Web rate-limits /token/ as brute-force protection; retry a
+        # bounded number of times on 429, honoring Retry-After, so a
+        # transient throttle self-heals instead of failing the whole run.
+        for attempt in range(3):
+            response = self._http.post(
+                "/token/",
+                json={"username": self._config.username, "password": self._config.password},
+            )
+            if response.status_code == 429 and attempt < 2:
+                retry_after = response.headers.get("Retry-After")
+                delay = (
+                    float(retry_after)
+                    if (retry_after or "").strip().isdigit()
+                    else 2**attempt
+                )
+                time.sleep(min(delay, 30.0))
+                continue
+            response.raise_for_status()
+            token = response.json()["access_token"]
+            if self._token_cache is not None:
+                _write_token_cache(self._token_cache, token, _decode_jwt_exp(token))
+            return token
+        response.raise_for_status()  # exhausted retries -> raise the last 429 clearly
 
     def request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         if self._token is None:
