@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 
 import httpx
 import pytest
@@ -115,3 +116,63 @@ def test_http_error_propagates_as_status_error():
     client = GrampsClient(CONFIG, transport=_transport(handler))
     with pytest.raises(httpx.HTTPStatusError):
         client.get_json("/people/")
+
+
+# -- on-disk token cache (opt-in via token_cache=) --------------------------
+
+
+def test_token_cached_after_login(tmp_path):
+    cache = tmp_path / "token.json"
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        assert request.headers["Authorization"] == "Bearer tok-1"
+        return httpx.Response(200, json=[{"name": "arbre"}])
+
+    client = GrampsClient(CONFIG, transport=_transport(handler), token_cache=cache)
+    assert client.get_json("/trees/") == [{"name": "arbre"}]
+
+    assert cache.exists()
+    cached = json.loads(cache.read_text())
+    assert cached["token"] == "tok-1"
+    assert "exp" in cached
+    # credential on disk: must not be group/world readable
+    assert (cache.stat().st_mode & 0o777) == 0o600
+
+
+def test_cached_token_reused_without_relogin(tmp_path):
+    cache = tmp_path / "token.json"
+    cache.write_text(json.dumps({"token": "cached-tok", "exp": int(time.time()) + 3600}))
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            raise AssertionError("must not re-login: a valid cached token exists")
+        assert request.headers["Authorization"] == "Bearer cached-tok"
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler), token_cache=cache)
+    assert client.get_json("/people/") == {"ok": True}
+
+
+def test_expired_cached_token_triggers_relogin(tmp_path):
+    cache = tmp_path / "token.json"
+    past_exp = int(time.time()) - 10
+    cache.write_text(json.dumps({"token": "stale-tok", "exp": past_exp}))
+
+    calls = []
+
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path == "/api/token/":
+            return _token_response()
+        assert request.headers["Authorization"] == "Bearer tok-1"
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler), token_cache=cache)
+    assert client.get_json("/people/") == {"ok": True}
+
+    assert "/api/token/" in calls
+    refreshed = json.loads(cache.read_text())
+    assert refreshed["token"] == "tok-1"
+    assert refreshed["exp"] > past_exp

@@ -8,13 +8,20 @@ orchestrator (no LLM) and wrapped by the thin BaseTool classes in read_tools.py.
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import json
 import os
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import httpx
 
 DEFAULT_TIMEOUT = 15.0
+TOKEN_EXPIRY_SKEW_S = 60  # treat a token as expired this many seconds before its real exp
+FALLBACK_TOKEN_TTL_S = 300  # used when a token's exp claim can't be decoded
 
 
 class GrampsConfigError(RuntimeError):
@@ -43,6 +50,54 @@ class GrampsConfig:
             ) from exc
 
 
+def _decode_jwt_exp(token: str) -> int:
+    """Best-effort decode of a JWT's `exp` claim (unix seconds).
+
+    Falls back to a conservative short TTL from now if the token isn't a
+    well-formed JWT, so a fresh login is never cached as valid "forever".
+    """
+    try:
+        _, payload_b64, *_ = token.split(".")
+        padded = payload_b64 + "=" * (-len(payload_b64) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded))
+        return int(payload["exp"])
+    except Exception:
+        return int(time.time()) + FALLBACK_TOKEN_TTL_S
+
+
+def _is_expired(exp: int) -> bool:
+    return time.time() >= exp - TOKEN_EXPIRY_SKEW_S
+
+
+def _load_token_cache(path: Path) -> dict[str, Any] | None:
+    """Read {"token", "exp"} from the cache file, or None if missing/unreadable.
+
+    We trust the `exp` stored alongside the token (rather than re-decoding the
+    JWT on every load): it was already decoded once when the token was first
+    cached, and re-deriving it here would just duplicate that work.
+    """
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    if "token" not in data or "exp" not in data:
+        return None
+    return data
+
+
+def _write_token_cache(path: Path, token: str, exp: int) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"token": token, "exp": exp}))
+    path.chmod(0o600)  # credential on disk: owner read/write only
+
+
+def _invalidate_token_cache(path: Path) -> None:
+    try:
+        path.unlink()
+    except OSError:
+        pass
+
+
 class GrampsClient:
     """Thin synchronous Gramps Web client; one instance per process."""
 
@@ -50,12 +105,21 @@ class GrampsClient:
         self,
         config: GrampsConfig,
         transport: httpx.BaseTransport | None = None,
+        token_cache: str | Path | None = None,
     ) -> None:
         self._config = config
         self._http = httpx.Client(
             base_url=config.api_url, timeout=DEFAULT_TIMEOUT, transport=transport
         )
+        # Opt-in: None (the default) preserves the previous login-on-first-request
+        # behaviour used by existing callers/tests that don't pass this parameter.
+        self._token_cache = Path(token_cache) if token_cache is not None else None
         self._token: str | None = None
+
+        if self._token_cache is not None:
+            cached = _load_token_cache(self._token_cache)
+            if cached is not None and not _is_expired(cached["exp"]):
+                self._token = cached["token"]
 
     def _fetch_token(self) -> str:
         response = self._http.post(
@@ -63,7 +127,10 @@ class GrampsClient:
             json={"username": self._config.username, "password": self._config.password},
         )
         response.raise_for_status()
-        return response.json()["access_token"]
+        token = response.json()["access_token"]
+        if self._token_cache is not None:
+            _write_token_cache(self._token_cache, token, _decode_jwt_exp(token))
+        return token
 
     def request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         if self._token is None:
@@ -71,6 +138,8 @@ class GrampsClient:
         headers = {"Authorization": f"Bearer {self._token}"}
         response = self._http.request(method, path, headers=headers, **kwargs)
         if response.status_code == 401:  # expired token: refresh once
+            if self._token_cache is not None:
+                _invalidate_token_cache(self._token_cache)
             self._token = self._fetch_token()
             headers = {"Authorization": f"Bearer {self._token}"}
             response = self._http.request(method, path, headers=headers, **kwargs)
@@ -121,9 +190,21 @@ class GrampsClient:
 _CLIENT: GrampsClient | None = None
 
 
+def _default_token_cache_path(config: GrampsConfig) -> Path:
+    """Per-config cache file path, so different trees/servers don't collide."""
+    cache_dir = Path(os.environ.get("GENECREW_TOKEN_CACHE", Path.home() / ".cache" / "genecrew"))
+    digest = hashlib.sha256(f"{config.api_url}|{config.username}".encode()).hexdigest()[:16]
+    return cache_dir / f"gramps-token-{digest}.json"
+
+
 def get_client() -> GrampsClient:
-    """Lazy per-process singleton configured from the environment."""
+    """Lazy per-process singleton configured from the environment.
+
+    Uses a default on-disk token cache so real invocations reuse the JWT
+    across process runs instead of logging in (and risking 429s) every time.
+    """
     global _CLIENT
     if _CLIENT is None:
-        _CLIENT = GrampsClient(GrampsConfig.from_env())
+        config = GrampsConfig.from_env()
+        _CLIENT = GrampsClient(config, token_cache=_default_token_cache_path(config))
     return _CLIENT
