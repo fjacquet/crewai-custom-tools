@@ -6,12 +6,14 @@ from crewai_custom_tools.tools.genealogy.geo.france import resolve_fr
 from crewai_custom_tools.tools.genealogy.geo.nominatim import resolve_world
 from crewai_custom_tools.tools.genealogy.geo.suisse import resolve_ch
 from crewai_custom_tools.tools.genealogy.geo.transitions import apply_transition, load_transitions
+from crewai_custom_tools.tools.genealogy.geo.usa import resolve_us
 from crewai_custom_tools.tools.genealogy.models.domain import ParsedPlace, ResolvedPlace
 
 # Résolveurs autoritaires par pays. Ajouter un pays = une ligne (générique).
 _BY_COUNTRY = {
     "France": lambda p: resolve_fr(p),
     "Suisse": lambda p: resolve_ch(p),
+    "États-Unis": lambda p: resolve_us(p),
 }
 
 
