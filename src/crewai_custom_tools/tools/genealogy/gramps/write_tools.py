@@ -234,7 +234,8 @@ class GrampsUpdatePlaceTool(BaseTool):
         place = get_client().get_object("places", handle)
         before = {"name": (place.get("name") or {}).get("value"),
                   "place_type": place.get("place_type"), "lat": place.get("lat"),
-                  "long": place.get("long"), "placeref_list": place.get("placeref_list") or []}
+                  "long": place.get("long"), "code": place.get("code"),
+                  "placeref_list": place.get("placeref_list") or []}
         place["name"] = {**(place.get("name") or {}), "value": name}
         place["place_type"] = place_type
         if lat is not None:
@@ -254,14 +255,17 @@ class GrampsUpdatePlaceTool(BaseTool):
             place["placeref_list"] = normalized
         existing_alt = place.get("alt_names") or []
         existing_values = {a.get("value") for a in existing_alt}
+        original_values = set(existing_values)
         for a in (alt_names or []):
             if a.get("value") not in existing_values:
                 existing_alt.append(a)
+                existing_values.add(a.get("value"))
         place["alt_names"] = existing_alt
         after = {"name": name, "place_type": place_type, "lat": lat if lat is not None else place.get("lat"),
                  "long": long if long is not None else place.get("long"),
+                 "code": code if code is not None else place.get("code"),
                  "placeref_list": placeref_list if placeref_list is not None else before["placeref_list"]}
-        noop = before == after and set(existing_values) >= {a.get("value") for a in (alt_names or [])}
+        noop = before == after and original_values >= {a.get("value") for a in (alt_names or [])}
         change = {"handle": handle, "gramps_id": place.get("gramps_id"),
                   "dry_run": dry_run, "noop": noop}
         if not noop and not dry_run:

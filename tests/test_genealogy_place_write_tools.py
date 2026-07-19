@@ -64,3 +64,40 @@ def test_update_place_noop_when_conforming(mocker):
         handle="h1", name="Bourges", place_type="Municipality", lat="47.081", long="2.399",
         placeref_list=[{"ref": "H_CHER"}]))
     assert data["data"]["noop"] is True
+
+
+def test_update_place_code_only_change_fires_put(mocker):
+    existing = {"handle": "h1", "gramps_id": "P1", "name": {"value": "Bourges"},
+                "place_type": "Municipality", "lat": "47.081", "long": "2.399",
+                "code": "18033", "placeref_list": [{"ref": "H_CHER"}], "alt_names": []}
+    puts = []
+
+    def on_put(request):
+        puts.append(json.loads(request.content))
+        return httpx.Response(200, json={})
+
+    mocker.patch.object(write_tools, "get_client",
+                        return_value=_client(on_put=on_put, existing=existing))
+    data = json.loads(GrampsUpdatePlaceTool()._run(
+        handle="h1", name="Bourges", place_type="Municipality", lat="47.081", long="2.399",
+        code="18099",                                  # differs from stored 18033
+        placeref_list=[{"ref": "H_CHER"}]))
+    assert data["data"]["noop"] is False               # NOT a no-op
+    assert len(puts) == 1 and puts[0]["code"] == "18099"
+
+
+def test_update_place_altnames_deduped_within_call(mocker):
+    existing = {"handle": "h1", "gramps_id": "P1", "name": {"value": "Bourges"},
+                "place_type": "Municipality", "placeref_list": [], "alt_names": []}
+    puts = []
+
+    def on_put(request):
+        puts.append(json.loads(request.content))
+        return httpx.Response(200, json={})
+
+    mocker.patch.object(write_tools, "get_client",
+                        return_value=_client(on_put=on_put, existing=existing))
+    GrampsUpdatePlaceTool()._run(handle="h1", name="Bourges", place_type="Municipality",
+                                 alt_names=[{"value": "Avaricum"}, {"value": "Avaricum"}])
+    values = [a["value"] for a in puts[0]["alt_names"]]
+    assert values.count("Avaricum") == 1               # appended once, not twice
