@@ -112,18 +112,25 @@ REGLE_DATE_PARENTS = "date_complete+parents"
 REGLE_DATE = "date_complete"
 REGLE_CONJOINT_ENFANT = "conjoint+enfant"
 
-_MODIFIER_TEXTE = 6
-"""Date en texte libre : non exploitable comme concordance."""
+_MODIFIER_EXACT = 0
+"""Seul modificateur Gramps qui FIXE une date au lieu de la borner."""
 
 
 def date_complete(ev: EventFact | None) -> bool:
-    """Vrai si l'événement porte une date exacte de précision au JOUR.
+    """Vrai si l'événement porte une date EXACTE de précision au JOUR.
 
-    Un `sortval` à 0 (inconnu ou non triable) et une date textuelle
-    (`modifier == 6`) ne comptent jamais — c'est le piège « année seule » sous
-    ses différentes formes (spec §4.1).
+    Seul `modifier == 0` (date exacte) prouve une identité : c'est le seul cas
+    où la date est fixée plutôt que bornée. Tous les autres modificateurs
+    Gramps — avant (1), après (2), environ (3), intervalle (4), span (5),
+    texte libre (6) — bornent ou approximent une date sans la fixer : deux
+    personnes distinctes peuvent tout à fait partager la même date « vers » ou
+    la même borne « avant »/« après ». Les accepter créerait un faux positif
+    de fusion automatique et irréversible (§4.1 — cf. l'incident du
+    2026-07-19 sur l'année seule, dont ceci est une variante).
+
+    Un `sortval` à 0 (inconnu ou non triable) ne compte jamais non plus.
     """
-    if ev is None or ev.sortval == 0 or ev.modifier == _MODIFIER_TEXTE:
+    if ev is None or ev.sortval == 0 or ev.modifier != _MODIFIER_EXACT:
         return False
     if len(ev.dateval) < 3:
         return False

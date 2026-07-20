@@ -22,6 +22,13 @@ def _annee_seule(annee):
                      modifier=0, dateval=[0, 0, annee, False])
 
 
+def _naissance_environ(jour, mois, annee):
+    """Date approximative (« vers ») : même sortval/jour/mois qu'une date
+    exacte, mais modifier=3 — elle borne la date, elle ne la fixe pas."""
+    return EventFact(type="Birth", sortval=annee * 366 + mois * 31 + jour,
+                     year=annee, modifier=3, dateval=[jour, mois, annee, False])
+
+
 def _p(gid, given, surname, birth=None, familles=(), parents=(), sex="U"):
     return PersonFacts(
         gramps_id=gid, handle=f"h{gid}", name=f"{given} {surname}",
@@ -61,6 +68,16 @@ def test_date_textuelle_n_est_pas_complete():
     ev = EventFact(type="Birth", sortval=677000, year=1850, modifier=6,
                    dateval=[3, 4, 1850, False])
     assert date_complete(ev) is False
+
+
+def test_seul_le_modifier_exact_est_complet():
+    """Seul modifier == 0 (date exacte) prouve l'identité. avant/après/vers/
+    intervalle/span BORNENT une date sans la FIXER : deux personnes distinctes
+    peuvent partager la même date approximative."""
+    for modifier in (1, 2, 3, 4, 5, 6):
+        ev = EventFact(type="Birth", sortval=677000, year=1850, modifier=modifier,
+                       dateval=[3, 4, 1850, False])
+        assert date_complete(ev) is False, f"modifier={modifier} ne doit pas compter"
 
 
 # --- les trois règles de l'étage auto ---------------------------------------
@@ -177,6 +194,19 @@ def test_piege_annee_seule_identique():
     b = _p("I2", "Jean", "Dupont", _annee_seule(1850))
     paires, _ = etager([a, b], {})
     assert _tier(paires, "I1", "I2")[0] != "auto"
+
+
+def test_piege_date_environ_avec_memes_parents_ne_fusionne_jamais():
+    """« Vers » (modifier=3) borne une date, ne la fixe pas. Même nom complet,
+    même sortval/jour/mois, mêmes parents : sans le garde-fou modifier==0,
+    ceci passerait en `auto` par la règle date_complete+parents. Deux
+    personnes distinctes peuvent porter la même date approximative — ça doit
+    tomber en arbitrage, jamais en auto."""
+    familles = {"F1": _famille("F1", "hPERE", "hMERE")}
+    a = _p("I1", "Jean", "Dupont", _naissance_environ(3, 4, 1850), parents=["F1"])
+    b = _p("I2", "Jean", "Dupont", _naissance_environ(3, 4, 1850), parents=["F1"])
+    paires, _ = etager([a, b], familles)
+    assert _tier(paires, "I1", "I2")[0] == "arbitrage"
 
 
 def test_piege_deux_dates_inconnues_ne_concordent_pas():
