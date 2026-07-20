@@ -243,3 +243,40 @@ class Piste(BaseModel):
         if self.divergences:
             return "faible"
         return "forte" if len(set(self.concordances)) >= 2 else "faible"
+
+
+MergeTier = Literal["auto", "arbitrage", "rejet"]
+"""Les trois étages de la fusion (spec §4.1).
+
+`auto` : preuve structurelle, fusion sans relecture. `arbitrage` : preuve
+partielle, passe par un YAML relu. `rejet` : ressemblance de nom seule — jamais
+une preuve.
+"""
+
+
+class MergePair(BaseModel):
+    """Une paire de personnes, avec l'étage qui lui a été attribué."""
+
+    gramps_id_a: str
+    gramps_id_b: str
+    handle_a: str
+    handle_b: str
+    tier: MergeTier
+    regle: str = ""
+    """Règle de l'étage auto qui a conclu : `date_complete+parents`,
+    `date_complete`, `conjoint+enfant`. Vide pour les étages arbitrage et rejet."""
+    blocs: list[str] = Field(default_factory=list)
+    """Clés de blocage ayant produit la paire — traçabilité du rappel."""
+
+
+class MergeCluster(BaseModel):
+    """Une grappe de doublons réduite à un seul survivant (spec §4.5)."""
+
+    phoenix_handle: str
+    phoenix_gramps_id: str
+    titanic_handles: list[str] = Field(default_factory=list)
+    titanic_gramps_ids: list[str] = Field(default_factory=list)
+    gender_patch: Literal[0, 1] | None = None
+    """Genre à écrire sur le phoenix AVANT la fusion, ou None. `Person.merge()`
+    ignore le genre : sans ce patch, un phoenix « Inconnu » perdrait sans trace le
+    genre connu d'un titanic (spec §2)."""
