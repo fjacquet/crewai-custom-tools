@@ -3,6 +3,8 @@
 from crewai_custom_tools.tools.genealogy.pistes.dhs import pistes_dhs
 from crewai_custom_tools.tools.genealogy.pistes.gallica import (
     ark_de,
+    date_concordante,
+    dates_du_texte,
     fenetre_vie,
     personne_eligible,
     pistes_gallica,
@@ -23,6 +25,8 @@ from crewai_custom_tools.tools.genealogy.pistes.wikidata import (
 
 __all__ = [
     "ark_de",
+    "date_concordante",
+    "dates_du_texte",
     "event_iso",
     "fenetre_vie",
     "first_given",

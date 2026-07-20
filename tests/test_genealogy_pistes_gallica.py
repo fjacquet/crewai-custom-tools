@@ -1,6 +1,6 @@
 from crewai_custom_tools.tools.genealogy.models.domain import EventFact, PersonFacts
 from crewai_custom_tools.tools.genealogy.pistes import (
-    fenetre_vie, personne_eligible, pistes_gallica, requete_gallica,
+    dates_du_texte, fenetre_vie, personne_eligible, pistes_gallica, requete_gallica,
 )
 
 
@@ -56,6 +56,41 @@ def test_resultat_dans_la_fenetre_donne_une_piste_faible():
     assert p.identite_derivee is False
     assert p.url == "https://gallica.bnf.fr/ark:/12148/bpt6k1"
     assert p.force == "faible"
+
+
+def test_nom_et_lieu_dans_le_meme_titre_ne_font_qu_un_facteur():
+    """Le titre est UNE preuve. Sans cette règle, « Le Journal de Montbéliard »
+    rendrait FORTE une piste pour un Dupont né à Montbéliard — donc écrite
+    dans l'arbre — sans qu'aucune identité n'ait été vérifiée."""
+    records = [{"title": "Dupont et le Journal de Montbéliard", "creator": "",
+                "date": "1935", "type": "text",
+                "url": "https://gallica.bnf.fr/ark:/12148/bpt6k1"}]
+    p = pistes_gallica(_person(deces_annee=1970), records)[0]
+    assert len(set(p.concordances)) == 1
+    assert p.force == "faible"
+
+
+def test_titre_portant_la_date_complete_atteint_forte():
+    records = [{"title": "Dupont — acte du 14 juillet 1900", "creator": "",
+                "date": "1935", "type": "text",
+                "url": "https://gallica.bnf.fr/ark:/12148/bpt6k1"}]
+    p = pistes_gallica(_person(deces_annee=1970), records)[0]
+    assert set(p.concordances) == {"nom", "date complète"}
+    assert p.force == "forte"
+
+
+def test_roy_ne_correspond_pas_a_leroy_dans_un_titre():
+    person = _person(dateval=[14, 7, 1900, False], place_name="Montbéliard")
+    person.surname = "Roy"
+    records = [{"title": "Le Leroy de Belfort", "creator": "", "date": "1935",
+                "type": "text", "url": "https://gallica.bnf.fr/ark:/12148/bpt6k1"}]
+    assert pistes_gallica(person, records)[0].concordances == []
+
+
+def test_annee_seule_dans_le_titre_n_est_pas_une_date():
+    assert dates_du_texte("Le Journal de 1900") == set()
+    assert dates_du_texte("acte du 14/07/1900") == {"1900-07-14"}
+    assert dates_du_texte("acte du 1900-07-14") == {"1900-07-14"}
 
 
 def test_personne_ineligible_ne_produit_rien():
