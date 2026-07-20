@@ -49,6 +49,30 @@ def test_famille_conjugale_commune_bloque_sans_aucune_date():
     assert any(k.startswith("fam:") for k in pairs[("hI1", "hI2")])
 
 
+def test_famille_conjugale_seule_suffit_prenoms_differents_sans_date():
+    """fam: doit à elle seule produire la paire — nom: et pho: ne s'y déclenchent pas
+    (prénoms d'initiales différentes, aucune date de naissance)."""
+    a = _p("I1", "Jean", "Sestre", familles=["F1"])
+    b = _p("I2", "Marie", "Sestre", familles=["F1"])
+    pairs, _ = candidate_pairs([a, b])
+    assert ("hI1", "hI2") in pairs
+    cles = pairs[("hI1", "hI2")]
+    assert not any(k.startswith("nom:") for k in cles)
+    assert cles == {"fam:F1"}
+
+
+def test_famille_parentale_seule_suffit_prenoms_differents_sans_date():
+    """par: doit à elle seule produire la paire — nom: et pho: ne s'y déclenchent pas
+    (prénoms d'initiales différentes, aucune date de naissance)."""
+    a = _p("I1", "Jean", "Sestre", parents=["F2"])
+    b = _p("I2", "Marie", "Sestre", parents=["F2"])
+    pairs, _ = candidate_pairs([a, b])
+    assert ("hI1", "hI2") in pairs
+    cles = pairs[("hI1", "hI2")]
+    assert not any(k.startswith("nom:") for k in cles)
+    assert cles == {"par:F2"}
+
+
 def test_paires_normalisees_et_sans_doublon():
     a, b = _p("I1", "Jean", "Dupont", 1850), _p("I2", "Jean", "Dupont", 1850)
     pairs, _ = candidate_pairs([a, b])
