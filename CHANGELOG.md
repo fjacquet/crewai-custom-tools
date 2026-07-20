@@ -4,6 +4,28 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.21.0] - 2026-07-20
+
+### Added
+
+- **Paquet `tools/genealogy/pistes/`** : une fonction pure par source d'archives, qui
+  traduit un résultat d'API en objet `Piste` — aucun appel réseau, la collecte reste dans
+  les outils appelants. Quatre modules :
+  - `matchid.py` — déménagé depuis l'application `genecrew`, sans changement de
+    comportement.
+  - `wikidata.py` — dérive une `Piste` d'un résultat SPARQL Wikidata.
+  - `dhs.py` — projection de Wikidata via la propriété `P902` (identifiant Dictionnaire
+    Historique de la Suisse), dérivée ligne par ligne (pas par position).
+  - `gallica.py` — livré, pur et testé, mais **volontairement non exposé** par `genecrew` :
+    mesuré contre l'API réelle, le SRU de Gallica rend des notices de *collection*, pas
+    d'article — une piste dirait seulement « ce nom est quelque part dans ce volume de
+    500 pages ». L'API adéquate (`services/ContentSearch`, qui rend des passages avec
+    numéro de page) impose une conception à deux étapes et fera l'objet d'un sous-projet.
+- `EventFact` porte désormais `place` et `place_name`, peuplés depuis le `profile` de
+  l'API Gramps sans requête supplémentaire.
+
+---
+
 ## [0.20.0] - 2026-07-20
 
 ### Changed
