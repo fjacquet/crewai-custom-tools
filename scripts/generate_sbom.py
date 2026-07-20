@@ -2,7 +2,6 @@
 """Generates a standardized CycloneDX JSON Software Bill of Materials (SBOM)."""
 
 import json
-import os
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -43,9 +42,7 @@ def dep_ver_cleanup(dep: str) -> str:
 
 def generate_sbom(project_dir: Path) -> dict:
     """Generate a valid CycloneDX JSON v1.5 SBOM."""
-    pyproject_path = project_root = (
-        Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
-    )
+    pyproject_path = Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
     if not pyproject_path.exists():
         pyproject_path = project_dir / "pyproject.toml"
 
