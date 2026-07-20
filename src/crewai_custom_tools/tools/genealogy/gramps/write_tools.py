@@ -321,6 +321,44 @@ class GrampsMergePlacesTool(BaseTool):
         return ok(change)
 
 
+class GrampsMergePeopleInput(BaseModel):
+    phoenix_handle: str = Field(..., description="Handle of the person that survives.")
+    titanic_handle: str = Field(..., description="Handle of the person that is deleted.")
+    family_merger: bool = Field(
+        True, description="Also merge spouse/parent families made duplicate by the merge.")
+    dry_run: bool = Field(False, description="If true, POST nothing and report the intent.")
+
+
+class GrampsMergePeopleTool(BaseTool):
+    """Merge two people. Phoenix survives; titanic is deleted. IRREVERSIBLE.
+
+    Gramps unions every list (events, citations, notes, media, attributes, tags,
+    families), demotes the titanic's primary name to an alternate name, and records
+    a `Merged Gramps ID` attribute. It does NOT merge gender — the caller must patch
+    the phoenix beforehand when needed (see analysis/merge_plan.py).
+    """
+
+    name: str = "gramps_merge_people"
+    description: str = (
+        "Merges the titanic person into the phoenix person in Gramps. The phoenix "
+        "survives and the titanic is deleted — this cannot be undone. Writes unless "
+        "dry_run is set or GENECREW_DRY_RUN is enabled."
+    )
+    args_schema: type[BaseModel] = GrampsMergePeopleInput
+
+    @api_tool(provider="GrampsWeb", endpoint="MergePeople")
+    def _run(self, phoenix_handle: str, titanic_handle: str,
+             family_merger: bool = True, dry_run: bool = False) -> str:
+        dry_run = effective_dry_run(dry_run)
+        change = {"phoenix": phoenix_handle, "titanic": titanic_handle,
+                  "family_merger": family_merger, "dry_run": dry_run}
+        if not dry_run:
+            get_client().request(
+                "POST", f"/people/{phoenix_handle}/merge/{titanic_handle}",
+                json={"family_merger": family_merger})
+        return ok(change)
+
+
 # --- Écriture encadrée append-only pour la crew : notes + tags (seul le Chroniqueur les a) ---
 
 
