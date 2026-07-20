@@ -4,6 +4,18 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.19.3] - 2026-07-20
+
+### Added
+
+- **`Piste`** (`models/domain.py`) : le modèle des pistes de recherche (Phase 4).
+  Une piste n'est jamais un fait — aucune citation n'est créée à ce stade. Porte
+  l'identité de la source (ark, id MatchID, Q-item) ou, à défaut, une clé dérivée
+  marquée comme telle ; `url` reste `None` plutôt que d'être fabriquée. `force`
+  est un `Literal["forte", "faible"]`, calculé et non saisi.
+
+---
+
 ## [0.19.2] - 2026-07-20
 
 ### Fixed

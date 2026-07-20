@@ -31,3 +31,27 @@ def test_familyfacts_and_anomaly_and_duplicate():
     d = DuplicateCandidate(gramps_id_a="I0001", gramps_id_b="I0002",
                            score=0.91, reason="homonymes, naissances proches")
     assert d.score == 0.91
+
+
+def test_piste_champs_et_defauts():
+    from crewai_custom_tools.tools.genealogy.models.domain import Piste
+
+    p = Piste(gramps_id="I1123", handle="h1", source="matchid",
+              identite="a1b2c3d4", requete="nom=SOULAT&prenom=Kleber",
+              concordances=["nom", "date de naissance complète"],
+              divergences=[], force="forte")
+    assert p.identite_derivee is False       # défaut : identité native de la source
+    assert p.url is None                     # défaut : aucune URL inventée
+    assert p.force == "forte"
+
+
+def test_piste_force_est_un_ensemble_ferme():
+    import pytest
+    from pydantic import ValidationError
+    from crewai_custom_tools.tools.genealogy.models.domain import Piste
+
+    # `force` est Literal, pas str libre : le contrat est garanti par le modèle,
+    # pas par la discipline de chaque émetteur.
+    with pytest.raises(ValidationError):
+        Piste(gramps_id="I1", handle="h", source="s", identite="i",
+              requete="q", concordances=[], divergences=[], force="moyenne")

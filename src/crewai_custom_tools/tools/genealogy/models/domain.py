@@ -6,6 +6,8 @@ raw Gramps Web JSON, which the genecrew orchestrator maps into these shapes.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -182,3 +184,24 @@ class PropositionsLot(BaseModel):
     """Structured batch of propositions."""
 
     propositions: list[PropositionAudit] = Field(default_factory=list)
+
+
+class Piste(BaseModel):
+    """Une piste de recherche : ce qu'une source suggère, jamais ce qu'elle prouve.
+
+    Aucune citation n'est créée à ce stade (document-de-travail §6.3). L'identité
+    est celle de la source (ark, id MatchID, Q-item) ; à défaut, une clé dérivée
+    des champs identifiants — jamais une URL fabriquée, qui serait un lien mort
+    présenté comme preuve.
+    """
+
+    gramps_id: str
+    handle: str
+    source: str                       # "matchid" | "mdh" | "gallica" | "wikidata" | …
+    identite: str                     # identifiant externe stable, OU clé dérivée
+    identite_derivee: bool = False    # True -> la note dira le permalien absent
+    url: str | None = None            # None si la source n'en donne pas
+    requete: str                      # la requête exacte, rejouable telle quelle
+    concordances: list[str] = Field(default_factory=list)
+    divergences: list[str] = Field(default_factory=list)
+    force: Literal["forte", "faible"]
