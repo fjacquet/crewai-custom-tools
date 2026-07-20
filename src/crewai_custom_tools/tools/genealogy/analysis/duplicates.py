@@ -2,22 +2,17 @@
 
 from __future__ import annotations
 
-import unicodedata
 from difflib import SequenceMatcher
 
+from crewai_custom_tools.tools.genealogy.analysis.phonetics import normalize_name
 from crewai_custom_tools.tools.genealogy.models.domain import (
     DuplicateCandidate,
     PersonFacts,
 )
 
+__all__ = ["find_duplicates", "normalize_name"]
+
 BIRTH_YEAR_WINDOW = 2
-
-
-def normalize_name(s: str) -> str:
-    """Lowercase, strip accents, collapse whitespace."""
-    decomposed = unicodedata.normalize("NFKD", s)
-    ascii_only = "".join(c for c in decomposed if not unicodedata.combining(c))
-    return " ".join(ascii_only.lower().split())
 
 
 def _key(p: PersonFacts) -> str:
