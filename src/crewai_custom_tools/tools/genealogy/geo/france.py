@@ -54,13 +54,14 @@ def resolve_fr(parsed: ParsedPlace) -> ResolvedPlace | None:
     return _resolve_fr_by_name(parsed)
 
 
-def _resolve_fr_by_name(parsed: ParsedPlace) -> ResolvedPlace | None:
-    """Résolution par nom via geo.api.gouv.fr. La recherche `nom` est floue -> on ne garde que
-    les correspondances de nom EXACTES. 1 exact -> autoritaire ; >1 -> proposition ; 0 -> None."""
-    results = _http_get("/communes", {"nom": parsed.commune, "fields": _FIELDS,
-                                      "boost": "population", "limit": 10})
-    if not isinstance(results, list) or not results:
-        return None
+def pick_exact_by_name(results: list, parsed: ParsedPlace) -> list:
+    """Ne garder que les correspondances de nom EXACTES, désambiguïsées par contexte.
+
+    La recherche `nom` de geo.api.gouv.fr est floue : un quasi-homonyme ne doit
+    jamais passer pour une résolution. Partagé par le résolveur des communes
+    vivantes et par celui des ex-communes, qui interrogent deux endpoints au
+    format identique.
+    """
     exact = [c for c in results if _norm(c.get("nom", "")) == _norm(parsed.commune)]
     ctx = _norm(parsed.departement) or _norm(parsed.region)
     if ctx and len(exact) > 1:
@@ -71,6 +72,17 @@ def _resolve_fr_by_name(parsed: ParsedPlace) -> ResolvedPlace | None:
                         and (c.get("departement") or {}).get("code", "") == parsed.departement)]
         if filtered:
             exact = filtered
+    return exact
+
+
+def _resolve_fr_by_name(parsed: ParsedPlace) -> ResolvedPlace | None:
+    """Résolution par nom via geo.api.gouv.fr. La recherche `nom` est floue -> on ne garde que
+    les correspondances de nom EXACTES. 1 exact -> autoritaire ; >1 -> proposition ; 0 -> None."""
+    results = _http_get("/communes", {"nom": parsed.commune, "fields": _FIELDS,
+                                      "boost": "population", "limit": 10})
+    if not isinstance(results, list) or not results:
+        return None
+    exact = pick_exact_by_name(results, parsed)
     if not exact:
         return None                                  # abréviations/fautes -> bascule registre
     if "centre" not in exact[0]:

@@ -12,9 +12,16 @@ from __future__ import annotations
 
 import re
 
+import httpx
 import requests
 from pydantic import BaseModel
 
+from crewai_custom_tools.core.rate_limiter import get_rate_limiter
+from crewai_custom_tools.tools.genealogy.geo.france import _FIELDS as _COMMUNE_FIELDS
+from crewai_custom_tools.tools.genealogy.geo.france import map_commune, pick_exact_by_name
+from crewai_custom_tools.tools.genealogy.models.domain import (
+    DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
+)
 from crewai_custom_tools.tools.web.wikidata import sparql_rows
 
 _WKT_POINT_RE = re.compile(r"^\s*Point\(\s*(-?[\d.]+)\s+(-?[\d.]+)\s*\)\s*$", re.IGNORECASE)
@@ -88,3 +95,83 @@ def wikidata_ex_commune(insee: str) -> ExCommuneFacts | None:
         successor_insee=row.get("succInsee"),
         lat=lat, long=long,
     )
+
+
+_BASE = "https://geo.api.gouv.fr"
+_ASSOCIEE_FIELDS = "nom,code,type,chefLieu,centre,departement,region"
+_PROVIDER = "GeoApiGouvFr"
+
+
+def _http_get(path: str, params: dict):
+    """Thin HTTP GET (monkeypatché dans les tests). WGS84 GeoJSON en sortie."""
+    get_rate_limiter().acquire(_PROVIDER)
+    resp = httpx.get(f"{_BASE}{path}", params=params, timeout=15.0)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def resolve_fr_ex_commune(parsed: ParsedPlace) -> ResolvedPlace | None:
+    """Résout une commune française fusionnée (associée/déléguée).
+
+    Deux chaînes datées quand geo.api.gouv.fr et Wikidata s'accordent sur le
+    successeur ; sinon une seule chaîne non datée — jamais de date inventée.
+    """
+    if not parsed.commune:
+        return None
+    results = _http_get("/communes_associees_deleguees",
+                        {"nom": parsed.commune, "fields": _ASSOCIEE_FIELDS, "limit": 10})
+    if not isinstance(results, list) or not results:
+        return None
+    exact = pick_exact_by_name(results, parsed)
+    if not exact:
+        return None                                  # repli Nominatim côté registre
+    ex = exact[0]
+    chef_code = ex.get("chefLieu")
+    if not chef_code:
+        return None
+    chef = _http_get(f"/communes/{chef_code}", {"fields": _COMMUNE_FIELDS})
+    if not isinstance(chef, dict) or "centre" not in chef:
+        return None
+    # map_commune est réutilisé pour la hiérarchie France>Région>Département, déjà testée.
+    modern = map_commune(chef, parsed)
+    parents = list(modern.chains[0].levels)
+    chef_level = PlaceLevel(name=modern.name, place_type="Municipality", code=modern.code)
+
+    facts = wikidata_ex_commune(ex["code"])
+    # Garde de recoupement : on ne date que si les DEUX sources désignent le même
+    # successeur. Une date de fusion fausse route silencieusement les événements
+    # vers la mauvaise branche — pire qu'une date absente.
+    concordant = (facts is not None and facts.dissolved
+                  and facts.successor_insee == chef_code)
+    if concordant:
+        chains = [
+            DatedChain(levels=parents, date_qualifier=f"avant {facts.dissolved}"),
+            DatedChain(levels=parents + [chef_level],
+                       date_qualifier=f"après {facts.dissolved}"),
+        ]
+        source = "geo.api.gouv.fr/communes_associees_deleguees + Wikidata"
+    else:
+        chains = [DatedChain(levels=parents + [chef_level])]
+        source = "geo.api.gouv.fr/communes_associees_deleguees"
+
+    # GPS : Wikidata (centre du bourg) de préférence au `centre` de l'API, qui est le
+    # centroïde du territoire — mesuré à ~700 m du village sur Saint-Agnant. En
+    # généalogie on veut l'église, pas le barycentre cadastral. Exception assumée à
+    # map_commune, qui prend toujours le centre de l'API pour les communes vivantes.
+    lon, lat = (ex.get("centre") or {}).get("coordinates", [None, None])
+    if facts is not None and facts.lat and facts.long:
+        lat, lon = facts.lat, facts.long
+
+    resolved = ResolvedPlace(
+        name=ex["nom"], place_type="Municipality",
+        lat=str(lat) if lat is not None else None,
+        long=str(lon) if lon is not None else None,
+        code=ex["code"], chains=chains,
+        alt_names=[DatedName(value=parsed.raw)],
+        score=1.0, source=source,
+        query=f"/communes_associees_deleguees?nom={parsed.commune}",
+    )
+    if len(exact) > 1:
+        resolved.ambiguous = True                    # vrais homonymes -> proposition
+        resolved.source = f"{source} ({len(exact)} homonymes)"
+    return resolved
