@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class EventFact(BaseModel):
@@ -186,6 +186,19 @@ class PropositionsLot(BaseModel):
     propositions: list[PropositionAudit] = Field(default_factory=list)
 
 
+FacteurConcordance = Literal[
+    "nom", "prénom", "date complète", "lieu", "unité militaire", "profession",
+]
+"""Vocabulaire fermé des facteurs de concordance qu'une piste peut invoquer.
+
+Volontairement clos : une source qui voudrait faire valoir « né en 1888 » se
+fait refuser par pydantic plutôt que de gonfler son score. L'année seule
+n'y figure pas — elle qualifie une date, elle n'en constitue pas une (règle
+projet : une année seule n'est jamais discriminante, trop d'homonymes
+partagent une naissance la même année).
+"""
+
+
 class Piste(BaseModel):
     """Une piste de recherche : ce qu'une source suggère, jamais ce qu'elle prouve.
 
@@ -193,6 +206,11 @@ class Piste(BaseModel):
     est celle de la source (ark, id MatchID, Q-item) ; à défaut, une clé dérivée
     des champs identifiants — jamais une URL fabriquée, qui serait un lien mort
     présenté comme preuve.
+
+    `force` est DÉRIVÉ, jamais saisi : voir `Piste.force` ci-dessous. La règle vit
+    ici, à côté du modèle, pour que toute source de cette bibliothèque (MatchID
+    aujourd'hui, Gallica/Wikidata demain) puisse l'invoquer sans dépendre de
+    l'application appelante.
     """
 
     gramps_id: str
@@ -202,6 +220,24 @@ class Piste(BaseModel):
     identite_derivee: bool = False    # True -> la note dira le permalien absent
     url: str | None = None            # None si la source n'en donne pas
     requete: str                      # la requête exacte, rejouable telle quelle
-    concordances: list[str] = Field(default_factory=list)
+    concordances: list[FacteurConcordance] = Field(default_factory=list)
     divergences: list[str] = Field(default_factory=list)
-    force: Literal["forte", "faible"]
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def force(self) -> Literal["forte", "faible"]:
+        """Forte = au moins DEUX facteurs concordants DISTINCTS ET aucune divergence.
+
+        Catégoriel, pas numérique : un score peut valoir 1.0 en masquant une
+        ambiguïté (mesuré sur le résolveur de lieux). Dédupliquée : `["nom", "nom"]`
+        ne compte que pour un seul facteur — c'est le doublon qui manquait pour que
+        cette liste ne se fasse pas passer pour deux concordances indépendantes.
+
+        Non saisissable : `force` n'est plus un paramètre du constructeur. Un appel
+        legacy passant `force=...` est silencieusement ignoré par pydantic (champ
+        extra sur un `computed_field`) — la valeur ci-dessous reste la seule qui
+        compte, y compris à la sérialisation (`model_dump`/`model_dump_json`).
+        """
+        if self.divergences:
+            return "faible"
+        return "forte" if len(set(self.concordances)) >= 2 else "faible"

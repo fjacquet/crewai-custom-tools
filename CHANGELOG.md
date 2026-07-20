@@ -4,6 +4,38 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.20.0] - 2026-07-20
+
+### Changed
+
+- **`Piste.force` est désormais dérivé, pas saisi** (`models/domain.py`) — durcissement suite
+  à revue finale de trois défauts liés :
+  - `force` n'est plus un paramètre du constructeur : c'est un `@computed_field` pydantic v2,
+    calculé depuis `concordances`/`divergences` à chaque accès et sérialisé normalement dans
+    `model_dump()`/`model_dump_json()`. Un appel legacy qui passerait encore `force=...` voit
+    le kwarg ignoré silencieusement (`extra="ignore"`, comportement par défaut de pydantic) —
+    la valeur calculée l'emporte toujours. **Rupture de signature** (d'où le mineur, pas le
+    correctif) : tout appelant construisant `Piste(..., force="forte")` doit retirer cet
+    argument.
+  - La règle de calcul (déplacée depuis le paquet applicatif `genecrew`, qui ne peut
+    structurellement pas être une dépendance de cette bibliothèque) vit maintenant à côté du
+    modèle : forte = au moins deux facteurs concordants **distincts** et aucune divergence.
+    Toute future source de *cette* bibliothèque (Gallica, Wikidata, …) peut désormais
+    l'invoquer sans détour par l'application appelante.
+  - `concordances` prend un vocabulaire fermé (`FacteurConcordance`, `Literal["nom",
+    "prénom", "date complète", "lieu", "unité militaire", "profession"]`) au lieu de `str`
+    libre. Une source qui voudrait faire valoir « né en 1888 » est refusée par pydantic avant
+    même d'atteindre la règle — l'année seule n'est jamais discriminante (trop d'homonymes
+    partagent une naissance la même année) et n'a délibérément pas sa place dans ce
+    vocabulaire : elle qualifie une date, elle n'en constitue pas une.
+  - La règle déduplique désormais `concordances` avant de compter les facteurs : mesuré,
+    `["nom", "nom"]` valait `"forte"` (deux entrées, un seul facteur réel) ; c'est maintenant
+    `"faible"`.
+  - Toujours catégoriel, délibérément : pas de score, pas de pondération, pas de seuil
+    configurable — un score peut valoir 1.0 en masquant une ambiguïté, constaté sur ce projet.
+
+---
+
 ## [0.19.3] - 2026-07-20
 
 ### Added
