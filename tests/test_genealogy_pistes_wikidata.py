@@ -106,6 +106,21 @@ def test_ligne_sans_aucune_concordance_ne_produit_aucune_piste():
     assert pistes_wikidata(person, rows) == []
 
 
+def test_patronyme_vide_ne_decroche_pas_le_facteur_nom():
+    # Garde symétrique à celle de pistes/gallica.py : `mots(person.surname) <=
+    # mots_label` est vacuement vrai quand le patronyme est vide, ce qui
+    # laisserait un simple prénom commun décrocher "nom" sans aucune preuve de
+    # patronyme. Date complète concordante ajoutée pour isoler le facteur
+    # "nom" : sans la garde, les DEUX facteurs concordent (piste "forte") ;
+    # avec la garde, seule la date concorde (piste "faible", pas de "nom").
+    person = _person(surname="", given="Jean", place_name="")
+    rows = [{"item": "http://www.wikidata.org/entity/Q999", "itemLabel": "Jean Dupont",
+             "birthDate": "1677-07-15T00:00:00Z", "birthPlaceLabel": ""}]
+    p = pistes_wikidata(person, rows)[0]
+    assert "nom" not in p.concordances
+    assert p.force == "faible"
+
+
 def test_divergence_sans_concordance_ne_produit_pas_de_piste():
     # Une date qui diverge, sans nom ni lieu qui corrobore, ne corrobore rien :
     # une divergence seule ne doit pas suffire à fabriquer une piste faible.

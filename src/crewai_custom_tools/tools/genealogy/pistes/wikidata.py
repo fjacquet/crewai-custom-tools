@@ -83,7 +83,7 @@ def pistes_wikidata(person: PersonFacts, resultats: list[dict]) -> list[Piste]:
         # est ÉCRITE dans l'arbre, une faible reste dans le rapport.
         # On exige le patronyme ET au moins un prénom commun.
         mots_label = mots(row.get("itemLabel", ""))
-        if mots_label and mots(person.surname) <= mots_label and (
+        if mots_label and mots(person.surname) and mots(person.surname) <= mots_label and (
                 mots(person.given) & mots_label):
             concordances.append("nom")
 

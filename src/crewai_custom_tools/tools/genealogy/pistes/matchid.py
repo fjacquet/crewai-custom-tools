@@ -19,8 +19,8 @@ def event_iso(event: EventFact | None) -> str:
     compter comme facteur de concordance : règle projet, une année n'est jamais
     discriminante (trop d'homonymes naissent la même année).
 
-    COPIE EXACTE de genecrew/deces.py — ne pas « améliorer » en la déplaçant, sous
-    peine de changer le comportement que les tests existants verrouillent.
+    Fonction partagée : `genecrew.deces` l'importe d'ici plutôt que d'en garder
+    une copie locale, pour ne jamais désynchroniser les deux définitions.
     """
     if event is None or not event.year:
         return ""
@@ -33,7 +33,7 @@ def event_iso(event: EventFact | None) -> str:
 def first_given(given: str) -> str:
     """Premier prénom, virgules de l'arbre retirées ('Paul, Marcel' -> 'Paul'). Pure.
 
-    MatchID répond 422 sur 'Paul,'. COPIE EXACTE de genecrew/deces.py.
+    MatchID répond 422 sur 'Paul,'. Fonction partagée : voir `event_iso` ci-dessus.
     """
     return (given.replace(",", " ").split() or [""])[0]
 
