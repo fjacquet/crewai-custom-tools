@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from crewai_custom_tools.tools.genealogy.geo.allemagne import resolve_de
 from crewai_custom_tools.tools.genealogy.geo.france import resolve_fr
+from crewai_custom_tools.tools.genealogy.geo.france_ex_communes import resolve_fr_ex_commune
 from crewai_custom_tools.tools.genealogy.geo.nominatim import resolve_world
 from crewai_custom_tools.tools.genealogy.geo.suisse import resolve_ch
 from crewai_custom_tools.tools.genealogy.geo.transitions import apply_transition, load_transitions
@@ -12,7 +13,12 @@ from crewai_custom_tools.tools.genealogy.models.domain import ParsedPlace, Resol
 
 # Résolveurs autoritaires par pays. Ajouter un pays = une ligne (générique).
 _BY_COUNTRY = {
-    "France": lambda p: resolve_fr(p),
+    # Les communes fusionnées sont absentes de /communes : si resolve_fr rend None,
+    # on tente /communes_associees_deleguees AVANT le repli Nominatim, qui perdrait
+    # la hiérarchie. Le branchement est ici et non dans resolve_fr, parce que
+    # france_ex_communes importe map_commune depuis france (sinon : cycle).
+    # Nota : un résultat ambigu est truthy -> pas de repli, c'est voulu.
+    "France": lambda p: resolve_fr(p) or resolve_fr_ex_commune(p),
     "Suisse": lambda p: resolve_ch(p),
     "Allemagne": lambda p: resolve_de(p),
     "États-Unis": lambda p: resolve_us(p),
