@@ -4,6 +4,29 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.19.2] - 2026-07-20
+
+### Fixed
+
+- **Bug critique** dans le résolveur des ex-communes françaises (`geo/france_ex_communes.py`) :
+  `wdt:P576` (date de dissolution) rend toujours un `xsd:dateTime` complet, quelle que soit la
+  précision réelle de la déclaration Wikidata — une dissolution saisie en précision ANNÉE
+  ressortait "1972-01-01T00:00:00Z" comme si c'était une date exacte, sans que la garde
+  d'unicité d'entité (qui vérifie le *successeur*, pas la *précision*) ne s'en aperçoive.
+  `rows[0]` pouvait alors choisir arbitrairement la ligne en précision année, fabriquant une
+  borne de rattachement inventée — mesuré en direct sur Huppain (INSEE `14340`) : une date
+  `1972-01-02` fabriquée de toutes pièces, alors qu'aucune date fiable n'aurait dû être posée.
+  Une fausse date de fusion route silencieusement des actes vers la mauvaise branche de la
+  hiérarchie — pire qu'une date absente.
+  - La requête SPARQL passe désormais par le nœud de déclaration (`p:P576/psv:P576`) pour lire
+    `wikibase:timePrecision` en même temps que la valeur, au lieu du raccourci `wdt:P576`.
+  - `wikidata_ex_commune` n'accepte plus qu'une dissolution en précision JOUR (`prec=11`) ;
+    toute autre précision, ou précision absente, dégrade vers une chaîne non datée.
+  - Plusieurs déclarations `P576` *distinctes* en précision jour (dates contradictoires)
+    restent une ambiguïté — pas de choix arbitraire, pas de datation. Plusieurs lignes portant
+    la *même* valeur en précision jour restent du fan-out SPARQL bénin (déjà géré par la garde
+    d'unicité d'entité) et ne bloquent pas la datation.
+
 ## [0.19.1] - 2026-07-20
 
 ### Fixed

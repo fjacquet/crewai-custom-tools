@@ -2,10 +2,13 @@
 from crewai_custom_tools.tools.genealogy.geo import france_ex_communes as fec
 from crewai_custom_tools.tools.genealogy.models.domain import ParsedPlace
 
-# Ligne réellement rendue par query.wikidata.org pour ?item wdt:P374 "55451"
+# Ligne réellement rendue par query.wikidata.org pour ?item wdt:P374 "55451",
+# avec la précision (?prec) demandée via p:P576/psv:P576 — Wikidata la porte à 11
+# (jour) pour cette commune : une seule déclaration P576, sans ambiguïté.
 _ROW_SAINT_AGNANT = {
     "item": "http://www.wikidata.org/entity/Q25398054",
     "dissolved": "1972-12-31T00:00:00Z",
+    "prec": "11",
     "succInsee": "55012",
     "coord": "Point(5.622588 48.842142)",
 }
@@ -53,6 +56,12 @@ def test_merged_on_from_dissolved_none_is_none():
 
 def test_merged_on_from_dissolved_unparsable_is_none():
     # Une année seule n'est pas une date ISO complète — pas d'exception levée.
+    # NB : ce n'est PAS ainsi qu'une précision insuffisante arrive en pratique —
+    # wdt:P576 rend toujours un xsd:dateTime complet ("1972-01-01T00:00:00Z"),
+    # jamais la chaîne "1973" nue. Ce test documente juste que le convertisseur
+    # est robuste à une entrée non-ISO ; la vraie garde contre les dates en
+    # précision année vit dans `_precise_dissolved` (filtre sur `?prec`), testée
+    # plus bas via `wikidata_ex_commune`.
     assert fec.merged_on_from_dissolved("1973") is None
 
 
@@ -118,6 +127,49 @@ def test_wikidata_ex_commune_missing_optionals(monkeypatch):
     assert facts.dissolved is None and facts.merged_on is None
     assert facts.successor_insee is None
     assert facts.lat is None and facts.long is None
+
+
+def test_wikidata_ex_commune_year_precision_is_not_dated(monkeypatch):
+    # Précision 9 (année) : wdt:P576 aurait rendu "1972-01-01T00:00:00Z" comme si
+    # c'était une date complète — c'est exactement la fausse précision que ?prec
+    # doit démasquer. Cas réel mesuré sur Huppain (INSEE 14340).
+    row = dict(_ROW_SAINT_AGNANT, dissolved="1972-01-01T00:00:00Z", prec="9")
+    monkeypatch.setattr(fec, "sparql_rows", lambda query: [row])
+    facts = fec.wikidata_ex_commune("55451")
+    assert facts is not None
+    assert facts.dissolved is None and facts.merged_on is None
+    # Le reste de la ligne (successeur, GPS) n'est pas affecté par la garde de précision.
+    assert facts.successor_insee == "55012"
+
+
+def test_wikidata_ex_commune_day_precision_is_dated(monkeypatch):
+    # Précision 11 (jour) : comportement inchangé, la datation passe normalement.
+    monkeypatch.setattr(fec, "sparql_rows", lambda query: [_ROW_SAINT_AGNANT])
+    facts = fec.wikidata_ex_commune("55451")
+    assert facts is not None
+    assert facts.dissolved == "1972-12-31"
+    assert facts.merged_on == "1973-01-01"
+
+
+def test_wikidata_ex_commune_missing_precision_is_not_dated(monkeypatch):
+    # `?prec` absent (ex. la déclaration P576 elle-même n'existe pas, donc le bloc
+    # OPTIONAL entier ne se lie pas) : traité comme une précision insuffisante.
+    row = {k: v for k, v in _ROW_SAINT_AGNANT.items() if k != "prec"}
+    monkeypatch.setattr(fec, "sparql_rows", lambda query: [row])
+    facts = fec.wikidata_ex_commune("55451")
+    assert facts is not None
+    assert facts.dissolved is None and facts.merged_on is None
+
+
+def test_wikidata_ex_commune_two_distinct_day_precision_dates_is_ambiguous(monkeypatch):
+    # Deux déclarations P576 DISTINCTES, toutes deux en précision jour : des dates
+    # de dissolution contradictoires. Pas de choix arbitraire — pas de datation.
+    row_a = dict(_ROW_SAINT_AGNANT)
+    row_b = dict(_ROW_SAINT_AGNANT, dissolved="1973-06-15T00:00:00Z")
+    monkeypatch.setattr(fec, "sparql_rows", lambda query: [row_a, row_b])
+    facts = fec.wikidata_ex_commune("55451")
+    assert facts is not None
+    assert facts.dissolved is None and facts.merged_on is None
 
 
 def test_wikidata_ex_commune_network_failure_is_none(monkeypatch):
@@ -301,3 +353,59 @@ def test_resolve_ex_commune_department_disambiguates(monkeypatch):
 
 def test_resolve_ex_commune_without_commune_is_none():
     assert fec.resolve_fr_ex_commune(ParsedPlace(raw="", commune="", country="France")) is None
+
+
+# Bout en bout : une commune réellement affectée par le bug — Huppain (Calvados),
+# absorbée par Port-en-Bessin-Huppain. Payloads réels de geo.api.gouv.fr, et une
+# ligne SPARQL réelle mesurée sur query.wikidata.org pour ?item wdt:P374 "14340" :
+# une déclaration P576 en précision ANNÉE ("1972-01-01T00:00:00Z", prec 9). Avant
+# le correctif, `rows[0]` l'acceptait telle quelle et fabriquait une borne
+# 1972-01-02. Ce test route `sparql_rows` (pas `wikidata_ex_commune`) pour
+# exercer le vrai filtre de précision de bout en bout.
+_ASSOCIEE_HUPPAIN = {
+    "nom": "Huppain", "code": "14340",
+    "type": "commune-associee", "chefLieu": "14515",
+    "centre": {"type": "Point", "coordinates": [-0.7798, 49.3387]},   # [lon, lat]
+    "departement": {"code": "14", "nom": "Calvados"},
+    "region": {"code": "28", "nom": "Normandie"},
+}
+_CHEF_LIEU_HUPPAIN = {
+    "nom": "Port-en-Bessin-Huppain", "code": "14515",
+    "centre": {"type": "Point", "coordinates": [-0.7727, 49.3387]},
+    "departement": {"code": "14", "nom": "Calvados"},
+    "region": {"code": "28", "nom": "Normandie"},
+}
+_ROW_HUPPAIN_YEAR_PRECISION = {
+    "item": "http://www.wikidata.org/entity/Q60882197",
+    "dissolved": "1972-01-01T00:00:00Z",
+    "prec": "9",
+    "succInsee": "14515",
+    "coord": "Point(-0.7723308 49.3410007)",
+}
+_PARSED_HUPPAIN = ParsedPlace(
+    raw=", , , Huppain, 14515, Calvados, Normandie, France",
+    commune="Huppain", postal="14515",
+    departement="Calvados", region="Normandie", country="France", shifted=True)
+
+
+def test_resolve_ex_commune_huppain_year_precision_degrades_to_single_undated_chain(
+        monkeypatch):
+    def fake_get(path, params):
+        if path == "/communes_associees_deleguees":
+            return [_ASSOCIEE_HUPPAIN]
+        assert path == "/communes/14515", path
+        return _CHEF_LIEU_HUPPAIN
+
+    monkeypatch.setattr(fec, "_http_get", fake_get)
+    monkeypatch.setattr(fec, "sparql_rows", lambda query: [_ROW_HUPPAIN_YEAR_PRECISION])
+    rp = fec.resolve_fr_ex_commune(_PARSED_HUPPAIN)
+
+    assert rp is not None
+    assert rp.code == "14340"
+    # Précision insuffisante (année) -> aucune date fabriquée : une seule chaîne,
+    # rattachée au chef-lieu moderne, sans qualificatif de date.
+    assert len(rp.chains) == 1
+    assert rp.chains[0].date_qualifier is None
+    assert [lvl.name for lvl in rp.chains[0].levels] == [
+        "France", "Normandie", "Calvados", "Port-en-Bessin-Huppain"]
+    assert rp.source == "geo.api.gouv.fr/communes_associees_deleguees"
