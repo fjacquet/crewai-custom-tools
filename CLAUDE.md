@@ -74,7 +74,7 @@ OSINT/scraper tools default to **keyless/free fallbacks** and auto-upgrade to th
 HTML templates live **inside the package** at `reporting/templates/` and are resolved via `Path(__file__).parent / "templates"` (`default_template_dir()` in `html_generator.py`), so they ship in the wheel and work on a plain `pip install`. Reporting tools share `build_environment()`; untrusted section content is escaped (`_sections_to_html`) — do not reintroduce `| safe` on agent-supplied content.
 
 ## Testing conventions
-- **701 tests, 100% offline/mocked** — the whole suite runs in seconds with no network. Use `pytest-mock`'s `mocker`: `mocker.patch("requests.get", ...)` for HTTP and `mocker.patch.dict(os.environ, {...})` for keys. Assert on the envelope (`json.loads(result)["success"]`), not on prose strings.
+- **739 tests, 100% offline/mocked** — the whole suite runs in seconds with no network. Use `pytest-mock`'s `mocker`: `mocker.patch("requests.get", ...)` for HTTP and `mocker.patch.dict(os.environ, {...})` for keys. Assert on the envelope (`json.loads(result)["success"]`), not on prose strings.
 - New tools require a mocked success-path test and an error/no-key-path test (asserting `success is False`), plus the export in `__all__`.
 - There is no `conftest.py` — fixtures come from `pytest-mock`. Test files live under `tests/` per domain (e.g. `test_finance_tools.py`, `test_search_providers.py`).
 
