@@ -286,3 +286,95 @@ def test_fetch_token_raises_after_exhausting_429_retries():
     with pytest.raises(httpx.HTTPStatusError):
         client.get_json("/people/")
     assert calls["tokens"] == 3
+
+
+# -- 429 data-endpoint retry (request()) -------------------------------------
+
+
+def test_request_retries_once_on_429_then_succeeds():
+    calls = {"data": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        calls["data"] += 1
+        if calls["data"] == 1:
+            return httpx.Response(429, headers={"Retry-After": "0"})
+        assert request.headers["Authorization"] == "Bearer tok-1"
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    assert client.get_json("/people/") == {"ok": True}
+    assert calls["data"] == 2
+
+
+def test_request_raises_after_exhausting_429_retries(mocker):
+    sleeps = []
+    mocker.patch("time.sleep", side_effect=sleeps.append)
+    calls = {"data": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        calls["data"] += 1
+        return httpx.Response(429)
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    with pytest.raises(httpx.HTTPStatusError):
+        client.get_json("/people/")
+    assert calls["data"] == 3
+    # no Retry-After header this time -> falls back to exponential backoff
+    assert sleeps == [1, 2]
+
+
+def test_request_429_honors_retry_after_header(mocker):
+    sleeps = []
+    mocker.patch("time.sleep", side_effect=sleeps.append)
+    calls = {"data": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        calls["data"] += 1
+        if calls["data"] == 1:
+            return httpx.Response(429, headers={"Retry-After": "7"})
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    assert client.get_json("/people/") == {"ok": True}
+    assert sleeps == [7.0]
+
+
+def test_request_401_refresh_still_works_alongside_429_retry():
+    # Non-regression: the 401-refresh-once path must keep working now that
+    # request() also retries on 429.
+    state = {"tokens": 0, "data_calls": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            state["tokens"] += 1
+            return httpx.Response(200, json={"access_token": f"tok-{state['tokens']}"})
+        state["data_calls"] += 1
+        if state["data_calls"] == 1:
+            return httpx.Response(401)
+        assert request.headers["Authorization"] == "Bearer tok-2"
+        return httpx.Response(200, json={"ok": True})
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    assert client.get_json("/people/") == {"ok": True}
+    assert state["tokens"] == 2  # initial + refresh, unaffected by 429 handling
+
+
+def test_request_404_propagates_without_retry():
+    calls = {"data": 0}
+
+    def handler(request):
+        if request.url.path == "/api/token/":
+            return _token_response()
+        calls["data"] += 1
+        return httpx.Response(404)
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    with pytest.raises(httpx.HTTPStatusError):
+        client.get_json("/people/")
+    assert calls["data"] == 1  # 404 is not retried

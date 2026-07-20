@@ -150,18 +150,39 @@ class GrampsClient:
             return token
         response.raise_for_status()  # exhausted retries -> raise the last 429 clearly
 
+    def _send_with_429_retry(
+        self, method: str, path: str, headers: dict[str, str], **kwargs: Any
+    ) -> httpx.Response:
+        # Data endpoints (people, places, notes, tags, ...) are rate-limited
+        # the same way /token/ is; retry a bounded number of times on 429,
+        # honoring Retry-After, mirroring _fetch_token()'s pattern so a
+        # transient throttle self-heals instead of failing the whole call.
+        for attempt in range(3):
+            response = self._http.request(method, path, headers=headers, **kwargs)
+            if response.status_code == 429 and attempt < 2:
+                retry_after = response.headers.get("Retry-After")
+                delay = (
+                    float(retry_after)
+                    if (retry_after or "").strip().isdigit()
+                    else 2**attempt
+                )
+                time.sleep(min(delay, 30.0))
+                continue
+            return response
+        return response  # exhausted retries -> caller's raise_for_status() surfaces the last 429
+
     def request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         if self._token is None:
             self._token = self._fetch_token()
         caller_headers = dict(kwargs.pop("headers", None) or {})  # ex. Content-Type upload
         headers = {**caller_headers, "Authorization": f"Bearer {self._token}"}
-        response = self._http.request(method, path, headers=headers, **kwargs)
+        response = self._send_with_429_retry(method, path, headers, **kwargs)
         if response.status_code == 401:  # expired token: refresh once
             if self._token_cache is not None:
                 _invalidate_token_cache(self._token_cache)
             self._token = self._fetch_token()
             headers = {**caller_headers, "Authorization": f"Bearer {self._token}"}
-            response = self._http.request(method, path, headers=headers, **kwargs)
+            response = self._send_with_429_retry(method, path, headers, **kwargs)
         response.raise_for_status()
         return response
 
