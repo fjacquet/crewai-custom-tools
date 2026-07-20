@@ -59,3 +59,15 @@ def test_lignes_melangees_ne_decale_pas_les_identifiants_dhs():
     pistes = pistes_dhs(_person(), rows)
     assert len(pistes) == 1
     assert pistes[0].identite == "012345"
+
+
+def test_ligne_avec_p902_mais_rien_qui_concorde_ne_produit_aucune_piste():
+    # Découle du correctif dans pistes_wikidata : une ligne P902 dont le nom, la
+    # date et le lieu ne concordent avec rien dans l'arbre n'est pas une piste,
+    # même si elle porte un identifiant DHS.
+    rows = [{"item": "http://www.wikidata.org/entity/Q999",
+             "itemLabel": "Marguerite Lefebvre",
+             "birthDate": "1901-01-01T00:00:00Z",
+             "birthPlaceLabel": "Marseille",
+             "p902": "999999"}]
+    assert pistes_dhs(_person(), rows) == []

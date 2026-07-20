@@ -60,7 +60,12 @@ def q_item(uri: str) -> str:
 
 
 def pistes_wikidata(person: PersonFacts, resultats: list[dict]) -> list[Piste]:
-    """Une piste par résultat SPARQL. N'écrit rien, ne conclut rien."""
+    """Une piste par résultat SPARQL portant AU MOINS une concordance. N'écrit rien, ne conclut rien.
+
+    Un résultat sans aucun facteur concordant est écarté : `EntitySearch` est une
+    recherche floue sur le nom, et sans rien qui corrobore, il ne s'agit que de la
+    sortie brute du moteur de recherche, pas d'une piste.
+    """
     requete = requete_wikidata(person)
     naissance_arbre = event_iso(person.birth)
     lieu_arbre = person.birth.place_name if person.birth else ""
@@ -95,6 +100,14 @@ def pistes_wikidata(person: PersonFacts, resultats: list[dict]) -> list[Piste]:
         lieu_wd = row.get("birthPlaceLabel", "")
         if lieu_arbre and lieu_wd and norm_nom(lieu_arbre) == norm_nom(lieu_wd):
             concordances.append("lieu")
+
+        # EntitySearch est une recherche FLOUE : sans aucune concordance, une
+        # ligne n'est que du bruit du moteur de recherche, pas une piste. Une
+        # divergence seule (sans rien qui corrobore) ne suffit pas non plus —
+        # mesuré sur 40 personnes réelles : 13/21 pistes Wikidata n'avaient
+        # aucun facteur de concordance.
+        if not concordances:
+            continue
 
         pistes.append(Piste(
             gramps_id=person.gramps_id, handle=person.handle,
