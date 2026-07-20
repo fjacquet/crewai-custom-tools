@@ -10,9 +10,47 @@ def _person(surname="Dupont", given="Jean", dateval=None, place_name="Montbélia
                        surname=surname, given=given, sex="M", birth=birth)
 
 
-def test_requete_contient_le_nom_et_est_rejouable():
+def test_requete_passe_par_le_service_indexe_pas_par_un_filtre():
+    # Un FILTER(CONTAINS(...)) sur rdfs:label balaie les ~10 M d'humains de
+    # Wikidata et rend 504 après 65 s — mesuré. La recherche DOIT être indexée.
     q = requete_wikidata(_person())
     assert "Dupont" in q and "SELECT" in q.upper()
+    assert "EntitySearch" in q and "wikibase:mwapi" in q
+    assert "CONTAINS" not in q.upper()
+
+
+def test_roy_ne_correspond_pas_a_leroy():
+    """Le faux positif qui motive la comparaison par mots entiers."""
+    person = _person(surname="Roy", given="Silvain")
+    rows = [{"item": "http://www.wikidata.org/entity/Q99", "itemLabel": "Silvain Leroy",
+             "birthDate": "1677-07-15T00:00:00Z", "birthPlaceLabel": "Montbéliard"}]
+    assert "nom" not in pistes_wikidata(person, rows)[0].concordances
+
+
+def test_prenom_en_liste_a_virgules_correspond_au_prenom_d_usage():
+    # 20 % de l'arbre : 'Marcel, Hubert, Andre' = trois prénoms, pas un composé.
+    person = _person(surname="Soulat", given="Marcel, Hubert, Andre")
+    rows = [{"item": "http://www.wikidata.org/entity/Q99", "itemLabel": "Marcel Soulat",
+             "birthDate": "1677-07-15T00:00:00Z", "birthPlaceLabel": "Montbéliard"}]
+    assert "nom" in pistes_wikidata(person, rows)[0].concordances
+
+
+def test_trait_d_union_eclate_correspond_a_la_forme_espacee():
+    # Cas réel vérifié : la recherche 'Guillaume-Henri Dufour' rend le libellé
+    # Wikidata 'Guillaume Henri Dufour'. Sans éclatement, vrai positif perdu.
+    person = _person(surname="Dufour", given="Guillaume-Henri")
+    rows = [{"item": "http://www.wikidata.org/entity/Q99",
+             "itemLabel": "Guillaume Henri Dufour",
+             "birthDate": "1677-07-15T00:00:00Z", "birthPlaceLabel": "Montbéliard"}]
+    assert "nom" in pistes_wikidata(person, rows)[0].concordances
+
+
+def test_accents_ne_font_pas_diverger_les_prenoms():
+    # L'arbre porte 'Andre' comme 'André' : norm_nom les rejoint.
+    person = _person(surname="Soulat", given="Andre")
+    rows = [{"item": "http://www.wikidata.org/entity/Q99", "itemLabel": "André Soulat",
+             "birthDate": "1677-07-15T00:00:00Z", "birthPlaceLabel": "Montbéliard"}]
+    assert "nom" in pistes_wikidata(person, rows)[0].concordances
 
 
 def test_piste_forte_nom_date_complete_et_lieu():

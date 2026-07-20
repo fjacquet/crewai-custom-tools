@@ -7,6 +7,7 @@ from crewai_custom_tools.tools.genealogy.pistes.matchid import (
     pistes_matchid,
 )
 from crewai_custom_tools.tools.genealogy.pistes.wikidata import (
+    mots,
     pistes_wikidata,
     q_item,
     requete_wikidata,
@@ -15,6 +16,7 @@ from crewai_custom_tools.tools.genealogy.pistes.wikidata import (
 __all__ = [
     "event_iso",
     "first_given",
+    "mots",
     "norm_nom",
     "pistes_matchid",
     "pistes_wikidata",

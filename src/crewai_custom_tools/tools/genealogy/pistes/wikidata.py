@@ -5,18 +5,47 @@ peut en tirer plusieurs facteurs distincts. Réserve connue : Wikidata ne décri
 que des personnes notables, le rendement sur un arbre ordinaire sera faible.
 """
 
+import re
+
 from crewai_custom_tools.tools.genealogy.models.domain import PersonFacts, Piste
 from crewai_custom_tools.tools.genealogy.pistes.matchid import event_iso, norm_nom
 
+# La recherche passe par le service INDEXÉ (mwapi/EntitySearch), jamais par un
+# FILTER(CONTAINS(…)) sur rdfs:label : mesuré, ce dernier balaie les ~10 M d'humains
+# de Wikidata et rend 504 Gateway Timeout après 65 s sur le point d'accès public.
+# La version ci-dessous répond en ~0,9 s. Vérifiée en direct, pas supposée.
 _SPARQL = """SELECT ?item ?itemLabel ?birthDate ?birthPlaceLabel ?p902 WHERE {{
-  ?item wdt:P31 wd:Q5 ;
-        rdfs:label ?label .
-  FILTER(CONTAINS(LCASE(?label), LCASE("{nom}")))
+  SERVICE wikibase:mwapi {{
+    bd:serviceParam wikibase:api "EntitySearch" .
+    bd:serviceParam wikibase:endpoint "www.wikidata.org" .
+    bd:serviceParam mwapi:search "{nom}" .
+    bd:serviceParam mwapi:language "fr" .
+    bd:serviceParam mwapi:limit 25 .
+    ?item wikibase:apiOutputItem mwapi:item .
+  }}
+  ?item wdt:P31 wd:Q5 .
   OPTIONAL {{ ?item wdt:P569 ?birthDate . }}
   OPTIONAL {{ ?item wdt:P19 ?birthPlace . }}
   OPTIONAL {{ ?item wdt:P902 ?p902 . }}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "fr,de,en". }}
 }} LIMIT 25"""
+
+_SEPARATEURS = re.compile(r"[,\-\s]+")
+
+
+def mots(valeur: str) -> set[str]:
+    """Découpe un nom en mots normalisés : virgules, espaces ET traits d'union.
+
+    Mesuré sur l'arbre : 79 % des prénoms sont simples, 20 % sont des LISTES
+    séparées par des virgules ('Marcel, Hubert, Andre' = trois prénoms distincts,
+    pas un composé), 1 % portent un trait d'union ('Georges-Frédéric').
+
+    Le trait d'union est éclaté volontairement : Wikidata répond
+    'Guillaume Henri Dufour' à une recherche 'Guillaume-Henri Dufour' — vérifié.
+    Sans éclatement, ce vrai positif serait perdu. Le patronyme devant lui aussi
+    correspondre, la permissivité sur le prénom ne coûte rien.
+    """
+    return {norm_nom(m) for m in _SEPARATEURS.split(valeur or "") if m.strip()}
 
 
 def requete_wikidata(person: PersonFacts) -> str:
@@ -43,8 +72,14 @@ def pistes_wikidata(person: PersonFacts, resultats: list[dict]) -> list[Piste]:
         concordances: list[str] = []
         divergences: list[str] = []
 
-        label = row.get("itemLabel", "")
-        if label and norm_nom(person.surname) in norm_nom(label):
+        # Comparaison par MOTS ENTIERS des deux côtés, jamais par sous-chaîne :
+        # `norm_nom(surname) in norm_nom(label)` ferait correspondre « Roy » à
+        # « LEROY » et fabriquerait des pistes fortes fausses — or une piste forte
+        # est ÉCRITE dans l'arbre, une faible reste dans le rapport.
+        # On exige le patronyme ET au moins un prénom commun.
+        mots_label = mots(row.get("itemLabel", ""))
+        if mots_label and mots(person.surname) <= mots_label and (
+                mots(person.given) & mots_label):
             concordances.append("nom")
 
         # wdt:P569 rend un dateTime complet quelle que soit la précision réelle ;
