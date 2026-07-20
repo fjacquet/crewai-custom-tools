@@ -29,12 +29,22 @@ _WKT_POINT_RE = re.compile(r"^\s*Point\(\s*(-?[\d.]+)\s+(-?[\d.]+)\s*\)\s*$", re
 
 # Une seule requête rend la dissolution, le successeur ET le GPS : la garde de
 # recoupement (successeur vs chefLieu) ne coûte donc aucun appel supplémentaire.
-_SPARQL = """SELECT ?item ?dissolved ?succInsee ?coord WHERE {{
+#
+# ?dissolved passe par le nœud de déclaration (p:P576/psv:P576) plutôt que par le
+# raccourci wdt:P576 : wdt: rend toujours un xsd:dateTime complet, quelle que soit
+# la précision réelle de la déclaration (une dissolution saisie en précision
+# ANNÉE sort quand même "1972-01-01T00:00:00Z"). Il faut ?prec (wikibase:timePrecision)
+# pour distinguer une vraie date au jour près (11) d'une année maquillée en date —
+# voir wikidata_ex_commune, qui rejette tout ce qui n'est pas prec=11.
+_SPARQL = """SELECT ?item ?dissolved ?succInsee ?coord ?prec WHERE {{
   ?item wdt:P374 "{insee}" .
-  OPTIONAL {{ ?item wdt:P576 ?dissolved }}
+  OPTIONAL {{ ?item p:P576/psv:P576 ?v . ?v wikibase:timeValue ?dissolved ;
+                                            wikibase:timePrecision ?prec }}
   OPTIONAL {{ ?item wdt:P1366 ?succ . ?succ wdt:P374 ?succInsee }}
   OPTIONAL {{ ?item wdt:P625 ?coord }}
 }} LIMIT 10"""
+
+_DAY_PRECISION = "11"  # wikibase:timePrecision pour une date au jour près
 
 
 class ExCommuneFacts(BaseModel):
@@ -87,6 +97,26 @@ def parse_wkt_point(wkt: str) -> tuple[str, str] | None:
     return lat, lon
 
 
+def _precise_dissolved(rows: list[dict]) -> str | None:
+    """Ne retient une dissolution que si sa précision Wikidata est le JOUR (prec=11).
+
+    P576 accepte des déclarations en précision année/décennie/siècle — wdt:P576 les
+    rend toutes comme un xsd:dateTime complet, ce qui fabrique une fausse illusion
+    de précision. On ignore donc toute ligne dont `prec` n'est pas "11", qu'elle
+    soit absente (déclaration sans P576 du tout) ou porte une autre valeur.
+
+    Plusieurs lignes en précision 11 portant des valeurs *différentes* sont des
+    déclarations P576 contradictoires — une vraie ambiguïté, qu'on ne tranche pas
+    arbitrairement. Plusieurs lignes portant la *même* valeur ne sont que du
+    fan-out SPARQL (ex. `?coord` multivaluée) : bénin, la datation passe.
+    """
+    precise = {row["dissolved"] for row in rows
+               if row.get("prec") == _DAY_PRECISION and row.get("dissolved")}
+    if len(precise) != 1:
+        return None
+    return precise.pop()
+
+
 def wikidata_ex_commune(insee: str) -> ExCommuneFacts | None:
     """Faits Wikidata pour une ex-commune. None si 0, ou >1 entité *distincte*, porte ce code INSEE.
 
@@ -118,7 +148,7 @@ def wikidata_ex_commune(insee: str) -> ExCommuneFacts | None:
         point = parse_wkt_point(row["coord"])
         if point is not None:
             lat, long = point
-    dissolved = row.get("dissolved")
+    dissolved = _precise_dissolved(rows)
     dissolved_date = dissolved.split("T")[0] if dissolved else None
     return ExCommuneFacts(
         dissolved=dissolved_date,
