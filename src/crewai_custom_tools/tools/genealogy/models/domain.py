@@ -153,6 +153,25 @@ class PlaceProposition(BaseModel):
     preuve: str
 
 
+class PlaceFacts(BaseModel):
+    """Faits normalisés d'un lieu, pour la détection de doublons. Pur.
+
+    Volontairement plat : la détection ne raisonne que sur ce qui distingue deux
+    lieux homonymes — leur type, leur code officiel, leurs coordonnées, et le
+    poids qu'ils portent dans l'arbre. Tout le reste appartient à l'orchestration.
+    """
+
+    gramps_id: str
+    handle: str
+    nom: str
+    place_type: str = ""
+    code: str = Field(default="", description="Code officiel (INSEE ou équivalent national).")
+    lat: str = ""
+    long: str = ""
+    a_parent: bool = Field(default=False, description="Le lieu est rattaché à un contenant.")
+    retroliens: int = Field(default=0, description="Nombre d'objets qui référencent ce lieu.")
+
+
 class PlaceMergeProposition(BaseModel):
     """Two existing leaf places resolving to the same canonical place (dedup). Never auto."""
 
@@ -162,6 +181,12 @@ class PlaceMergeProposition(BaseModel):
     handle_merge: str
     canonical: str
     reason: str
+    # Renseignés par la détection ; absents des YAML écrits avant elle, d'où les défauts.
+    verdict: str = Field(default="", description="'auto' (preuve) ou 'arbitrage' (relecture).")
+    perte_evitee: str = Field(
+        default="",
+        description="Ce que l'ordre inverse aurait effacé — la fusion Gramps écrase "
+                    "les champs simples du lieu absorbé.")
 
 
 class PropositionAudit(BaseModel):
