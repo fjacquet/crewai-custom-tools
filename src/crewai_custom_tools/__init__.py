@@ -1,6 +1,6 @@
 """Centralized CrewAI custom tools library."""
 
-__version__ = "0.21.1"
+__version__ = "0.22.0"
 
 # 1. Web Search & Scraping
 from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool
@@ -117,6 +117,7 @@ from crewai_custom_tools.tools.genealogy.gramps.write_tools import (
     GrampsCreatePlaceTool,
     GrampsUpdatePlaceTool,
     GrampsMergePlacesTool,
+    GrampsMergePeopleTool,
     GrampsCreateNoteTool,
     GrampsEnsureTagTool,
     GrampsAttachTool,
@@ -267,6 +268,7 @@ __all__ = [
     "GrampsCreatePlaceTool",
     "GrampsUpdatePlaceTool",
     "GrampsMergePlacesTool",
+    "GrampsMergePeopleTool",
     "GrampsCreateNoteTool",
     "GrampsEnsureTagTool",
     "GrampsAttachTool",
