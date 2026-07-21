@@ -280,3 +280,27 @@ class MergeCluster(BaseModel):
     """Genre à écrire sur le phoenix AVANT la fusion, ou None. `Person.merge()`
     ignore le genre : sans ce patch, un phoenix « Inconnu » perdrait sans trace le
     genre connu d'un titanic (spec §2)."""
+
+
+class Subdivision(BaseModel):
+    """Une subdivision administrative résolue depuis Wikidata (référentiel des lieux)."""
+
+    qid: str                            # "Q1273"
+    iso: str                            # "CH-VD"
+    code: str                           # "VD" — l'ISO amputé du préfixe pays
+    libelle_fr: str
+    noms: list[str] = []                # noms d'appariement : français, puis vernaculaire
+    place_type: str                     # type Gramps NATIF ("State", "Department"…)
+    niveau: int                         # 1 = sous le pays, 2 = sous une subdivision de niveau 1
+    parent_qid: str                     # QID du pays ou de la subdivision de niveau 1
+    lat: str | None = None              # WGS84 décimal
+    long: str | None = None
+    frwiki: str | None = None           # URL de l'article français
+
+
+class CollisionIso(BaseModel):
+    """Plusieurs entités retenues sous un même code ISO : signalé, jamais écrit."""
+
+    iso: str
+    qids: list[str]
+    libelles: list[str]
