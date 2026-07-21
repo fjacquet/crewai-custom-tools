@@ -127,6 +127,8 @@ from crewai_custom_tools.tools.genealogy.gramps.write_tools import (
     GrampsAddUrlTool,
     GrampsAttachMediaTool,
     GrampsUploadMediaTool,
+    GrampsCreatePersonTool,
+    GrampsCreateEventTool,
 )
 from crewai_custom_tools.tools.genealogy.analysis.tools import (
     GenealogyCheckPersonTool,
@@ -278,6 +280,8 @@ __all__ = [
     "GrampsAddUrlTool",
     "GrampsAttachMediaTool",
     "GrampsUploadMediaTool",
+    "GrampsCreatePersonTool",
+    "GrampsCreateEventTool",
     "GenealogyCheckPersonTool",
     "GenealogyFindDuplicatesTool",
     "GenealogyResolvePlaceTool",

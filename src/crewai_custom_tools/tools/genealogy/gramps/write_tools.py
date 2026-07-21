@@ -714,3 +714,129 @@ class GrampsAttachMediaTool(BaseTool):
             updated["media_list"] = [*refs, {"_class": "MediaRef", "ref": media_handle}]
             client.request("PUT", f"/{object_type}/{handle}", json=updated)
         return ok(result)
+
+
+# --- Création de personnes et d'événements (import de relevés : sujet ou décès absent) ---
+
+
+class GrampsCreatePersonInput(BaseModel):
+    """Input schema for GrampsCreatePersonTool."""
+
+    first_name: str = Field(..., description="Given name (already cased by the caller).")
+    surname: str = Field(..., description="Family name (already cased by the caller).")
+    gender: int = Field(2, description="Gender integer: 0=F, 1=M, 2=U (unknown).")
+    dry_run: bool = Field(False, description="If true, POST nothing and return a synthetic handle.")
+
+
+class GrampsCreatePersonTool(BaseTool):
+    """Create a bare person (primary name + gender). Returns its handle (synthetic in dry-run).
+
+    Deliberately minimal: name and gender only. No events, no filiation — those are
+    separate, explicit writes (GrampsCreateEventTool ; filiation is never automatic).
+    Casing is the caller's responsibility, as everywhere else in the write layer.
+    """
+
+    name: str = "gramps_create_person"
+    description: str = (
+        "Creates a Gramps person carrying a primary name (first name + surname) and a gender "
+        "(0=F, 1=M, 2=U). Nothing else — no events, no parents. Returns the new person handle. "
+        "In dry-run (flag or GENECREW_DRY_RUN) it POSTs nothing and returns 'DRYRUN:person'."
+    )
+    args_schema: type[BaseModel] = GrampsCreatePersonInput
+
+    @api_tool(provider="GrampsWeb", endpoint="CreatePerson")
+    def _run(self, first_name: str, surname: str, gender: int = 2, dry_run: bool = False) -> str:
+        dry_run = effective_dry_run(dry_run)
+        gen_handle = uuid.uuid4().hex
+        payload = {
+            "_class": "Person", "handle": gen_handle, "gender": gender,
+            "primary_name": {
+                "_class": "Name", "first_name": first_name,
+                "surname_list": [{"_class": "Surname", "surname": surname}],
+            },
+        }
+        if dry_run:
+            return ok({"handle": "DRYRUN:person", "dry_run": True, "created": False})
+        resp = get_client().request("POST", "/people/", json=payload)
+        data = resp.json() if resp.content else None
+        return ok({"handle": _created_handle(data) or gen_handle, "dry_run": False,
+                   "created": True})
+
+
+class GrampsCreateEventInput(BaseModel):
+    """Input schema for GrampsCreateEventTool."""
+
+    person_handle: str = Field(..., description="Handle of the person the event is attached to.")
+    event_type: str = Field(..., description="Gramps event type, e.g. 'Death' or 'Birth'.")
+    dateval: list[int] | None = Field(
+        None, description="[day, month, year]; 0 for an unknown component. None if undated.")
+    modifier: int = Field(
+        0, description="Gramps date modifier: 0 exact, 1 before, 2 after, 3 about, 4 range, 5 span.")
+    quality: int = Field(0, description="Gramps date quality: 0 normal, 1 estimated, 2 calculated.")
+    place_handle: str | None = Field(None, description="Handle of the event place, if any.")
+    citation_handle: str | None = Field(None, description="Citation handle to attach to the event.")
+    role: str = Field("Primary", description="EventRef role on the person.")
+    dry_run: bool = Field(False, description="If true, POST/PUT nothing and return a synthetic handle.")
+
+
+class GrampsCreateEventTool(BaseTool):
+    """Create an event and attach it to a person (append-only on event_ref_list).
+
+    Two writes, non-atomic: POST the event, then append its EventRef to the person.
+    For a Birth/Death, `birth_ref_index`/`death_ref_index` is set to the new ref ONLY
+    when the person had none (a negative index) — an existing vital pointer is never
+    overwritten. Every other person field is copied through unchanged (append-only).
+    A synthetic `DRYRUN:` place or citation handle is never written into the payload.
+    """
+
+    name: str = "gramps_create_event"
+    description: str = (
+        "Creates a Gramps event (type + optional date/place/citation) and attaches it to a "
+        "person by appending an EventRef; sets the birth/death index only if the person had "
+        "none. Append-only on the person. In dry-run (flag or GENECREW_DRY_RUN) it writes "
+        "nothing and returns 'DRYRUN:event'."
+    )
+    args_schema: type[BaseModel] = GrampsCreateEventInput
+
+    @api_tool(provider="GrampsWeb", endpoint="CreateEvent")
+    def _run(self, person_handle: str, event_type: str, dateval: list[int] | None = None,
+             modifier: int = 0, quality: int = 0, place_handle: str | None = None,
+             citation_handle: str | None = None, role: str = "Primary",
+             dry_run: bool = False) -> str:
+        dry_run = effective_dry_run(dry_run)
+        gen_handle = uuid.uuid4().hex
+        payload: dict = {"_class": "Event", "handle": gen_handle, "type": event_type}
+        if dateval:
+            payload["date"] = {"_class": "Date", "modifier": modifier, "quality": quality,
+                               "dateval": [*dateval, False]}
+        # Un handle synthétique 'DRYRUN:' (lieu/citation simulé en amont) ne doit jamais
+        # entrer dans un objet écrit pour de vrai — comme partout dans cette couche.
+        if place_handle and not str(place_handle).startswith("DRYRUN:"):
+            payload["place"] = place_handle
+        if citation_handle and not str(citation_handle).startswith("DRYRUN:"):
+            payload["citation_list"] = [citation_handle]
+        if dry_run:
+            return ok({"handle": "DRYRUN:event", "dry_run": True,
+                       "created": False, "attached": False})
+
+        client = get_client()
+        resp = client.request("POST", "/events/", json=payload)
+        data = resp.json() if resp.content else None
+        event_handle = _created_handle(data) or gen_handle
+
+        # À partir d'ici l'événement EXISTE. On le rattache à la personne en append-only :
+        # on repart de l'objet complet, on n'ajoute qu'un EventRef, et on ne pose l'index
+        # vital que s'il était absent.
+        person = client.get_object("people", person_handle)
+        refs = list(person.get("event_ref_list") or [])
+        new_index = len(refs)
+        refs.append({"_class": "EventRef", "ref": event_handle, "role": role})
+        updated = dict(person)
+        updated["event_ref_list"] = refs
+        if event_type == "Death" and person.get("death_ref_index", -1) < 0:
+            updated["death_ref_index"] = new_index
+        if event_type == "Birth" and person.get("birth_ref_index", -1) < 0:
+            updated["birth_ref_index"] = new_index
+        client.request("PUT", f"/people/{person_handle}", json=updated)
+        return ok({"handle": event_handle, "person_handle": person_handle,
+                   "created": True, "attached": True, "dry_run": False})
