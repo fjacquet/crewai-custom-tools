@@ -1,8 +1,10 @@
 """Tests de la détection pure des doublons de lieux."""
 
 from crewai_custom_tools.tools.genealogy.analysis.place_duplicates import (
+    evaluer_preuve,
     normaliser_nom_lieu,
 )
+from crewai_custom_tools.tools.genealogy.models.domain import PlaceFacts
 
 
 def test_casse_accents_et_separateurs_convergent():
@@ -44,3 +46,57 @@ def test_l_apostrophe_reste_un_separateur_et_ne_disparait_pas():
 def test_chaine_vide_et_blancs():
     assert normaliser_nom_lieu("") == ""
     assert normaliser_nom_lieu("   ") == ""
+
+
+def _lieu(gid, **kw):
+    base = {"gramps_id": gid, "handle": "H" + gid, "nom": "X"}
+    base.update(kw)
+    return PlaceFacts(**base)
+
+
+def test_codes_identiques_prouvent_quel_que_soit_le_type():
+    """Un code officiel est un identifiant canonique, pas une ressemblance."""
+    a = _lieu("P1", code="18044", place_type="Municipality")
+    b = _lieu("P2", code="18044", place_type="City")
+    assert evaluer_preuve(a, b) == "code"
+
+
+def test_codes_differents_opposent_un_veto():
+    """Paris : Department 75 contre Municipality 75056 — deux entités réelles."""
+    a = _lieu("P0301", code="75", place_type="Department", lat="48.8589", long="2.347")
+    b = _lieu("P0008", code="75056", place_type="Municipality", lat="48.8589", long="2.347")
+    assert evaluer_preuve(a, b) == ""
+
+
+def test_coordonnees_identiques_prouvent_a_type_egal():
+    """Rhodt unter Rietburg : deux Municipality sans code, mêmes coordonnées."""
+    a = _lieu("P0119", place_type="Municipality", lat="49.2708776", long="8.1234")
+    b = _lieu("P0103", place_type="Municipality", lat="49.2708776", long="8.1234")
+    assert evaluer_preuve(a, b) == "coordonnees"
+
+
+def test_coordonnees_ne_prouvent_rien_entre_types_differents():
+    """Le chantier référentiel va géocoder les départements : ce refus doit tenir."""
+    a = _lieu("P0301", place_type="Department", lat="48.8589", long="2.347")
+    b = _lieu("P0008", place_type="Municipality", lat="48.8589", long="2.347")
+    assert evaluer_preuve(a, b) == ""
+
+
+def test_un_seul_code_renseigne_ne_prouve_pas():
+    """Annaba : Department sans code contre Wilaya code 23 — arbitrage humain."""
+    a = _lieu("P0343", place_type="Department")
+    b = _lieu("P0383", place_type="Wilaya", code="23")
+    assert evaluer_preuve(a, b) == ""
+
+
+def test_sans_code_ni_coordonnees_aucune_preuve():
+    a = _lieu("P1", place_type="Municipality")
+    b = _lieu("P2", place_type="Municipality")
+    assert evaluer_preuve(a, b) == ""
+
+
+def test_coordonnees_partielles_ne_prouvent_pas():
+    """Une latitude égale et une longitude vide n'est pas une coïncidence de position."""
+    a = _lieu("P1", place_type="Municipality", lat="47.1147")
+    b = _lieu("P2", place_type="Municipality", lat="47.1147", long="2.0")
+    assert evaluer_preuve(a, b) == ""
