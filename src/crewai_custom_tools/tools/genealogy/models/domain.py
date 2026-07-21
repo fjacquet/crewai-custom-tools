@@ -289,7 +289,7 @@ class Subdivision(BaseModel):
     iso: str                            # "CH-VD"
     code: str                           # "VD" — l'ISO amputé du préfixe pays
     libelle_fr: str
-    noms: list[str] = []                # noms d'appariement : français, puis vernaculaire
+    noms: list[str] = Field(default_factory=list)   # appariement : français, puis vernaculaire
     place_type: str                     # type Gramps NATIF ("State", "Department"…)
     niveau: int                         # 1 = sous le pays, 2 = sous une subdivision de niveau 1
     parent_qid: str                     # QID du pays ou de la subdivision de niveau 1
