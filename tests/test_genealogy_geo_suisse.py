@@ -57,7 +57,7 @@ def test_map_swiss_canton_in_chain_various():
         rp = map_swiss(_swiss_payload(label), ParsedPlace(raw="", commune=commune, country="Suisse"))
         assert rp.name == commune
         assert [lvl.name for lvl in rp.chains[0].levels] == ["Suisse", canton]
-        assert rp.chains[0].levels[1].place_type == "Canton"
+        assert rp.chains[0].levels[1].place_type == "State"
 
 
 def test_map_swiss_no_canton_when_label_bare():
@@ -78,3 +78,16 @@ def test_resolve_ch_requests_municipalities_only(monkeypatch):
     monkeypatch.setattr(suisse, "_http_get", fake_get)
     suisse.resolve_ch(ParsedPlace(raw="", commune="Lausanne", country="Suisse"))
     assert seen.get("origins") == "gg25"
+
+
+def test_le_canton_est_pose_avec_un_type_gramps_natif():
+    """`Canton` n'est pas un type Gramps natif. Un type personnalisé est une ligne de plus
+    à ne pas oublier dans chaque filtre par type — on s'en tient à `State`."""
+    from crewai_custom_tools.tools.genealogy.geo.suisse import map_swiss
+    from crewai_custom_tools.tools.genealogy.models.domain import ParsedPlace
+
+    payload = {"results": [{"attrs": {"label": "Montreux (VD)", "lat": 46.43, "lon": 6.91}}]}
+    resolved = map_swiss(payload, ParsedPlace(raw="Montreux", commune="Montreux"))
+    types = [niveau.place_type for niveau in resolved.chains[0].levels]
+    assert types == ["Country", "State"]
+    assert "Canton" not in types
