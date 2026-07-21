@@ -4,6 +4,41 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.22.0] - 2026-07-21
+
+### Added
+
+- **Fusion des doublons de personnes** — la détection passe du simple encadré de rapport à un
+  pipeline en trois étages (`auto` / `arbitrage` / `rejet`). Toute l'analyse est **pure**,
+  testée hors ligne ; l'orchestration réseau vit dans `genecrew`.
+  - `analysis/phonetics.py` — clé phonétique française, **pour le rappel uniquement, jamais une
+    preuve**. Elle rapproche les graphies (`Jacquet`/`Jaquet`, `Lelièvre`/`Le Lievre`) tout en
+    **séparant** `Jacquet`/`Jacquier` et `Pagan`/`Pagani` — les deux plus grosses familles de
+    l'arbre, qui sont des lignées distinctes (`marie pagan` ≈ `marie pagani` à 0,957 en
+    similarité lexicale : la ressemblance de nom ne peut donc jamais prouver l'identité).
+  - `analysis/duplicates.py` — **blocking multi-clés** : cinq clés (nom exact, phonétique+initiale,
+    patronyme+année ±2, famille conjugale, famille parentale). Les deux clés familiales rattrapent
+    les personnes **sans date de naissance**, que R10 ignorait totalement. Garde `MAX_BLOC` contre
+    l'explosion quadratique (`Pagan` seul, 151 personnes, produirait 11 325 paires).
+  - `analysis/duplicates.py` — **étagement** : `auto` sur preuve **structurelle** (date de naissance
+    exacte identique + mêmes parents ; ou date exacte identique seule ; ou conjoint + enfant commun),
+    `arbitrage` sur preuve partielle, `rejet` sur ressemblance de nom seule. `date_complete` n'accepte
+    que le modificateur **exact** : `avant`/`après`/`environ`/intervalle/span bornent une date sans la
+    fixer et tombent en arbitrage. Corpus de pièges couvrant frères homonymes, jumeaux, père/fils,
+    Pagan/Pagani, concordance sur l'année seule.
+  - `analysis/merge_plan.py` — grappes **union-find** (A≈B et B≈C forment une seule grappe à un seul
+    survivant : fusionner par paires laisserait un `merge` partir sur un handle supprimé), choix
+    déterministe du **phoenix** (complétude, puis citations, puis `gramps_id`), et **patch de genre**.
+  - `GrampsMergePeopleTool` — l'appel de fusion réel (`POST /people/{phoenix}/merge/{titanic}` ;
+    le phoenix survit, le titanic est supprimé). **Câblé à aucun agent** du crew — la fusion n'est
+    invoquée que par l'orchestration déterministe côté `genecrew`.
+
+### Notes
+
+- `Person.merge()` de Gramps n'unit **pas** le genre : celui du phoenix écrase celui du titanic sans
+  trace. Le patch de genre calculé par `merge_plan` doit être appliqué **avant** la fusion — d'où le
+  seul champ scalaire patché, borné à `Literal[0, 1] | None` (un genre inconnu ne se patche pas).
+
 ## [0.21.1] - 2026-07-20
 
 ### Fixed
