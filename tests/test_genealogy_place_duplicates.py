@@ -72,6 +72,28 @@ def test_codes_differents_opposent_un_veto():
     assert evaluer_preuve(a, b) == ""
 
 
+def test_codes_differents_a_type_egal_et_coordonnees_egales_ne_prouvent_pas():
+    """Le veto est ici la SEULE garde : ni le type ni la position ne discriminent.
+
+    Deux Saint-Palais réels — 18205 dans le Cher, 17398 en Charente-Maritime —
+    tous deux `Municipality`, tous deux portant le même point (un géocodage
+    approximatif ou un copier-coller de coordonnées suffit à produire ce cas).
+    Le type étant identique, la garde de type laisse passer ; les coordonnées
+    étant complètes et égales, la voie des coordonnées conclurait. Seul le veto
+    des codes officiels distincts empêche alors une fusion irréversible.
+
+    Configuration programmée, pas hypothétique : le chantier référentiel pose
+    types ET coordonnées sur les contenants ; dès que les types sont
+    uniformisés, la garde de type cesse de discriminer.
+    """
+    a = _lieu("P0205", code="18205", place_type="Municipality",
+              lat="45.6533", long="-0.4869")
+    b = _lieu("P0398", code="17398", place_type="Municipality",
+              lat="45.6533", long="-0.4869")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
 def test_coordonnees_identiques_prouvent_a_type_egal():
     """Rhodt unter Rietburg : deux Municipality sans code, mêmes coordonnées."""
     a = _lieu("P0119", place_type="Municipality", lat="49.2708776", long="8.1234")
@@ -115,6 +137,34 @@ def test_meme_latitude_mais_longitude_differente_ne_prouve_pas():
     automatiquement deux communes distinctes d'un même parallèle."""
     a = _lieu("P1", place_type="Municipality", lat="47.1147", long="2.0")
     b = _lieu("P2", place_type="Municipality", lat="47.1147", long="5.0")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
+def test_longitude_absente_des_deux_cotes_ne_prouve_pas():
+    """Les couples sont ÉGAUX : seule l'exigence de complétude peut refuser.
+
+    Deux `Municipality` de même latitude, sans longitude ni d'un côté ni de
+    l'autre — l'état d'un géocodage à moitié importé. `(lat, long)` vaut
+    `("47.1147", "")` des deux côtés, donc la comparaison des couples conclut à
+    l'égalité : si la preuve se contentait d'« au moins une composante
+    renseignée », deux communes dont on ignore la position fusionneraient.
+    """
+    a = _lieu("P1", place_type="Municipality", lat="47.1147")
+    b = _lieu("P2", place_type="Municipality", lat="47.1147")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
+def test_meme_longitude_mais_latitude_differente_ne_prouve_pas():
+    """Miroir du test précédent : la preuve porte sur le COUPLE, pas sur `long`.
+
+    Deux communes homonymes peuvent partager un méridien sans partager la
+    moindre position : à longitude 2.3988, la latitude 47.0810 est celle de
+    Bourges et 48.8589 celle de Paris — deux cents kilomètres d'écart. Ne
+    comparer que `long` les ferait fusionner automatiquement."""
+    a = _lieu("P1", place_type="Municipality", lat="47.0810", long="2.3988")
+    b = _lieu("P2", place_type="Municipality", lat="48.8589", long="2.3988")
     assert evaluer_preuve(a, b) == ""
     assert evaluer_preuve(b, a) == ""
 
@@ -189,6 +239,11 @@ _PAIRES_SYMETRIE = [
      _lieu("P2", code="18044", place_type="City")),
     (_lieu("P1", code="75", place_type="Department", lat="48.8589", long="2.347"),
      _lieu("P2", code="75056", place_type="Municipality", lat="48.8589", long="2.347")),
+    # Le veto seul : même type connu, coordonnées complètes identiques — rien
+    # d'autre que les codes distincts ne peut refuser, dans un sens comme dans
+    # l'autre.
+    (_lieu("P1", code="18205", place_type="Municipality", lat="45.6533", long="-0.4869"),
+     _lieu("P2", code="17398", place_type="Municipality", lat="45.6533", long="-0.4869")),
     (_lieu("P1", place_type="Municipality", lat="49.27", long="8.12"),
      _lieu("P2", place_type="Municipality", lat="49.27", long="8.12")),
     (_lieu("P1", place_type="Department", lat="48.8589", long="2.347"),
@@ -209,7 +264,8 @@ _PAIRES_SYMETRIE = [
 
 
 _IDS_SYMETRIE = [
-    "codes-egaux", "codes-differents", "coordonnees-egales", "types-differents",
+    "codes-egaux", "codes-differents", "codes-differents-tout-le-reste-egal",
+    "coordonnees-egales", "types-differents",
     "un-seul-code", "coordonnees-partielles", "longitudes-differentes",
     "types-inconnus", "code-blanc-contre-code",
 ]

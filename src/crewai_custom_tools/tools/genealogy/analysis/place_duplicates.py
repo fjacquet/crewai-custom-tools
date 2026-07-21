@@ -46,12 +46,15 @@ def normaliser_nom_lieu(nom: str) -> str:
 PREUVE_CODE = "code"
 PREUVE_COORDONNEES = "coordonnees"
 
-# Les deux orthographes de l'ignorance. Le modèle `PlaceFacts` laisse `place_type`
-# à `""` par défaut, tandis que l'API Gramps rend le libellé `"Unknown"` — cf.
+# L'ignorance a deux orthographes. Le modèle `PlaceFacts` laisse `place_type` à
+# `""` par défaut, tandis que l'API Gramps rend le libellé `"Unknown"` — cf.
 # `genecrew/places_apply.py`, qui teste `(place.get("place_type") or "Unknown")
-# != "Unknown"`. Les deux désignent le même état : on ne sait pas. Faire dépendre
-# un verdict de fusion de l'orthographe rendue serait un pur hasard.
-_TYPES_INCONNUS = frozenset({"", "unknown"})
+# != "Unknown"`. Les deux désignent le même état : on ne sait pas, et faire
+# dépendre un verdict de fusion de l'orthographe rendue serait un pur hasard.
+# Seule `"unknown"` figure ici : `_type_connu` rend déjà `""` pour un type vide ou
+# blanc, si bien que la chaîne vide n'y jouerait aucun rôle. Cette table ne sert
+# qu'à ramener l'orthographe de l'API au même état que celle du modèle.
+_TYPES_INCONNUS = frozenset({"unknown"})
 
 
 def _renseigne(champ: str) -> str:
@@ -73,9 +76,12 @@ def _type_connu(place: PlaceFacts) -> str:
 def evaluer_preuve(a: PlaceFacts, b: PlaceFacts) -> str:
     """La preuve qui autorise une fusion automatique, ou la chaîne vide. Pur.
 
-    Un VETO passe avant tout : deux codes non vides et différents interdisent la
+    Un VETO passe avant tout : deux codes RENSEIGNÉS et différents interdisent la
     fusion, quels que soient les types et les coordonnées. C'est lui qui protège
     Paris — le département 75 et la commune 75056 sont deux entités réelles.
+    « Renseigné » s'entend après nettoyage des blancs : un code ne contenant que
+    des espaces vaut un code absent, n'oppose donc aucun veto, et laisse le
+    verdict aux voies ci-dessous.
 
     Hors veto, deux voies :
       - codes identiques et non vides : un code officiel est canonique, il prouve
