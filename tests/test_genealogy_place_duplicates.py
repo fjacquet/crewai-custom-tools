@@ -1,6 +1,10 @@
 """Tests de la détection pure des doublons de lieux."""
 
+import pytest
+
 from crewai_custom_tools.tools.genealogy.analysis.place_duplicates import (
+    PREUVE_CODE,
+    PREUVE_COORDONNEES,
     evaluer_preuve,
     normaliser_nom_lieu,
 )
@@ -100,3 +104,120 @@ def test_coordonnees_partielles_ne_prouvent_pas():
     a = _lieu("P1", place_type="Municipality", lat="47.1147")
     b = _lieu("P2", place_type="Municipality", lat="47.1147", long="2.0")
     assert evaluer_preuve(a, b) == ""
+
+
+def test_meme_latitude_mais_longitude_differente_ne_prouve_pas():
+    """La preuve porte sur le COUPLE, jamais sur la latitude seule.
+
+    Deux communes entièrement géocodées peuvent partager une latitude au
+    centième près sans partager la moindre position : le parallèle 47.11 traverse
+    la France entière. Ne comparer que `lat` suffirait à faire fusionner
+    automatiquement deux communes distinctes d'un même parallèle."""
+    a = _lieu("P1", place_type="Municipality", lat="47.1147", long="2.0")
+    b = _lieu("P2", place_type="Municipality", lat="47.1147", long="5.0")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
+@pytest.mark.parametrize(
+    ("type_a", "type_b"),
+    [("Unknown", "Unknown"), ("", ""), ("", "Unknown"), ("Unknown", "Municipality")],
+    ids=["deux-unknown", "deux-vides", "vide-contre-unknown", "unknown-contre-connu"],
+)
+def test_type_inconnu_ne_prouve_jamais_par_coordonnees(type_a, type_b):
+    """L'ignorance n'est pas une valeur : un inconnu n'est égal à aucun autre.
+
+    Scénario réel et programmé — le chantier référentiel va géocoder les
+    contenants : un arrondissement « Bourges » encore sans type, géocodé au point
+    de son chef-lieu, face à la commune « Bourges » sans type ni code. Même nom,
+    aucun code pour opposer un veto, coordonnées identiques : si l'absence de
+    type valait égalité de type, la fusion serait automatique et irréversible.
+
+    Les deux orthographes de l'ignorance (`""` du modèle, `"Unknown"` de l'API)
+    valent la même chose : le verdict ne doit pas dépendre de ce que rend l'API.
+    """
+    a = _lieu("P1", place_type=type_a, lat="47.0810", long="2.3988")
+    b = _lieu("P2", place_type=type_b, lat="47.0810", long="2.3988")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
+def test_type_connu_reste_insensible_aux_blancs():
+    """Le nettoyage des blancs ne doit pas casser la voie des coordonnées."""
+    a = _lieu("P1", place_type=" Municipality ", lat=" 49.2708776 ", long=" 8.1234 ")
+    b = _lieu("P2", place_type="Municipality", lat="49.2708776", long="8.1234")
+    assert evaluer_preuve(a, b) == PREUVE_COORDONNEES
+    assert evaluer_preuve(b, a) == PREUVE_COORDONNEES
+
+
+def test_codes_blancs_ne_prouvent_rien():
+    """Un champ vidé en tapant une espace n'est pas un identifiant canonique.
+
+    `" "` est truthy en Python ; sans nettoyage, deux codes blancs se prouvent
+    l'un l'autre — et le code prouve quel que soit le type, donc jusqu'entre un
+    département et une commune."""
+    a = _lieu("P0301", code=" ", place_type="Department")
+    b = _lieu("P0008", code="  ", place_type="Municipality")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
+def test_code_blanc_ne_leve_pas_le_veto_ni_ne_prouve_face_a_un_vrai_code():
+    """Un code blanc vaut un code absent : on retombe sur l'arbitrage humain."""
+    a = _lieu("P1", code=" ", place_type="Municipality", lat="47.08", long="2.39")
+    b = _lieu("P2", code="18033", place_type="Municipality", lat="47.08", long="2.39")
+    assert evaluer_preuve(a, b) == PREUVE_COORDONNEES
+    assert evaluer_preuve(b, a) == PREUVE_COORDONNEES
+
+
+def test_coordonnees_blanches_ne_prouvent_rien():
+    """Deux lieux « géocodés » à coups d'espaces ne partagent aucune position."""
+    a = _lieu("P1", place_type="Municipality", lat=" ", long=" ")
+    b = _lieu("P2", place_type="Municipality", lat="", long="")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
+_PAIRES_SYMETRIE = [
+    # (a, b) couvrant chaque branche du verdict, dans les deux sens.
+    (_lieu("P1", code="18044", place_type="Municipality"),
+     _lieu("P2", code="18044", place_type="City")),
+    (_lieu("P1", code="75", place_type="Department", lat="48.8589", long="2.347"),
+     _lieu("P2", code="75056", place_type="Municipality", lat="48.8589", long="2.347")),
+    (_lieu("P1", place_type="Municipality", lat="49.27", long="8.12"),
+     _lieu("P2", place_type="Municipality", lat="49.27", long="8.12")),
+    (_lieu("P1", place_type="Department", lat="48.8589", long="2.347"),
+     _lieu("P2", place_type="Municipality", lat="48.8589", long="2.347")),
+    (_lieu("P1", place_type="Department"),
+     _lieu("P2", place_type="Wilaya", code="23")),
+    (_lieu("P1", place_type="Municipality", lat="47.1147"),
+     _lieu("P2", place_type="Municipality", lat="47.1147", long="2.0")),
+    (_lieu("P1", place_type="Municipality", lat="47.1147", long="2.0"),
+     _lieu("P2", place_type="Municipality", lat="47.1147", long="5.0")),
+    (_lieu("P1", place_type="Unknown", lat="47.08", long="2.39"),
+     _lieu("P2", place_type="", lat="47.08", long="2.39")),
+    (_lieu("P1", code=" ", place_type="Municipality"),
+     _lieu("P2", code="18033", place_type="Municipality")),
+]
+
+
+_IDS_SYMETRIE = [
+    "codes-egaux", "codes-differents", "coordonnees-egales", "types-differents",
+    "un-seul-code", "coordonnees-partielles", "longitudes-differentes",
+    "types-inconnus", "code-blanc-contre-code",
+]
+
+
+@pytest.mark.parametrize(("a", "b"), _PAIRES_SYMETRIE, ids=_IDS_SYMETRIE)
+def test_le_verdict_est_symetrique(a, b):
+    """`evaluer_preuve` ne doit pas dépendre de l'ordre des deux lieux.
+
+    L'appelant parcourt des paires non ordonnées ; une asymétrie ferait dépendre
+    une fusion irréversible de l'ordre d'itération sur l'arbre — un lieu fusionné
+    ou non selon la page d'API qui l'a rendu en premier."""
+    assert evaluer_preuve(a, b) == evaluer_preuve(b, a)
+
+
+def test_les_constantes_de_verdict_sont_les_valeurs_rendues():
+    """Les deux verdicts sont exportés : l'appelant n'a pas à recopier de littéral."""
+    assert (PREUVE_CODE, PREUVE_COORDONNEES) == ("code", "coordonnees")

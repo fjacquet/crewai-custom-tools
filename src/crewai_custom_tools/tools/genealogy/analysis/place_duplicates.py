@@ -14,7 +14,12 @@ import unicodedata
 
 from crewai_custom_tools.tools.genealogy.models.domain import PlaceFacts
 
-__all__ = ["evaluer_preuve", "normaliser_nom_lieu"]
+__all__ = [
+    "PREUVE_CODE",
+    "PREUVE_COORDONNEES",
+    "evaluer_preuve",
+    "normaliser_nom_lieu",
+]
 
 # Les ligatures ne sont pas des accents : NFD ne les décompose pas. « Vœuil-et-Giget »
 # et « Voeuil-et-Giget » désignent pourtant la même commune de Charente. Cette table
@@ -41,6 +46,29 @@ def normaliser_nom_lieu(nom: str) -> str:
 PREUVE_CODE = "code"
 PREUVE_COORDONNEES = "coordonnees"
 
+# Les deux orthographes de l'ignorance. Le modèle `PlaceFacts` laisse `place_type`
+# à `""` par défaut, tandis que l'API Gramps rend le libellé `"Unknown"` — cf.
+# `genecrew/places_apply.py`, qui teste `(place.get("place_type") or "Unknown")
+# != "Unknown"`. Les deux désignent le même état : on ne sait pas. Faire dépendre
+# un verdict de fusion de l'orthographe rendue serait un pur hasard.
+_TYPES_INCONNUS = frozenset({"", "unknown"})
+
+
+def _renseigne(champ: str) -> str:
+    """Champ libre de l'API → sa valeur utile, ou `""` s'il ne porte que des blancs.
+
+    `code`, `lat` et `long` sont des chaînes saisies à la main dans Gramps. Un
+    champ « vidé » en y tapant une espace reste truthy en Python : sans ce
+    nettoyage, deux `" "` se prouveraient mutuellement comme un code canonique.
+    """
+    return (champ or "").strip()
+
+
+def _type_connu(place: PlaceFacts) -> str:
+    """Type du lieu s'il est connu, sinon `""` — l'ignorance n'est pas une valeur."""
+    brut = _renseigne(place.place_type)
+    return "" if brut.casefold() in _TYPES_INCONNUS else brut
+
 
 def evaluer_preuve(a: PlaceFacts, b: PlaceFacts) -> str:
     """La preuve qui autorise une fusion automatique, ou la chaîne vide. Pur.
@@ -52,17 +80,27 @@ def evaluer_preuve(a: PlaceFacts, b: PlaceFacts) -> str:
     Hors veto, deux voies :
       - codes identiques et non vides : un code officiel est canonique, il prouve
         quel que soit le type des deux lieux ;
-      - même type ET coordonnées complètes identiques : la voie des lieux sans
-        code. Les coordonnées ne prouvent JAMAIS rien entre types différents —
-        un département géocodé reçoit le point de sa préfecture, c'est-à-dire
-        celui de sa commune-chef-lieu.
+      - deux types CONNUS et égaux ET coordonnées complètes identiques : la voie
+        des lieux sans code. Les coordonnées ne prouvent JAMAIS rien entre types
+        différents — un département géocodé reçoit le point de sa préfecture,
+        c'est-à-dire celui de sa commune-chef-lieu — ni dès qu'un seul des deux
+        types est inconnu : un inconnu n'est jamais égal à un autre inconnu.
+        C'est la doctrine du module jumeau `duplicates.py`, qui exige un nom
+        « identique et non vide » et refuse dès qu'un parent est inconnu. Sans
+        elle, un arrondissement « Bourges » encore `Unknown` mais géocodé au
+        point de son chef-lieu fusionnerait tout seul avec la commune du même
+        nom — l'état sans type étant l'état majoritaire de l'arbre réel.
+
+    Fonction symétrique : `evaluer_preuve(a, b) == evaluer_preuve(b, a)`. Une
+    écriture irréversible ne doit pas dépendre de l'ordre de parcours.
     """
-    if a.code and b.code and a.code != b.code:
+    code_a, code_b = _renseigne(a.code), _renseigne(b.code)
+    if code_a and code_b:
+        return PREUVE_CODE if code_a == code_b else ""
+    type_a, type_b = _type_connu(a), _type_connu(b)
+    if not type_a or not type_b or type_a != type_b:
         return ""
-    if a.code and b.code:                       # égaux, et non vides : canonique
-        return PREUVE_CODE
-    if a.place_type != b.place_type:
-        return ""
-    if a.lat and a.long and (a.lat, a.long) == (b.lat, b.long):
+    coord_a = (_renseigne(a.lat), _renseigne(a.long))
+    if all(coord_a) and coord_a == (_renseigne(b.lat), _renseigne(b.long)):
         return PREUVE_COORDONNEES
     return ""
