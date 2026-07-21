@@ -136,6 +136,48 @@ def test_create_event_attach_failure_after_post_surfaces_orphan_handle(mocker):
     assert "attach_error" in data["data"]
 
 
+def test_create_event_attach_network_error_also_surfaces_orphan(mocker):
+    # L1 — un ÉCHEC RÉSEAU (RequestError, pas un statut HTTP) pendant le rattachement
+    # doit être capté au même titre : l'événement est créé, l'orphelin reste retrouvable.
+    # `httpx.HTTPError` (base) couvre RequestError ; `HTTPStatusError` seul le manquerait.
+    def h(request):
+        if request.method == "POST" and request.url.path == "/api/events/":
+            return httpx.Response(201, json=[{"handle": "E_ORPH"}])
+        if request.method == "GET" and request.url.path == "/api/people/H":
+            raise httpx.ConnectError("connexion coupée")
+        return httpx.Response(404)
+    mocker.patch.object(write_tools, "get_client", return_value=_client(h))
+    data = json.loads(GrampsCreateEventTool()._run(
+        person_handle="H", event_type="Death", dateval=[10, 12, 1894]))
+    assert data["success"] is True
+    assert data["data"]["created"] is True and data["data"]["attached"] is False
+    assert data["data"]["handle"] == "E_ORPH"
+
+
+def test_create_event_post_failure_is_reported_as_error(mocker):
+    # Le POST de l'événement lui-même échoue (5xx) : rien n'est créé, l'outil rend
+    # un ÉCHEC franc (success=False), pas un succès qualifié.
+    def h(request):
+        if request.method == "POST" and request.url.path == "/api/events/":
+            return httpx.Response(500, json={"error": "boom"})
+        return httpx.Response(404)
+    mocker.patch.object(write_tools, "get_client", return_value=_client(h))
+    data = json.loads(GrampsCreateEventTool()._run(
+        person_handle="H", event_type="Death", dateval=[10, 12, 1894]))
+    assert data["success"] is False
+
+
+def test_create_person_post_failure_is_reported_as_error(mocker):
+    def h(request):
+        if request.method == "POST" and request.url.path == "/api/people/":
+            return httpx.Response(500, json={"error": "boom"})
+        return httpx.Response(404)
+    mocker.patch.object(write_tools, "get_client", return_value=_client(h))
+    data = json.loads(GrampsCreatePersonTool()._run(
+        first_name="Rose", surname="Jacquet", gender=0))
+    assert data["success"] is False
+
+
 def test_create_event_dryrun_place_handle_is_not_written(mocker):
     # Un place_handle synthétique 'DRYRUN:...' (lieu simulé en amont) ne doit jamais
     # entrer dans le payload d'un événement écrit pour de vrai.

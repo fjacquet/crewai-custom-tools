@@ -845,7 +845,12 @@ class GrampsCreateEventTool(BaseTool):
             if event_type == "Birth" and person.get("birth_ref_index", -1) < 0:
                 updated["birth_ref_index"] = new_index
             client.request("PUT", f"/people/{person_handle}", json=updated)
-        except httpx.HTTPStatusError as exc:
+        except httpx.HTTPError as exc:
+            # `HTTPError` est la base httpx : elle couvre `HTTPStatusError` (5xx/4xx)
+            # ET `RequestError` (timeout, coupure réseau). Un statut seul laisserait une
+            # coupure entre le POST réussi et le rattachement remonter en exception —
+            # avalée en `err` par @api_tool, perdant le handle de l'orphelin (le défaut
+            # même que ce chemin doit éviter).
             return ok({"handle": event_handle, "person_handle": person_handle,
                        "created": True, "attached": False, "dry_run": False,
                        "attach_error": str(exc)})

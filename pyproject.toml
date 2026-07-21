@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crewai-custom-tools"
-version = "0.23.0"
+version = "0.23.1"
 description = "Centralized, resilient tools for CrewAI multi-agent systems"
 readme = "README.md"
 requires-python = ">=3.12"
