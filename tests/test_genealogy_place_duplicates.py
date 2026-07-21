@@ -334,3 +334,50 @@ def test_perte_evitee_vide_quand_les_deux_sont_egaux():
     a = _lieu("P1", lat="47.1", long="2.3", code="18044")
     b = _lieu("P2", lat="47.1", long="2.3", code="18044")
     assert perte_evitee(a, b) == ""
+
+
+def test_richesse_ignore_les_champs_ne_contenant_que_des_blancs():
+    """Un code et des coordonnées « effacés » en tapant une espace ne comptent pas.
+
+    `" "` est truthy en Python : sans passer par `_renseigne` comme le fait
+    `evaluer_preuve`, ce lieu afficherait une richesse de 2 alors qu'il ne porte
+    aucune donnée exploitable."""
+    vide_avec_espace = _lieu("P1", code=" ", lat=" ", long=" ")
+    assert richesse(vide_avec_espace) == 0
+
+
+def test_champ_blanc_ne_l_emporte_pas_sur_un_lieu_reellement_vide():
+    """Miroir de `test_le_plus_riche_gagne_meme_avec_moins_de_retroliens` : une
+    coquille dont le code et les coordonnées ne sont que des espaces ne doit pas
+    se faire passer pour riche et l'emporter sur un doublon réellement vide mais
+    davantage référencé. Sans le nettoyage, `choisir_survivant` désignerait P2
+    (richesse apparente 2) au lieu de P1 (retroliens 50 contre 1) — et les vraies
+    données de P1 (ici son poids dans l'arbre) seraient perdues au profit d'une
+    coquille vide."""
+    vrai_vide = _lieu("P1", retroliens=50)
+    vide_avec_espace = _lieu("P2", code=" ", lat=" ", long=" ", retroliens=1)
+    assert choisir_survivant([vrai_vide, vide_avec_espace]).gramps_id == "P1"
+
+
+def test_perte_evitee_n_annonce_pas_une_perte_de_champs_blancs():
+    """Le rapport lu par un humain ne doit pas annoncer la perte d'un code ou de
+    coordonnées qui, sous les espaces, n'existaient pas."""
+    vrai_vide = _lieu("P1")
+    vide_avec_espace = _lieu("P2", code=" ", lat=" ", long=" ")
+    assert perte_evitee(vrai_vide, vide_avec_espace) == ""
+
+
+def test_richesse_exige_les_deux_coordonnees_jamais_une_seule():
+    """Une latitude seule, sans longitude, ne prouve aucune position exploitable —
+    la richesse doit rester à 0, pas remonter à 1 pour une coordonnée orpheline."""
+    assert richesse(_lieu("P1", lat="47.1")) == 0
+    assert richesse(_lieu("P1", long="2.3")) == 0
+
+
+def test_perte_evitee_signale_le_rattachement_manquant():
+    """Branche « rattachement » : l'absorbé est rattaché à un contenant, le
+    survivant ne l'est pas, rien d'autre (code, coordonnées) ne distingue les
+    deux — seule la perte du rattachement doit être rapportée."""
+    survivant = _lieu("P1", lat="47.1", long="2.3", code="18044", a_parent=False)
+    absorbe = _lieu("P2", lat="47.1", long="2.3", code="18044", a_parent=True)
+    assert perte_evitee(survivant, absorbe) == "rattachement"
