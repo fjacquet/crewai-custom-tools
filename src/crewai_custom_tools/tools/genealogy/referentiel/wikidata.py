@@ -8,6 +8,7 @@ l'endpoint public rend un 504 sur la fermeture transitive.
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from collections.abc import Callable
 
@@ -19,7 +20,9 @@ from crewai_custom_tools.tools.genealogy.models.domain import (
 )
 from crewai_custom_tools.tools.genealogy.referentiel.config import PaysReferentiel
 
-_NIVEAU_IMPOSSIBLE = 99
+# Sentinelle hors du domaine des niveaux réels : un entier comme 99 s'additionne sans bruit
+# (« 98 + 1 ») et se compare comme un niveau, alors qu'il signifie « rattachement introuvable ».
+_NIVEAU_IMPOSSIBLE = math.inf
 
 _SUBDIVISIONS = """SELECT ?item ?itemLabel ?nomLocal ?iso ?coord ?parent ?art ?ancre WHERE {{
   ?item wdt:P300 ?iso .
@@ -78,27 +81,49 @@ def code_sans_prefixe(iso: str, prefixe: str) -> str:
     return iso[len(debut):] if iso.startswith(debut) else iso
 
 
+_COLONNES = (("iso", "iso"), ("label", "itemLabel"), ("nom_local", "nomLocal"),
+             ("coord", "coord"), ("art", "art"))
+
+
+def _plus_petite(actuelle: str | None, proposee: str | None) -> str | None:
+    """Retient la plus petite valeur vue, jamais la première arrivée.
+
+    P625 n'est pas plus monovalué que P131 : `Q102317` Kielce porte deux coordonnées
+    distinctes. Prendre la première rendrait la sortie dépendante de l'ordre des lignes, que
+    SPARQL ne garantit pas. L'ordre lexicographique n'a pas de sens géographique — il n'est
+    là que pour être stable, et le choix reste arbitraire par nature.
+    """
+    if proposee is None:
+        return actuelle
+    return proposee if actuelle is None else min(actuelle, proposee)
+
+
 def _grouper(rows: list[dict]) -> dict[str, dict]:
     """Regroupe les lignes aplaties par entité. SPARQL éclate les propriétés multivaluées :
-    une entité à trois P131 revient sur trois lignes, et c'est bénin — on réunit ici."""
+    une entité à trois P131 revient sur trois lignes, et c'est bénin — on réunit ici.
+
+    Toute réunion est indépendante de l'ordre des lignes : union pour les parents, disjonction
+    pour l'ancre, plus petite valeur pour les colonnes scalaires.
+    """
     par_qid: dict[str, dict] = {}
     for row in rows:
         qid = qid_of(row.get("item"))
         if not qid:
             continue
-        entree = par_qid.setdefault(qid, {"qid": qid, "iso": row.get("iso", ""),
-                                          "label": row.get("itemLabel", ""),
+        entree = par_qid.setdefault(qid, {"qid": qid, "iso": None, "label": None,
                                           "nom_local": None, "parents": set(),
                                           "coord": None, "art": None, "ancre": False})
         parent = qid_of(row.get("parent"))
         if parent:
             entree["parents"].add(parent)
-        entree["coord"] = entree["coord"] or row.get("coord")
-        entree["art"] = entree["art"] or row.get("art")
-        entree["nom_local"] = entree["nom_local"] or row.get("nomLocal")
+        for cle, colonne in _COLONNES:
+            entree[cle] = _plus_petite(entree[cle], row.get(colonne))
         # `BIND(true AS ?ancre)` ne rend la variable que si le pays est atteignable ; le drapeau
         # est donc vrai dès qu'UNE ligne de l'entité le porte, quel que soit l'ordre des lignes.
         entree["ancre"] = entree["ancre"] or str(row.get("ancre", "")).lower() == "true"
+    for entree in par_qid.values():          # `iso` et `label` alimentent des champs `str`
+        entree["iso"] = entree["iso"] or ""
+        entree["label"] = entree["label"] or ""
     return par_qid
 
 
@@ -120,7 +145,7 @@ def _candidats(entree: dict, par_qid: dict[str, dict]) -> list[str]:
 
 
 def _moins_profond(candidats: list[str],
-                   profondeur: Callable[[str], int]) -> tuple[str | None, int]:
+                   profondeur: Callable[[str], float]) -> tuple[str | None, float]:
     """Le candidat le MOINS profond, départagé à égalité par le plus petit QID.
 
     Unique implémentation du départage, partagée par le calcul du niveau (`_niveaux`) et par
@@ -128,7 +153,7 @@ def _moins_profond(candidats: list[str],
     finissent toujours par diverger, et la base porterait alors une hiérarchie contredisant le
     niveau annoncé — un département de niveau 2 rattaché au pays.
 
-    `profondeur` rend le niveau d'un candidat ; `_NIVEAU_IMPOSSIBLE` écarte le candidat.
+    `profondeur` rend le niveau d'un candidat ; `_NIVEAU_IMPOSSIBLE` l'écarte.
     Rend `(None, _NIVEAU_IMPOSSIBLE)` quand aucun candidat n'est exploitable.
     """
     exploitables = [(profondeur(p), p) for p in candidats]
@@ -139,8 +164,15 @@ def _moins_profond(candidats: list[str],
     return parent, profondeur_min
 
 
-def _niveaux(par_qid: dict[str, dict], qid_pays: str) -> dict[str, int]:
+def _niveaux(par_qid: dict[str, dict]) -> dict[str, float]:
     """Niveau de chaque entité : 1 + celui du parent le MOINS profond, ou 1 par l'ancre.
+
+    Point fixe itératif, et non récursion : on part des entités de premier niveau, puis on
+    relâche `niveau(enfant) = 1 + min(niveau des parents candidats)` jusqu'à stabilisation.
+    La version récursive coupait les cycles par un ensemble de sommets visités, ce qui
+    interdisait de mémoïser les appels contraints — donc un coût exponentiel sur un graphe
+    `P131` dense (mesuré : 24 entités, 10,5 s). Ici c'est O(V·E), sans récursion, et les
+    cycles se règlent d'eux-mêmes : un sommet qu'aucune ancre n'atteint reste à l'infini.
 
     Le parent le moins profond l'emporte parce que le rattachement le plus direct fait foi :
     le Bas-Rhin pend sous la Collectivité européenne d'Alsace *et* sous le Grand Est ; retenir
@@ -149,42 +181,36 @@ def _niveaux(par_qid: dict[str, dict], qid_pays: str) -> dict[str, int]:
     L'ancre ne s'applique qu'aux entités dont AUCUN `P131` ne pointe dans l'univers. Sans cette
     condition, Venise-la-ville — dont l'unique parent porte le même code ISO qu'elle, donc n'est
     pas candidat — serait promue au rang de région.
-
-    `qid_pays in parents` double le drapeau `?ancre` : sur une charge réelle il est redondant
-    (le pays à un saut allume l'ancre), mais il tient pour des lignes construites à la main,
-    où la variable `?ancre` peut manquer alors que le rattachement au pays est explicite.
     """
     candidats = {q: _candidats(e, par_qid) for q, e in par_qid.items()}
     dans_univers = {q: any(p in par_qid for p in e["parents"]) for q, e in par_qid.items()}
-    memo: dict[str, int] = {}
+    # Amorce : sont de premier niveau les entités qu'aucun P131 ne rattache dans l'univers et
+    # que l'ancre pays atteint — ou qui n'ont aucun P131 du tout.
+    niveaux: dict[str, float] = {
+        qid: (1.0 if not dans_univers[qid] and (e["ancre"] or not e["parents"])
+              else _NIVEAU_IMPOSSIBLE)
+        for qid, e in par_qid.items()}
 
-    def niveau(qid: str, vus: frozenset) -> int:
-        if qid in memo:
-            return memo[qid]
-        if qid in vus:                                   # cycle de rattachement
-            return _NIVEAU_IMPOSSIBLE
-        entree = par_qid[qid]
-        resultat = _NIVEAU_IMPOSSIBLE
-        _, profondeur = _moins_profond(candidats[qid], lambda p: niveau(p, vus | {qid}))
-        if profondeur < _NIVEAU_IMPOSSIBLE:
-            resultat = profondeur + 1
-        elif not dans_univers[qid] and (entree["ancre"] or qid_pays in entree["parents"]
-                                        or not entree["parents"]):
-            resultat = 1
-        if not vus:                                      # ne mémoïser que les appels racines
-            memo[qid] = resultat
-        return resultat
-
-    return {qid: niveau(qid, frozenset()) for qid in par_qid}
+    # Un plus court chemin est simple : |V| passes suffisent à le propager (Bellman-Ford).
+    for _ in range(len(par_qid)):
+        stable = True
+        for qid in par_qid:
+            _, profondeur = _moins_profond(candidats[qid], niveaux.__getitem__)
+            if profondeur + 1 < niveaux[qid]:
+                niveaux[qid] = profondeur + 1
+                stable = False
+        if stable:
+            break
+    return niveaux
 
 
-def _parent_retenu(qid: str, par_qid: dict[str, dict], niveaux: dict[str, int],
+def _parent_retenu(qid: str, par_qid: dict[str, dict], niveaux: dict[str, float],
                    qid_pays: str) -> str:
     """Le parent effectivement inscrit : celui-là même qui a servi à calculer le niveau.
 
-    Le départage n'est pas réécrit ici — il est délégué à `_moins_profond`, appelé avec la
-    table des niveaux déjà résolue. Un parent qui divergerait de celui du calcul écrirait en
-    base une hiérarchie contredisant le niveau annoncé.
+    Le départage n'est pas réécrit ici — il est délégué à `_moins_profond`, appelé sur la
+    table des niveaux stabilisée, celle-là même dont `_niveaux` a tiré le niveau. Un parent
+    qui divergerait écrirait en base une hiérarchie contredisant le niveau annoncé.
 
     Sans candidat, l'entité tient son niveau 1 de l'ancre : son parent est le pays.
     """
@@ -201,18 +227,20 @@ def map_subdivisions(
     trois listes : rien ne disparaît en silence.
     """
     par_qid = _grouper(rows)
-    niveaux = _niveaux(par_qid, pays.qid)
+    niveaux = _niveaux(par_qid)
 
     retenues: list[Subdivision] = []
     ecartees: list[EntiteEcartee] = []
     for qid, entree in sorted(par_qid.items()):
-        niveau = niveaux[qid]
-        if niveau > len(pays.niveaux):
-            motif = ("rattachement introuvable" if niveau >= _NIVEAU_IMPOSSIBLE
-                     else f"niveau {niveau}, or {pays.nom} en compte {len(pays.niveaux)}")
+        profondeur = niveaux[qid]
+        if profondeur > len(pays.niveaux):
+            motif = ("rattachement introuvable" if profondeur == _NIVEAU_IMPOSSIBLE
+                     else f"niveau {profondeur:.0f}, or {pays.nom} "
+                          f"en compte {len(pays.niveaux)}")
             ecartees.append(EntiteEcartee(qid=qid, iso=entree["iso"],
                                           libelle_fr=entree["label"], motif=motif))
             continue
+        niveau = int(profondeur)
         lat, long = (parse_wkt_point(entree["coord"]) or (None, None))
         retenues.append(Subdivision(
             qid=qid, iso=entree["iso"],

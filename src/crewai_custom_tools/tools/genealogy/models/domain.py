@@ -285,7 +285,7 @@ class MergeCluster(BaseModel):
 class Subdivision(BaseModel):
     """Une subdivision administrative résolue depuis Wikidata (référentiel des lieux)."""
 
-    qid: str                            # "Q1273"
+    qid: str                            # "Q12771" — le canton de Vaud (relu le 2026-07-22)
     iso: str                            # "CH-VD"
     code: str                           # "VD" — l'ISO amputé du préfixe pays
     libelle_fr: str

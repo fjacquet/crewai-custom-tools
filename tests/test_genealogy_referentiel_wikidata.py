@@ -60,3 +60,8 @@ def test_build_query_demande_lancre_pays():
     assert "wd:Q142" in q
     assert "wdt:P131/wdt:P131/wdt:P131" in q      # trois sauts, pas plus
     assert "wdt:P131/wdt:P131/wdt:P131/wdt:P131" not in q
+    # La clause ne sert à rien si la variable n'est pas PROJETÉE : `sparql_rows` ne rendrait
+    # jamais la clé `ancre`, le mapper ne verrait plus une seule ancre, et la France
+    # retomberait à 12 subdivisions — sans qu'un seul test sur fixtures figées ne bronche,
+    # puisque les fixtures, elles, portent déjà la clé.
+    assert "?ancre" in q.split("WHERE")[0]

@@ -1,9 +1,12 @@
 # tests/test_genealogy_referentiel_mapper.py
 """Le mapper, éprouvé sur des charges Wikidata RÉELLES figées.
 
-Les fixtures viennent de `scripts/capturer_charges_referentiel.py`. Les QID écrits à la main
-dans ce fichier ont tous été vérifiés en ligne — une version antérieure de ces tests portait
-des QID inventés et n'a pas vu que la France entière tombait.
+Les fixtures viennent de `scripts/capturer_charges_referentiel.py`. Tout QID désignant une
+entité réelle a été vérifié en ligne le 2026-07-22 — libellé ET code `P300` relus via
+`wbgetentities`, jamais de mémoire. Une version antérieure de ces tests portait des QID
+inventés et n'a pas vu que la France entière tombait. Seuls les tests de cycle et d'orpheline
+emploient des identifiants délibérément fictifs (`Q1`, `Q2`, `Q888888`, `Q999999`) : ils ne
+désignent personne, et c'est exactement ce qu'ils éprouvent.
 """
 import json
 import pathlib
@@ -86,28 +89,37 @@ def test_la_pologne_ecarte_la_ville_de_kielce():
 
 @pytest.mark.parametrize("code", ["FR", "IT", "CH", "PL"])
 def test_toute_entite_est_retenue_ecartee_ou_en_collision(code):
-    """Aucune disparition muette : chaque entité de la charge ressort quelque part."""
+    """Les trois listes PARTITIONNENT la charge : ni disparition muette, ni entité comptée
+    deux fois. Comparer des ensembles ne prouverait que l'union — les effectifs prouvent
+    qu'aucune entité ne figure à la fois en retenue et en écartée."""
     rows = charge(code)
     subs, collisions, ecartees = map_subdivisions(rows, PAYS_REFERENTIEL[code])
     entrees = {r["item"].rsplit("/", 1)[-1] for r in rows}
-    sorties = ({s.qid for s in subs} | {e.qid for e in ecartees}
-               | {q for c in collisions for q in c.qids})
-    assert entrees == sorties
+    sorties = ([s.qid for s in subs] + [e.qid for e in ecartees]
+               + [q for c in collisions for q in c.qids])
+    assert set(sorties) == entrees
+    assert len(sorties) == len(entrees)
 
 
 @pytest.mark.parametrize("code", ["FR", "IT"])
 def test_le_resultat_ne_depend_pas_de_lordre_des_lignes(code):
-    """SPARQL ne garantit pas l'ordre. Deux exécutions doivent rendre le même résultat."""
+    """SPARQL ne garantit pas l'ordre. Les TROIS listes doivent être identiques d'une
+    permutation à l'autre, écartées comprises : c'est là que se verrait une propriété
+    multivaluée — deux P625 sur la même entité — retenue selon l'ordre d'arrivée."""
     import random
 
     rows = charge(code)
     pays = PAYS_REFERENTIEL[code]
-    reference = map_subdivisions(rows, pays)
-    melange = list(rows)
-    random.Random(1789).shuffle(melange)
-    obtenu = map_subdivisions(melange, pays)
-    assert [s.model_dump() for s in obtenu[0]] == [s.model_dump() for s in reference[0]]
-    assert [c.model_dump() for c in obtenu[1]] == [c.model_dump() for c in reference[1]]
+
+    def sortie(lignes):
+        return [[m.model_dump() for m in liste] for liste in map_subdivisions(lignes, pays)]
+
+    reference = sortie(rows)
+    alea = random.Random(1789)
+    for _ in range(5):
+        melange = list(rows)
+        alea.shuffle(melange)
+        assert sortie(melange) == reference
 
 
 def test_les_coordonnees_ne_sont_pas_inversees():
@@ -136,13 +148,21 @@ def test_un_cycle_de_rattachement_ecarte_les_deux_entites():
 
 def test_le_parent_le_moins_profond_lemporte():
     """Le Bas-Rhin pend sous la Collectivité européenne d'Alsace ET sous le Grand Est.
-    Le rattachement direct fait foi, sinon il tomberait au niveau 3 et serait écarté."""
-    rows = [ligne("Q1142", "Grand Est", "FR-GES", parent="Q212429", ancre=True),
-            ligne("Q3153299", "Collectivité européenne d'Alsace", "FR-6AE", parent="Q1142"),
-            ligne("Q1180", "Bas-Rhin", "FR-67", parent="Q3153299"),
-            ligne("Q1180", "Bas-Rhin", "FR-67", parent="Q1142")]
+    Le rattachement direct fait foi, sinon il tomberait au niveau 3 et serait écarté.
+
+    QID relus le 2026-07-22 : Q18677983 = Grand Est (FR-GES), Q2982948 = Collectivité
+    européenne d'Alsace (FR-6AE), Q12717 = Bas-Rhin (FR-67). C'est la topologie réelle de
+    la charge française, où le Bas-Rhin porte bien ces deux P131."""
+    rows = [ligne("Q18677983", "Grand Est", "FR-GES", parent="Q212429", ancre=True),
+            ligne("Q2982948", "Collectivité européenne d'Alsace", "FR-6AE",
+                  parent="Q18677983"),
+            ligne("Q12717", "Bas-Rhin", "FR-67", parent="Q2982948"),
+            ligne("Q12717", "Bas-Rhin", "FR-67", parent="Q18677983")]
     subs, _, _ = map_subdivisions(rows, PAYS_REFERENTIEL["FR"])
     assert {s.iso: s.niveau for s in subs} == {"FR-GES": 1, "FR-6AE": 2, "FR-67": 2}
+    # Le parent inscrit est celui qui a donné le niveau : le Grand Est, pas la Collectivité.
+    assert {s.iso: s.parent_qid for s in subs} == {
+        "FR-GES": "Q142", "FR-6AE": "Q18677983", "FR-67": "Q18677983"}
 
 
 def test_lancre_ne_rattrape_pas_une_entite_dont_un_parent_est_dans_lunivers():
@@ -176,7 +196,8 @@ def test_les_noms_dapariement_portent_le_francais_puis_le_vernaculaire():
 
 
 def test_les_noms_ne_repetent_pas_un_libelle_identique():
-    rows = [ligne("Q12146", "Vaud", "CH-VD", parent="Q39", nom_local="Vaud", ancre=True)]
+    # Q12771 = canton de Vaud (CH-VD), relu le 2026-07-22.
+    rows = [ligne("Q12771", "Vaud", "CH-VD", parent="Q39", nom_local="Vaud", ancre=True)]
     subs, _, _ = map_subdivisions(rows, PAYS_REFERENTIEL["CH"])
     assert subs[0].noms == ["Vaud"]
 
