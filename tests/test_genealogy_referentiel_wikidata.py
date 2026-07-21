@@ -30,7 +30,7 @@ def test_code_sans_prefixe_rend_lentree_telle_quelle_si_le_prefixe_ne_colle_pas(
 
 
 def test_build_query_filtre_le_prefixe_et_les_entites_dissoutes():
-    q = build_query("CH", "de")
+    q = build_query("CH", "de", "Q39")
     assert 'STRSTARTS(?iso, "CH-")' in q
     assert "wdt:P576" in q            # dissolution : exclue
     assert "wdt:P300" in q            # ISO 3166-2 : le sélecteur
@@ -42,7 +42,7 @@ def test_build_query_filtre_le_prefixe_et_les_entites_dissoutes():
 def test_build_query_demande_le_nom_vernaculaire():
     """Sans lui, `Bayern` déjà en base ne serait apparié par aucun nom au premier run,
     et un doublon `Bavière` serait créé à côté."""
-    q = build_query("DE", "de")
+    q = build_query("DE", "de", "Q183")
     assert "rdfs:label" in q
     assert '"de"' in q
 
@@ -51,3 +51,12 @@ def test_build_query_pays_liste_les_qid_en_values():
     q = build_query_pays(["Q142", "Q39"])
     assert "wd:Q142" in q and "wd:Q39" in q
     assert "VALUES" in q
+
+
+def test_build_query_demande_lancre_pays():
+    """Sans elle, les régions françaises — qui pendent sous France métropolitaine, sans code
+    ISO — tombent toutes, et les 96 départements avec elles."""
+    q = build_query("FR", "fr", "Q142")
+    assert "wd:Q142" in q
+    assert "wdt:P131/wdt:P131/wdt:P131" in q      # trois sauts, pas plus
+    assert "wdt:P131/wdt:P131/wdt:P131/wdt:P131" not in q

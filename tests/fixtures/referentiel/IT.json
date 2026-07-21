@@ -1,0 +1,1300 @@
+[
+ {
+  "item": "http://www.wikidata.org/entity/Q3622022",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Cagliari",
+  "nomLocal": "città metropolitana di Cagliari",
+  "iso": "IT-CA",
+  "coord": "Point(9.116666944 39.216666944)",
+  "parent": "http://www.wikidata.org/entity/Q1462",
+  "itemLabel": "ville métropolitaine de Cagliari"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3678586",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Reggio_de_Calabre",
+  "nomLocal": "città metropolitana di Reggio Calabria",
+  "iso": "IT-RC",
+  "coord": "Point(15.65 38.111111111)",
+  "parent": "http://www.wikidata.org/entity/Q1458",
+  "itemLabel": "ville métropolitaine de Reggio de Calabre"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3678587",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Venise",
+  "nomLocal": "città metropolitana di Venezia",
+  "iso": "IT-VE",
+  "coord": "Point(12.3319 45.4397)",
+  "parent": "http://www.wikidata.org/entity/Q1243",
+  "itemLabel": "ville métropolitaine de Venise"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18241854",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Bari",
+  "nomLocal": "città metropolitana di Bari",
+  "iso": "IT-BA",
+  "coord": "Point(16.8667 41.1253)",
+  "parent": "http://www.wikidata.org/entity/Q1447",
+  "itemLabel": "ville métropolitaine de Bari"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18241891",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Naples",
+  "nomLocal": "città metropolitana di Napoli",
+  "iso": "IT-NA",
+  "coord": "Point(14.25 40.8333)",
+  "parent": "http://www.wikidata.org/entity/Q1438",
+  "itemLabel": "ville métropolitaine de Naples"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18288145",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Bologne",
+  "nomLocal": "città metropolitana di Bologna",
+  "iso": "IT-BO",
+  "coord": "Point(11.3428 44.4939)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "ville métropolitaine de Bologne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18288148",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Florence",
+  "nomLocal": "città metropolitana di Firenze",
+  "iso": "IT-FI",
+  "coord": "Point(11.2542 43.7714)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "ville métropolitaine de Florence"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18288155",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Milan",
+  "nomLocal": "città metropolitana di Milano",
+  "iso": "IT-MI",
+  "coord": "Point(9.19034 45.4642)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "ville métropolitaine de Milan"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18288152",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_G%C3%AAnes",
+  "nomLocal": "città metropolitana di Genova",
+  "iso": "IT-GE",
+  "coord": "Point(8.9325 44.4111)",
+  "parent": "http://www.wikidata.org/entity/Q1256",
+  "itemLabel": "ville métropolitaine de Gênes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18288162",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Turin",
+  "nomLocal": "città metropolitana di Torino",
+  "iso": "IT-TO",
+  "coord": "Point(7.7 45.0667)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "ville métropolitaine de Turin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18288160",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Rome_Capitale",
+  "nomLocal": "città metropolitana di Roma Capitale",
+  "iso": "IT-RM",
+  "coord": "Point(12.482777777 41.893055555)",
+  "parent": "http://www.wikidata.org/entity/Q1282",
+  "itemLabel": "ville métropolitaine de Rome Capitale"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q20795016",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Palerme",
+  "nomLocal": "città metropolitana di Palermo",
+  "iso": "IT-PA",
+  "coord": "Point(13.36138889 38.11555556)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "ville métropolitaine de Palerme"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q20991246",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Catane",
+  "nomLocal": "città metropolitana di Catania",
+  "iso": "IT-CT",
+  "coord": "Point(15.06666667 37.51666667)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "ville métropolitaine de Catane"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q20991250",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ville_m%C3%A9tropolitaine_de_Messine",
+  "nomLocal": "città metropolitana di Messina",
+  "iso": "IT-ME",
+  "coord": "Point(15.55 38.183333333)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "ville métropolitaine de Messine"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q23498165",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Sardaigne_du_Sud",
+  "nomLocal": "provincia del Sud Sardegna",
+  "iso": "IT-SU",
+  "coord": "Point(8.516666944 39.15)",
+  "parent": "http://www.wikidata.org/entity/Q1462",
+  "itemLabel": "province de Sardaigne du Sud"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q25510290",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Libre_consortium_municipal_de_Syracuse",
+  "nomLocal": "libero consorzio comunale di Siracusa",
+  "iso": "IT-SR",
+  "coord": "Point(15.283333333 37.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "Libre consortium municipal de Syracuse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q26160403",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Libre_consortium_municipal_de_Trapani",
+  "nomLocal": "Libero consorzio comunale di Trapani",
+  "iso": "IT-TP",
+  "coord": "Point(12.5453 38.0171)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "Libre consortium municipal de Trapani"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q26160405",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Libre_consortium_municipal_de_Raguse",
+  "nomLocal": "Libero consorzio comunale di Ragusa",
+  "iso": "IT-RG",
+  "coord": "Point(14.730555555 36.925)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "Libre consortium municipal de Raguse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15091",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Coni",
+  "nomLocal": "provincia di Cuneo",
+  "iso": "IT-CN",
+  "coord": "Point(7.55 44.383333333)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province de Coni"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15094",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Bielle",
+  "nomLocal": "provincia di Biella",
+  "iso": "IT-BI",
+  "coord": "Point(8.0 46.0)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province de Bielle"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15099",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Asti",
+  "nomLocal": "provincia di Asti",
+  "iso": "IT-AT",
+  "coord": "Point(8.207777777 44.898888888)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province d'Asti"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15096",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Verceil",
+  "nomLocal": "provincia di Vercelli",
+  "iso": "IT-VC",
+  "coord": "Point(8.416666666 45.316666666)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province de Verceil"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15097",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Alexandrie",
+  "nomLocal": "provincia di Alessandria",
+  "iso": "IT-AL",
+  "coord": "Point(8.62 44.913333333)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province d'Alexandrie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15118",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Aoste",
+  "nomLocal": "provincia di Aosta",
+  "iso": "IT-AO",
+  "coord": "Point(7.32055556 45.73722222)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province d'Aoste"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15124",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_autonome_de_Bolzano",
+  "nomLocal": "provincia autonoma di Bolzano",
+  "iso": "IT-BZ",
+  "coord": "Point(11.33333334 46.50000001)",
+  "parent": "http://www.wikidata.org/entity/Q1237",
+  "itemLabel": "Haut-Adige"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15129",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Foggia",
+  "nomLocal": "provincia di Foggia",
+  "iso": "IT-FG",
+  "coord": "Point(15.566666666 41.466666666)",
+  "parent": "http://www.wikidata.org/entity/Q1447",
+  "itemLabel": "province de Foggia"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16114",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Anc%C3%B4ne",
+  "nomLocal": "provincia di Ancona",
+  "iso": "IT-AN",
+  "coord": "Point(13.516666666 43.616666666)",
+  "parent": "http://www.wikidata.org/entity/Q1279",
+  "itemLabel": "province d'Ancône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16115",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Arezzo",
+  "nomLocal": "provincia di Arezzo",
+  "iso": "IT-AR",
+  "coord": "Point(11.87 43.473333333)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province d'Arezzo"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16117",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Ascoli_Piceno",
+  "nomLocal": "provincia di Ascoli Piceno",
+  "iso": "IT-AP",
+  "coord": "Point(13.575277777 42.854722222)",
+  "parent": "http://www.wikidata.org/entity/Q1279",
+  "itemLabel": "province d'Ascoli Piceno"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16120",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Avellino",
+  "nomLocal": "provincia di Avellino",
+  "iso": "IT-AV",
+  "coord": "Point(14.789722222 40.915277777)",
+  "parent": "http://www.wikidata.org/entity/Q1438",
+  "itemLabel": "province d'Avellino"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16126",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Belluno",
+  "nomLocal": "provincia di Belluno",
+  "iso": "IT-BL",
+  "coord": "Point(12.215555555 46.140833333)",
+  "parent": "http://www.wikidata.org/entity/Q1243",
+  "itemLabel": "province de Belluno"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16124",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Barletta-Andria-Trani",
+  "nomLocal": "provincia di Barletta-Andria-Trani",
+  "iso": "IT-BT",
+  "coord": "Point(16.283333333 41.316666666)",
+  "parent": "http://www.wikidata.org/entity/Q1447",
+  "itemLabel": "province de Barletta-Andria-Trani"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16134",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_B%C3%A9n%C3%A9vent",
+  "nomLocal": "provincia di Benevento",
+  "iso": "IT-BN",
+  "coord": "Point(14.783333333 41.133333333)",
+  "parent": "http://www.wikidata.org/entity/Q1438",
+  "itemLabel": "province de Bénévent"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16137",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Bergame",
+  "nomLocal": "provincia di Bergamo",
+  "iso": "IT-BG",
+  "coord": "Point(9.67 45.695)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Bergame"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16144",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Brescia",
+  "nomLocal": "provincia di Brescia",
+  "iso": "IT-BS",
+  "coord": "Point(10.219444444 45.538888888)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Brescia"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16151",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Campobasso",
+  "nomLocal": "provincia di Campobasso",
+  "iso": "IT-CB",
+  "coord": "Point(14.666666666 41.566666666)",
+  "parent": "http://www.wikidata.org/entity/Q1443",
+  "itemLabel": "province de Campobasso"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16148",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Brindisi",
+  "nomLocal": "provincia di Brindisi",
+  "iso": "IT-BR",
+  "coord": "Point(17.945833333 40.638333333)",
+  "parent": "http://www.wikidata.org/entity/Q1447",
+  "itemLabel": "province de Brindisi"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16153",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Caserte",
+  "nomLocal": "provincia di Caserta",
+  "iso": "IT-CE",
+  "coord": "Point(14.216666666 41.166666666)",
+  "parent": "http://www.wikidata.org/entity/Q1438",
+  "itemLabel": "province de Caserte"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16159",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Catanzaro",
+  "nomLocal": "provincia di Catanzaro",
+  "iso": "IT-CZ",
+  "coord": "Point(16.5875 38.91)",
+  "parent": "http://www.wikidata.org/entity/Q1458",
+  "itemLabel": "province de Catanzaro"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16162",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Cosenza",
+  "nomLocal": "provincia di Cosenza",
+  "iso": "IT-CS",
+  "coord": "Point(16.25 39.3)",
+  "parent": "http://www.wikidata.org/entity/Q1458",
+  "itemLabel": "province de Cosenza"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16163",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Cr%C3%A9mone",
+  "nomLocal": "provincia di Cremona",
+  "iso": "IT-CR",
+  "coord": "Point(10.033333333 45.133333333)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Crémone"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16160",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Chieti",
+  "nomLocal": "provincia di Chieti",
+  "iso": "IT-CH",
+  "coord": "Point(14.166666666 42.35)",
+  "parent": "http://www.wikidata.org/entity/Q1284",
+  "itemLabel": "province de Chieti"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16161",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_C%C3%B4me",
+  "nomLocal": "provincia di Como",
+  "iso": "IT-CO",
+  "coord": "Point(9.083333333 45.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Côme"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16167",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Fermo",
+  "nomLocal": "provincia di Fermo",
+  "iso": "IT-FM",
+  "coord": "Point(13.7181 43.160419444)",
+  "parent": "http://www.wikidata.org/entity/Q1279",
+  "itemLabel": "province de Fermo"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16165",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Crotone",
+  "nomLocal": "provincia di Crotone",
+  "iso": "IT-KR",
+  "coord": "Point(17.116666666 39.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q1458",
+  "itemLabel": "province de Crotone"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16168",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Ferrare",
+  "nomLocal": "provincia di Ferrara",
+  "iso": "IT-FE",
+  "coord": "Point(11.632777777 44.845)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Ferrare"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16180",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Forl%C3%AC-Cesena",
+  "nomLocal": "provincia di Forlì-Cesena",
+  "iso": "IT-FC",
+  "coord": "Point(12.040833333 44.2225)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Forlì-Cesena"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16181",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Frosinone",
+  "nomLocal": "provincia di Frosinone",
+  "iso": "IT-FR",
+  "coord": "Point(13.35 41.633333333)",
+  "parent": "http://www.wikidata.org/entity/Q1282",
+  "itemLabel": "province de Frosinone"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16186",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Imperia",
+  "nomLocal": "provincia di Imperia",
+  "iso": "IT-IM",
+  "coord": "Point(8.029652777 43.886466666)",
+  "parent": "http://www.wikidata.org/entity/Q1256",
+  "itemLabel": "province d'Imperia"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16187",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Isernia",
+  "nomLocal": "provincia di Isernia",
+  "iso": "IT-IS",
+  "coord": "Point(14.266667 41.65)",
+  "parent": "http://www.wikidata.org/entity/Q1443",
+  "itemLabel": "province d'Isernia"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16185",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Grosseto",
+  "nomLocal": "provincia di Grosseto",
+  "iso": "IT-GR",
+  "coord": "Point(11.108333333 42.75)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Grosseto"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16188",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_La_Spezia",
+  "nomLocal": "provincia della Spezia",
+  "iso": "IT-SP",
+  "coord": "Point(9.828872222 44.108041666)",
+  "parent": "http://www.wikidata.org/entity/Q1256",
+  "itemLabel": "province de La Spezia"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16189",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_L%27Aquila",
+  "nomLocal": "provincia dell'Aquila",
+  "iso": "IT-AQ",
+  "coord": "Point(13.3945 42.4228)",
+  "parent": "http://www.wikidata.org/entity/Q1284",
+  "itemLabel": "province de L'Aquila"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16199",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Lecco",
+  "nomLocal": "provincia di Lecco",
+  "iso": "IT-LC",
+  "coord": "Point(9.4 45.85)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Lecco"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16196",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Latina",
+  "nomLocal": "provincia di Latina",
+  "iso": "IT-LT",
+  "coord": "Point(12.903611111 41.4675)",
+  "parent": "http://www.wikidata.org/entity/Q1282",
+  "itemLabel": "province de Latina"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16197",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Lecce",
+  "nomLocal": "provincia di Lecce",
+  "iso": "IT-LE",
+  "coord": "Point(18.169138888 40.352011111)",
+  "parent": "http://www.wikidata.org/entity/Q1447",
+  "itemLabel": "province de Lecce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16202",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Lucques",
+  "nomLocal": "provincia di Lucca",
+  "iso": "IT-LU",
+  "coord": "Point(10.516666666 43.85)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Lucques"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16203",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Macerata",
+  "nomLocal": "provincia di Macerata",
+  "iso": "IT-MC",
+  "coord": "Point(13.453302777 43.30025)",
+  "parent": "http://www.wikidata.org/entity/Q1279",
+  "itemLabel": "province de Macerata"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16200",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Livourne",
+  "nomLocal": "provincia di Livorno",
+  "iso": "IT-LI",
+  "coord": "Point(10.316666666 43.55)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Livourne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16201",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Lodi",
+  "nomLocal": "provincia di Lodi",
+  "iso": "IT-LO",
+  "coord": "Point(9.5 45.316666666)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Lodi"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16206",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Matera",
+  "nomLocal": "provincia di Matera",
+  "iso": "IT-MT",
+  "coord": "Point(16.6 40.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q1452",
+  "itemLabel": "province de Matera"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16207",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_du_Medio_Campidano",
+  "nomLocal": "provincia del Medio Campidano",
+  "iso": "IT-VS",
+  "coord": "Point(8.9 39.56666667)",
+  "parent": "http://www.wikidata.org/entity/Q1462",
+  "itemLabel": "province du Medio Campidano"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16204",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Mantoue",
+  "nomLocal": "provincia di Mantova",
+  "iso": "IT-MN",
+  "coord": "Point(10.8 45.166666666)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Mantoue"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16205",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Massa-Carrara",
+  "nomLocal": "provincia di Massa-Carrara",
+  "iso": "IT-MS",
+  "coord": "Point(10.0 44.3)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Massa-Carrara"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16210",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Monza_et_de_la_Brianza",
+  "nomLocal": "provincia di Monza e della Brianza",
+  "iso": "IT-MB",
+  "coord": "Point(9.266666666 45.583333333)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Monza et de la Brianza"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16209",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Mod%C3%A8ne",
+  "nomLocal": "provincia di Modena",
+  "iso": "IT-MO",
+  "coord": "Point(10.883333333 44.55)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Modène"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16216",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Novare",
+  "nomLocal": "provincia di Novara",
+  "iso": "IT-NO",
+  "coord": "Point(8.616666666 45.45)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province de Novare"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16220",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Nuoro",
+  "nomLocal": "provincia di Nuoro",
+  "iso": "IT-NU",
+  "coord": "Point(9.3235302 40.3174281)",
+  "parent": "http://www.wikidata.org/entity/Q1462",
+  "itemLabel": "province de Nuoro"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16226",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Padoue",
+  "nomLocal": "provincia di Padova",
+  "iso": "IT-PD",
+  "coord": "Point(11.877777777 45.406388888)",
+  "parent": "http://www.wikidata.org/entity/Q1243",
+  "itemLabel": "province de Padoue"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16225",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_d%27Oristano",
+  "nomLocal": "provincia di Oristano",
+  "iso": "IT-OR",
+  "coord": "Point(8.583333333 39.9)",
+  "parent": "http://www.wikidata.org/entity/Q1462",
+  "itemLabel": "province d'Oristano"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16231",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Pavie",
+  "nomLocal": "provincia di Pavia",
+  "iso": "IT-PV",
+  "coord": "Point(9.15 45.183333333)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Pavie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16228",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Parme",
+  "nomLocal": "provincia di Parma",
+  "iso": "IT-PR",
+  "coord": "Point(10.331194444 44.795055555)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Parme"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16242",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Pescara",
+  "nomLocal": "provincia di Pescara",
+  "iso": "IT-PE",
+  "coord": "Point(14.214166666 42.463888888)",
+  "parent": "http://www.wikidata.org/entity/Q1284",
+  "itemLabel": "province de Pescara"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16243",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Plaisance",
+  "nomLocal": "provincia di Piacenza",
+  "iso": "IT-PC",
+  "coord": "Point(9.7 45.05)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Plaisance"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16240",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_P%C3%A9rouse",
+  "nomLocal": "provincia di Perugia",
+  "iso": "IT-PG",
+  "coord": "Point(12.3888 43.1121)",
+  "parent": "http://www.wikidata.org/entity/Q1280",
+  "itemLabel": "province de Pérouse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16241",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Pesaro_et_d%27Urbino",
+  "nomLocal": "provincia di Pesaro e Urbino",
+  "iso": "IT-PU",
+  "coord": "Point(12.9133 43.91015)",
+  "parent": "http://www.wikidata.org/entity/Q1279",
+  "itemLabel": "Province de Pesaro et d'Urbino"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16244",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Pise",
+  "nomLocal": "provincia di Pisa",
+  "iso": "IT-PI",
+  "coord": "Point(10.4 43.716666666)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Pise"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16245",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Pistoia",
+  "nomLocal": "provincia di Pistoia",
+  "iso": "IT-PT",
+  "coord": "Point(10.916666666 43.933333333)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Pistoia"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16250",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Prato",
+  "nomLocal": "provincia di Prato",
+  "iso": "IT-PO",
+  "coord": "Point(11.096561111 43.880813888)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Prato"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16249",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Potenza",
+  "nomLocal": "provincia di Potenza",
+  "iso": "IT-PZ",
+  "coord": "Point(15.802222222 40.638611111)",
+  "parent": "http://www.wikidata.org/entity/Q1452",
+  "itemLabel": "province de Potenza"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16254",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Reggio_d%27%C3%89milie",
+  "nomLocal": "provincia di Reggio Emilia",
+  "iso": "IT-RE",
+  "coord": "Point(10.55 44.5667)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Reggio d'Émilie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16252",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Ravenne",
+  "nomLocal": "provincia di Ravenna",
+  "iso": "IT-RA",
+  "coord": "Point(12.199444444 44.417777777)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Ravenne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16267",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Rieti",
+  "nomLocal": "provincia di Rieti",
+  "iso": "IT-RI",
+  "coord": "Point(12.861799 42.398518)",
+  "parent": "http://www.wikidata.org/entity/Q1282",
+  "itemLabel": "province de Rieti"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16270",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Rovigo",
+  "nomLocal": "provincia di Rovigo",
+  "iso": "IT-RO",
+  "coord": "Point(11.783333333 45.066666666)",
+  "parent": "http://www.wikidata.org/entity/Q1243",
+  "itemLabel": "province de Rovigo"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16271",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Salerne",
+  "nomLocal": "provincia di Salerno",
+  "iso": "IT-SA",
+  "coord": "Point(14.766666666 40.683333333)",
+  "parent": "http://www.wikidata.org/entity/Q1438",
+  "itemLabel": "province de Salerne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16268",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Rimini",
+  "nomLocal": "provincia di Rimini",
+  "iso": "IT-RN",
+  "coord": "Point(12.55275 44.059694444)",
+  "parent": "http://www.wikidata.org/entity/Q1263",
+  "itemLabel": "province de Rimini"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16274",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Savone",
+  "nomLocal": "provincia di Savona",
+  "iso": "IT-SV",
+  "coord": "Point(8.49745 44.307336111)",
+  "parent": "http://www.wikidata.org/entity/Q1256",
+  "itemLabel": "province de Savone"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16275",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Sienne",
+  "nomLocal": "provincia di Siena",
+  "iso": "IT-SI",
+  "coord": "Point(11.333333333 43.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q1273",
+  "itemLabel": "province de Sienne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16272",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Sassari",
+  "nomLocal": "provincia di Sassari",
+  "iso": "IT-SS",
+  "coord": "Point(8.559167 40.726667)",
+  "parent": "http://www.wikidata.org/entity/Q1462",
+  "itemLabel": "province de Sassari"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16282",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Sondrio",
+  "nomLocal": "provincia di Sondrio",
+  "iso": "IT-SO",
+  "coord": "Point(9.944 46.360197222)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Sondrio"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16283",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Tarente",
+  "nomLocal": "provincia di Taranto",
+  "iso": "IT-TA",
+  "coord": "Point(17.233333333 40.466666666)",
+  "parent": "http://www.wikidata.org/entity/Q1447",
+  "itemLabel": "province de Tarente"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16286",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Terni",
+  "nomLocal": "provincia di Terni",
+  "iso": "IT-TR",
+  "coord": "Point(12.65 42.566666666)",
+  "parent": "http://www.wikidata.org/entity/Q1280",
+  "itemLabel": "province de Terni"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16284",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Teramo",
+  "nomLocal": "provincia di Teramo",
+  "iso": "IT-TE",
+  "coord": "Point(13.7025 42.658611111)",
+  "parent": "http://www.wikidata.org/entity/Q1284",
+  "itemLabel": "province de Teramo"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16289",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_autonome_de_Trente",
+  "nomLocal": "provincia autonoma di Trento",
+  "iso": "IT-TN",
+  "coord": "Point(11.1257601 46.0664228)",
+  "parent": "http://www.wikidata.org/entity/Q1237",
+  "itemLabel": "province autonome de Trente"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16292",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Tr%C3%A9vise",
+  "nomLocal": "provincia di Treviso",
+  "iso": "IT-TV",
+  "coord": "Point(12.242222222 45.672222222)",
+  "parent": "http://www.wikidata.org/entity/Q1243",
+  "itemLabel": "province de Trévise"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16299",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Var%C3%A8se",
+  "nomLocal": "provincia di Varese",
+  "iso": "IT-VA",
+  "coord": "Point(8.833333333 45.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q1210",
+  "itemLabel": "province de Varèse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16314",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_V%C3%A9rone",
+  "nomLocal": "provincia di Verona",
+  "iso": "IT-VR",
+  "coord": "Point(10.98 45.43)",
+  "parent": "http://www.wikidata.org/entity/Q1243",
+  "itemLabel": "province de Vérone"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16315",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Vibo_Valentia",
+  "nomLocal": "provincia di Vibo Valentia",
+  "iso": "IT-VV",
+  "coord": "Point(16.0959 38.675277777)",
+  "parent": "http://www.wikidata.org/entity/Q1458",
+  "itemLabel": "province de Vibo Valentia"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16312",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_du_Verbano-Cusio-Ossola",
+  "nomLocal": "provincia del Verbano-Cusio-Ossola",
+  "iso": "IT-VB",
+  "coord": "Point(8.533333333 45.933333333)",
+  "parent": "http://www.wikidata.org/entity/Q1216",
+  "itemLabel": "province du Verbano-Cusio-Ossola"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16318",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Viterbe",
+  "nomLocal": "provincia di Viterbo",
+  "iso": "IT-VT",
+  "coord": "Point(12.104166666 42.418611111)",
+  "parent": "http://www.wikidata.org/entity/Q1282",
+  "itemLabel": "province de Viterbe"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16316",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Province_de_Vicence",
+  "nomLocal": "provincia di Vicenza",
+  "iso": "IT-VI",
+  "coord": "Point(11.55 45.55)",
+  "parent": "http://www.wikidata.org/entity/Q1243",
+  "itemLabel": "province de Vicence"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q641",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Venise",
+  "nomLocal": "Venezia",
+  "iso": "IT-VE",
+  "coord": "Point(12.331944444 45.439722222)",
+  "parent": "http://www.wikidata.org/entity/Q3678587",
+  "itemLabel": "Venise"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q134470541",
+  "nomLocal": "Villa romana di Santa Marina",
+  "iso": "IT-82",
+  "coord": "Point(14.1195 37.7734)",
+  "parent": "http://www.wikidata.org/entity/Q490929",
+  "itemLabel": "Q134470541"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q26160406",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Libre_consortium_municipal_d%27Agrigente",
+  "nomLocal": "Libero consorzio comunale di Agrigento",
+  "iso": "IT-AG",
+  "coord": "Point(13.58944444 37.32166667)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "libre consortium municipal d'Agrigento"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q26160410",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Libre_consortium_municipal_de_Caltanissetta",
+  "nomLocal": "Libero consorzio comunale di Caltanissetta",
+  "iso": "IT-CL",
+  "coord": "Point(14.04583333 37.48888889)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "Libre consortium municipal de Caltanissetta"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q26160408",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Libre_consortium_municipal_d%27Enna",
+  "nomLocal": "Libero consorzio comunale di Enna",
+  "iso": "IT-EN",
+  "coord": "Point(14.266666666 37.566666666)",
+  "parent": "http://www.wikidata.org/entity/Q1460",
+  "itemLabel": "Libre consortium municipal d'Enna"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1210",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Lombardie",
+  "nomLocal": "Lombardia",
+  "iso": "IT-25",
+  "coord": "Point(9.95 45.65)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Lombardie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1216",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Pi%C3%A9mont",
+  "nomLocal": "Piemonte",
+  "iso": "IT-21",
+  "coord": "Point(7.916666666 45.25)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Piémont"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1222",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vall%C3%A9e_d%27Aoste",
+  "nomLocal": "Valle d'Aosta",
+  "iso": "IT-23",
+  "coord": "Point(7.366666666 45.716666666)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Vallée d'Aoste"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1237",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Trentin-Haut-Adige",
+  "nomLocal": "Trentino-Alto Adige",
+  "iso": "IT-32",
+  "coord": "Point(11.416666666 46.383333333)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Trentin-Haut-Adige"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1243",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/V%C3%A9n%C3%A9tie",
+  "nomLocal": "Veneto",
+  "iso": "IT-34",
+  "coord": "Point(11.85 45.733333333)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Vénétie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1250",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Frioul-V%C3%A9n%C3%A9tie_Julienne",
+  "nomLocal": "Friuli-Venezia Giulia",
+  "iso": "IT-36",
+  "coord": "Point(13.116666666 46.1)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Frioul-Vénétie Julienne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1256",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ligurie",
+  "nomLocal": "Liguria",
+  "iso": "IT-42",
+  "coord": "Point(8.766666666 44.45)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Ligurie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1263",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/%C3%89milie-Romagne",
+  "nomLocal": "Emilia-Romagna",
+  "iso": "IT-45",
+  "coord": "Point(11.0 44.75)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Émilie-Romagne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1273",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Toscane",
+  "nomLocal": "Toscana",
+  "iso": "IT-52",
+  "coord": "Point(11.2 43.45)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Toscane"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1279",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Marches",
+  "nomLocal": "Marche",
+  "iso": "IT-57",
+  "coord": "Point(13.0 43.316666666)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Marches"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1282",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Latium",
+  "nomLocal": "Lazio",
+  "iso": "IT-62",
+  "coord": "Point(12.716666666 41.9)",
+  "parent": "http://www.wikidata.org/entity/Q172579",
+  "itemLabel": "Latium"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1282",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Latium",
+  "nomLocal": "Lazio",
+  "iso": "IT-62",
+  "coord": "Point(12.716666666 41.9)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Latium"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1280",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ombrie",
+  "nomLocal": "Umbria",
+  "iso": "IT-55",
+  "coord": "Point(12.566666666 42.983333333)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Ombrie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1284",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Abruzzes",
+  "nomLocal": "Abruzzo",
+  "iso": "IT-65",
+  "coord": "Point(13.833333333 42.216666666)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Abruzzes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1438",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Campanie",
+  "nomLocal": "Campania",
+  "iso": "IT-72",
+  "coord": "Point(14.95 40.75)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Campanie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1443",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Molise",
+  "nomLocal": "Molise",
+  "iso": "IT-67",
+  "coord": "Point(14.616666666 41.7)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Molise"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1447",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Pouilles",
+  "nomLocal": "Puglia",
+  "iso": "IT-75",
+  "coord": "Point(16.512777777 41.008611111)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Pouilles"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1452",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Basilicate",
+  "nomLocal": "Basilicata",
+  "iso": "IT-77",
+  "coord": "Point(16.5 40.5)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Basilicate"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1458",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Calabre",
+  "nomLocal": "Calabria",
+  "iso": "IT-78",
+  "coord": "Point(16.5 39.0)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Calabre"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1462",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Sardaigne",
+  "nomLocal": "Sardegna",
+  "iso": "IT-88",
+  "coord": "Point(9.0 40.0)",
+  "parent": "http://www.wikidata.org/entity/Q281345",
+  "itemLabel": "Sardaigne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1462",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Sardaigne",
+  "nomLocal": "Sardegna",
+  "iso": "IT-88",
+  "coord": "Point(9.0 40.0)",
+  "parent": "http://www.wikidata.org/entity/Q172579",
+  "itemLabel": "Sardaigne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1462",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Sardaigne",
+  "nomLocal": "Sardegna",
+  "iso": "IT-88",
+  "coord": "Point(9.0 40.0)",
+  "parent": "http://www.wikidata.org/entity/Q165154",
+  "itemLabel": "Sardaigne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1462",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Sardaigne",
+  "nomLocal": "Sardegna",
+  "iso": "IT-88",
+  "coord": "Point(9.0 40.0)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Sardaigne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1460",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Sicile",
+  "nomLocal": "Sicilia",
+  "iso": "IT-82",
+  "coord": "Point(14.016666666 37.6)",
+  "parent": "http://www.wikidata.org/entity/Q38",
+  "itemLabel": "Sicile"
+ }
+]

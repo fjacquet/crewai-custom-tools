@@ -1,0 +1,1790 @@
+[
+ {
+  "item": "http://www.wikidata.org/entity/Q17012",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Guadeloupe",
+  "nomLocal": "Guadeloupe",
+  "iso": "FR-971",
+  "coord": "Point(-61.5605 16.2595)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Guadeloupe"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q17054",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Martinique",
+  "nomLocal": "Martinique",
+  "iso": "FR-972",
+  "coord": "Point(-61.015 14.65)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Martinique"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q17063",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Mayotte",
+  "nomLocal": "Mayotte",
+  "iso": "FR-976",
+  "coord": "Point(45.138333333 -12.843055555)",
+  "parent": "http://www.wikidata.org/entity/Q88523604",
+  "itemLabel": "Mayotte"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q17063",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Mayotte",
+  "nomLocal": "Mayotte",
+  "iso": "FR-976",
+  "coord": "Point(45.138333333 -12.843055555)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Mayotte"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q17070",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/La_R%C3%A9union",
+  "nomLocal": "La Réunion",
+  "iso": "FR-974",
+  "coord": "Point(55.5325 -21.114444444)",
+  "parent": "http://www.wikidata.org/entity/Q88523604",
+  "itemLabel": "La Réunion"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q17070",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/La_R%C3%A9union",
+  "nomLocal": "La Réunion",
+  "iso": "FR-974",
+  "coord": "Point(55.5325 -21.114444444)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "La Réunion"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q25362",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Saint-Barth%C3%A9lemy_(Antilles_fran%C3%A7aises)",
+  "nomLocal": "Saint-Barthélemy",
+  "iso": "FR-BL",
+  "coord": "Point(-62.8342438 17.897728)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Saint-Barthélemy"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q33788",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Nouvelle-Cal%C3%A9donie",
+  "nomLocal": "Nouvelle-Calédonie",
+  "iso": "FR-NC",
+  "coord": "Point(165.3 -21.25)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Nouvelle-Calédonie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q34617",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Saint-Pierre-et-Miquelon",
+  "nomLocal": "Saint-Pierre-et-Miquelon",
+  "iso": "FR-PM",
+  "coord": "Point(-56.3 46.85)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Saint-Pierre-et-Miquelon"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q35555",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Wallis-et-Futuna",
+  "nomLocal": "Wallis-et-Futuna",
+  "iso": "FR-WF",
+  "coord": "Point(-178.10932 -14.30181)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Wallis-et-Futuna"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12789",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Var_(d%C3%A9partement)",
+  "nomLocal": "Var",
+  "iso": "FR-83",
+  "coord": "Point(6.21 43.400833333)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Var"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12789",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Var_(d%C3%A9partement)",
+  "nomLocal": "Var",
+  "iso": "FR-83",
+  "coord": "Point(6.21 43.400833333)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Var"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12792",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vaucluse_(d%C3%A9partement)",
+  "nomLocal": "Vaucluse",
+  "iso": "FR-84",
+  "coord": "Point(5.166666666 44.0)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Vaucluse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12792",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vaucluse_(d%C3%A9partement)",
+  "nomLocal": "Vaucluse",
+  "iso": "FR-84",
+  "coord": "Point(5.166666666 44.0)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Vaucluse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q13917",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/%C3%8Ele-de-France",
+  "nomLocal": "Île-de-France",
+  "iso": "FR-IDF",
+  "coord": "Point(2.316666666 48.85)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Île-de-France"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q13947",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Centre-Val_de_Loire",
+  "nomLocal": "Centre-Val de Loire",
+  "iso": "FR-CVL",
+  "coord": "Point(1.75 47.5)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Centre-Val de Loire"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q14112",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Corse",
+  "nomLocal": "Corse",
+  "iso": "FR-20R",
+  "coord": "Point(9.083333333 42.15)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Corse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q15104",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Provence-Alpes-C%C3%B4te_d%27Azur",
+  "nomLocal": "Provence-Alpes-Côte d'Azur",
+  "iso": "FR-PAC",
+  "coord": "Point(6.0 44.0)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Provence-Alpes-Côte d'Azur"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q16994",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Pays_de_la_Loire",
+  "nomLocal": "Pays de la Loire",
+  "iso": "FR-PDL",
+  "coord": "Point(-0.85 47.416666666)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Pays de la Loire"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q18914778",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q463",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12784",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Val-d%27Oise",
+  "nomLocal": "Val-d'Oise",
+  "iso": "FR-95",
+  "coord": "Point(2.086111111 49.061944444)",
+  "parent": "http://www.wikidata.org/entity/Q13917",
+  "itemLabel": "Val-d'Oise"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12788",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Val-de-Marne",
+  "nomLocal": "Val-de-Marne",
+  "iso": "FR-94",
+  "coord": "Point(2.416666666 48.75)",
+  "parent": "http://www.wikidata.org/entity/Q13917",
+  "itemLabel": "Val-de-Marne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12789",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Var_(d%C3%A9partement)",
+  "nomLocal": "Var",
+  "iso": "FR-83",
+  "coord": "Point(6.21 43.400833333)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Var"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12789",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Var_(d%C3%A9partement)",
+  "nomLocal": "Var",
+  "iso": "FR-83",
+  "coord": "Point(6.21 43.400833333)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Var"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12792",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vaucluse_(d%C3%A9partement)",
+  "nomLocal": "Vaucluse",
+  "iso": "FR-84",
+  "coord": "Point(5.166666666 44.0)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Vaucluse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12792",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vaucluse_(d%C3%A9partement)",
+  "nomLocal": "Vaucluse",
+  "iso": "FR-84",
+  "coord": "Point(5.166666666 44.0)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Vaucluse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12798",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vend%C3%A9e_(d%C3%A9partement)",
+  "nomLocal": "Vendée",
+  "iso": "FR-85",
+  "coord": "Point(-1.426666666 46.670555555)",
+  "parent": "http://www.wikidata.org/entity/Q16994",
+  "itemLabel": "Vendée"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12804",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vienne_(d%C3%A9partement)",
+  "nomLocal": "Vienne",
+  "iso": "FR-86",
+  "coord": "Point(0.340555555 46.581388888)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Vienne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12808",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haute-Vienne",
+  "nomLocal": "Haute-Vienne",
+  "iso": "FR-87",
+  "coord": "Point(1.256944444 45.8325)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Haute-Vienne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12816",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Yonne_(d%C3%A9partement)",
+  "nomLocal": "Yonne",
+  "iso": "FR-89",
+  "coord": "Point(3.566666666 47.8)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Yonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12820",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Yvelines",
+  "nomLocal": "Yvelines",
+  "iso": "FR-78",
+  "coord": "Point(1.916666666 48.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q13917",
+  "itemLabel": "Yvelines"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q18914778",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q18914778",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q463",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q46130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Rh%C3%B4ne_(d%C3%A9partement)",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.719570194 45.995504)",
+  "parent": "http://www.wikidata.org/entity/Q463",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q126125",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Saint-Martin_(Antilles_fran%C3%A7aises)",
+  "nomLocal": "Saint-Martin",
+  "iso": "FR-MF",
+  "coord": "Point(-63.06 18.075277777)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Saint-Martin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q129003",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Terres_australes_et_antarctiques_fran%C3%A7aises",
+  "nomLocal": "Terres australes et antarctiques françaises",
+  "iso": "FR-TF",
+  "coord": "Point(67.0 -43.0)",
+  "parent": "http://www.wikidata.org/entity/Q88523604",
+  "itemLabel": "Terres australes et antarctiques françaises"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q129003",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Terres_australes_et_antarctiques_fran%C3%A7aises",
+  "nomLocal": "Terres australes et antarctiques françaises",
+  "iso": "FR-TF",
+  "coord": "Point(67.0 -43.0)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Terres australes et antarctiques françaises"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q161258",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/%C3%8Ele_Clipperton",
+  "nomLocal": "La Passion–Clipperton",
+  "iso": "FR-CP",
+  "coord": "Point(-109.217222222 10.293888888)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "La Passion–Clipperton"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q463",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3769",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Guyane",
+  "nomLocal": "Guyane",
+  "iso": "FR-973",
+  "coord": "Point(-53.0 4.0)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Guyane"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18338206",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Auvergne-Rh%C3%B4ne-Alpes",
+  "nomLocal": "Auvergne-Rhône-Alpes",
+  "iso": "FR-ARA",
+  "coord": "Point(4.8 45.7)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Auvergne-Rhône-Alpes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18578267",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bourgogne-Franche-Comt%C3%A9",
+  "nomLocal": "Bourgogne-Franche-Comté",
+  "iso": "FR-BFC",
+  "coord": "Point(6.0305 47.234527777)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Bourgogne-Franche-Comté"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18677767",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Hauts-de-France",
+  "nomLocal": "Hauts-de-France",
+  "iso": "FR-HDF",
+  "coord": "Point(2.7 49.916666666)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Hauts-de-France"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18677875",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Normandie_(r%C3%A9gion_administrative)",
+  "nomLocal": "Normandie",
+  "iso": "FR-NOR",
+  "coord": "Point(-0.35 49.183333333)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Normandie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18677983",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Grand_Est",
+  "nomLocal": "Grand Est",
+  "iso": "FR-GES",
+  "coord": "Point(7.75 48.583333333)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Grand Est"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18678082",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Nouvelle-Aquitaine",
+  "nomLocal": "Nouvelle-Aquitaine",
+  "iso": "FR-NAQ",
+  "coord": "Point(-0.583333333 44.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Nouvelle-Aquitaine"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18678265",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Occitanie_(r%C3%A9gion_administrative)",
+  "nomLocal": "Occitanie",
+  "iso": "FR-OCC",
+  "coord": "Point(2.1375 43.7075)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Occitanie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q1137",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Lorraine",
+  "nomLocal": "Lorraine",
+  "iso": "FR-M",
+  "coord": "Point(6.487222222 48.6)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Lorraine"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3125",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Hautes-Alpes",
+  "nomLocal": "Hautes-Alpes",
+  "iso": "FR-05",
+  "coord": "Point(6.333333333 44.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Hautes-Alpes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3125",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Hautes-Alpes",
+  "nomLocal": "Hautes-Alpes",
+  "iso": "FR-05",
+  "coord": "Point(6.333333333 44.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Hautes-Alpes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3131",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-de-Haute-Provence",
+  "nomLocal": "Alpes-de-Haute-Provence",
+  "iso": "FR-04",
+  "coord": "Point(6.24 44.095277777)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Alpes-de-Haute-Provence"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3131",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-de-Haute-Provence",
+  "nomLocal": "Alpes-de-Haute-Provence",
+  "iso": "FR-04",
+  "coord": "Point(6.24 44.095277777)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Alpes-de-Haute-Provence"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12130",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bretagne_(r%C3%A9gion_administrative)",
+  "nomLocal": "Bretagne",
+  "iso": "FR-BRE",
+  "coord": "Point(-3.0 48.0)",
+  "parent": "http://www.wikidata.org/entity/Q212429",
+  "itemLabel": "Bretagne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q2982948",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Collectivit%C3%A9_europ%C3%A9enne_d%27Alsace",
+  "nomLocal": "Collectivité européenne d’Alsace",
+  "iso": "FR-6AE",
+  "coord": "Point(7.5 48.5)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Collectivité européenne d’Alsace"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q463",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q463",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q18914778",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Circonscription_d%C3%A9partementale_du_Rh%C3%B4ne",
+  "nomLocal": "Rhône",
+  "iso": "FR-69",
+  "coord": "Point(4.8433235 45.760437611)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12770",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Somme_(d%C3%A9partement)",
+  "nomLocal": "Somme",
+  "iso": "FR-80",
+  "coord": "Point(2.416666666 49.883333333)",
+  "parent": "http://www.wikidata.org/entity/Q18677767",
+  "itemLabel": "Somme"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12772",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Tarn_(d%C3%A9partement)",
+  "nomLocal": "Tarn",
+  "iso": "FR-81",
+  "coord": "Point(2.109166666 43.909722222)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Tarn"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12779",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Tarn-et-Garonne",
+  "nomLocal": "Tarn-et-Garonne",
+  "iso": "FR-82",
+  "coord": "Point(1.333333333 44.0)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Tarn-et-Garonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12782",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Territoire_de_Belfort",
+  "nomLocal": "Territoire de Belfort",
+  "iso": "FR-90",
+  "coord": "Point(6.861388888 47.638055555)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Territoire de Belfort"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q30971",
+  "art": "https://fr.wikipedia.org/wiki/Polyn%C3%A9sie_fran%C3%A7aise",
+  "nomLocal": "Polynésie française",
+  "iso": "FR-PF",
+  "coord": "Point(-149.4 -17.7)",
+  "parent": "http://www.wikidata.org/entity/Q203396",
+  "itemLabel": "Polynésie française"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q90",
+  "art": "https://fr.wikipedia.org/wiki/Paris",
+  "nomLocal": "Paris",
+  "iso": "FR-75C",
+  "coord": "Point(2.352222222 48.856666666)",
+  "parent": "http://www.wikidata.org/entity/Q16665915",
+  "itemLabel": "Paris"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3068",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Loire-Atlantique",
+  "nomLocal": "Loire-Atlantique",
+  "iso": "FR-44",
+  "coord": "Point(-1.666666666 47.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q16994",
+  "itemLabel": "Loire-Atlantique"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3083",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ain_(d%C3%A9partement)",
+  "nomLocal": "Ain",
+  "iso": "FR-01",
+  "coord": "Point(5.333333333 46.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Ain"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3093",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Aisne_(d%C3%A9partement)",
+  "nomLocal": "Aisne",
+  "iso": "FR-02",
+  "coord": "Point(3.5 49.5)",
+  "parent": "http://www.wikidata.org/entity/Q18677767",
+  "itemLabel": "Aisne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3105",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vosges_(d%C3%A9partement)",
+  "nomLocal": "Vosges",
+  "iso": "FR-88",
+  "coord": "Point(6.416666666 48.166666666)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Vosges"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3113",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Allier_(d%C3%A9partement)",
+  "nomLocal": "Allier",
+  "iso": "FR-03",
+  "coord": "Point(3.166666666 46.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Allier"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3120",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Jura_(d%C3%A9partement)",
+  "nomLocal": "Jura",
+  "iso": "FR-39",
+  "coord": "Point(5.554444444 46.675277777)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Jura"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3125",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Hautes-Alpes",
+  "nomLocal": "Hautes-Alpes",
+  "iso": "FR-05",
+  "coord": "Point(6.333333333 44.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Hautes-Alpes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3125",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Hautes-Alpes",
+  "nomLocal": "Hautes-Alpes",
+  "iso": "FR-05",
+  "coord": "Point(6.333333333 44.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Hautes-Alpes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3131",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-de-Haute-Provence",
+  "nomLocal": "Alpes-de-Haute-Provence",
+  "iso": "FR-04",
+  "coord": "Point(6.24 44.095277777)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Alpes-de-Haute-Provence"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3131",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-de-Haute-Provence",
+  "nomLocal": "Alpes-de-Haute-Provence",
+  "iso": "FR-04",
+  "coord": "Point(6.24 44.095277777)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Alpes-de-Haute-Provence"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q124954445",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3139",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Alpes-Maritimes",
+  "nomLocal": "Alpes-Maritimes",
+  "iso": "FR-06",
+  "coord": "Point(7.166666666 43.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q142",
+  "itemLabel": "Alpes-Maritimes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3148",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ard%C3%A8che_(d%C3%A9partement)",
+  "nomLocal": "Ardèche",
+  "iso": "FR-07",
+  "coord": "Point(4.416666666 44.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Ardèche"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3164",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ardennes_(d%C3%A9partement)",
+  "nomLocal": "Ardennes",
+  "iso": "FR-08",
+  "coord": "Point(4.586666666 49.578611111)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Ardennes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3184",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ari%C3%A8ge_(d%C3%A9partement)",
+  "nomLocal": "Ariège",
+  "iso": "FR-09",
+  "coord": "Point(1.5 43.0)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Ariège"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3194",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Aube_(d%C3%A9partement)",
+  "nomLocal": "Aube",
+  "iso": "FR-10",
+  "coord": "Point(4.166666666 48.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Aube"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3207",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Aude_(d%C3%A9partement)",
+  "nomLocal": "Aude",
+  "iso": "FR-11",
+  "coord": "Point(2.416666666 43.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Aude"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3216",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Aveyron_(d%C3%A9partement)",
+  "nomLocal": "Aveyron",
+  "iso": "FR-12",
+  "coord": "Point(2.7 44.25)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Aveyron"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3240",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bouches-du-Rh%C3%B4ne",
+  "nomLocal": "Bouches-du-Rhône",
+  "iso": "FR-13",
+  "coord": "Point(5.083333333 43.5)",
+  "parent": "http://www.wikidata.org/entity/Q15104",
+  "itemLabel": "Bouches-du-Rhône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3249",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Calvados_(d%C3%A9partement)",
+  "nomLocal": "Calvados",
+  "iso": "FR-14",
+  "coord": "Point(0.25 49.033333333)",
+  "parent": "http://www.wikidata.org/entity/Q18677875",
+  "itemLabel": "Calvados"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3259",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Cantal_(d%C3%A9partement)",
+  "nomLocal": "Cantal",
+  "iso": "FR-15",
+  "coord": "Point(3.1 45.033333333)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Cantal"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3266",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Charente_(d%C3%A9partement)",
+  "nomLocal": "Charente",
+  "iso": "FR-16",
+  "coord": "Point(0.333333333 45.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Charente"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3278",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Charente-Maritime",
+  "nomLocal": "Charente-Maritime",
+  "iso": "FR-17",
+  "coord": "Point(-0.966666666 45.95)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Charente-Maritime"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3286",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Cher_(d%C3%A9partement)",
+  "nomLocal": "Cher",
+  "iso": "FR-18",
+  "coord": "Point(2.444444444 47.081111111)",
+  "parent": "http://www.wikidata.org/entity/Q13947",
+  "itemLabel": "Cher"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3326",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Corr%C3%A8ze_(d%C3%A9partement)",
+  "nomLocal": "Corrèze",
+  "iso": "FR-19",
+  "coord": "Point(1.833333333 45.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Corrèze"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3334",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haute-Corse",
+  "nomLocal": "Haute-Corse",
+  "iso": "FR-2B",
+  "coord": "Point(9.2 42.466666666)",
+  "parent": "http://www.wikidata.org/entity/Q14112",
+  "itemLabel": "Haute-Corse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3336",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Corse-du-Sud",
+  "nomLocal": "Corse-du-Sud",
+  "iso": "FR-2A",
+  "coord": "Point(9.033333333 41.85)",
+  "parent": "http://www.wikidata.org/entity/Q14112",
+  "itemLabel": "Corse-du-Sud"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3342",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/C%C3%B4te-d%27Or",
+  "nomLocal": "Côte-d'Or",
+  "iso": "FR-21",
+  "coord": "Point(4.833333333 47.416666666)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Côte-d'Or"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3349",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/C%C3%B4tes-d%27Armor",
+  "nomLocal": "Côtes-d'Armor",
+  "iso": "FR-22",
+  "coord": "Point(-2.833333333 48.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q12130",
+  "itemLabel": "Côtes-d'Armor"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3353",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Creuse_(d%C3%A9partement)",
+  "nomLocal": "Creuse",
+  "iso": "FR-23",
+  "coord": "Point(2.05 46.583333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Creuse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3357",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Dordogne_(d%C3%A9partement)",
+  "nomLocal": "Dordogne",
+  "iso": "FR-24",
+  "coord": "Point(0.666666666 45.0)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Dordogne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3361",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Doubs_(d%C3%A9partement)",
+  "nomLocal": "Doubs",
+  "iso": "FR-25",
+  "coord": "Point(6.416666666 47.166666666)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Doubs"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3364",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Dr%C3%B4me_(d%C3%A9partement)",
+  "nomLocal": "Drôme",
+  "iso": "FR-26",
+  "coord": "Point(5.166666666 44.75)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Drôme"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3368",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Essonne_(d%C3%A9partement)",
+  "nomLocal": "Essonne",
+  "iso": "FR-91",
+  "coord": "Point(2.283333333 48.5)",
+  "parent": "http://www.wikidata.org/entity/Q13917",
+  "itemLabel": "Essonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3372",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Eure_(d%C3%A9partement)",
+  "nomLocal": "Eure",
+  "iso": "FR-27",
+  "coord": "Point(1.0 49.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q18677875",
+  "itemLabel": "Eure"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3377",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Eure-et-Loir",
+  "nomLocal": "Eure-et-Loir",
+  "iso": "FR-28",
+  "coord": "Point(1.416666666 48.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q13947",
+  "itemLabel": "Eure-et-Loir"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q3389",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Finist%C3%A8re",
+  "nomLocal": "Finistère",
+  "iso": "FR-29",
+  "coord": "Point(-4.0 48.25)",
+  "parent": "http://www.wikidata.org/entity/Q12130",
+  "itemLabel": "Finistère"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12515",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Gard",
+  "nomLocal": "Gard",
+  "iso": "FR-30",
+  "coord": "Point(4.081666666 44.128055555)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Gard"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12517",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Gers_(d%C3%A9partement)",
+  "nomLocal": "Gers",
+  "iso": "FR-32",
+  "coord": "Point(0.583333333 43.65)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Gers"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12526",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Gironde_(d%C3%A9partement)",
+  "nomLocal": "Gironde",
+  "iso": "FR-33",
+  "coord": "Point(-0.666666666 44.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Gironde"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12538",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haute-Garonne",
+  "nomLocal": "Haute-Garonne",
+  "iso": "FR-31",
+  "coord": "Point(1.5 43.416666666)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Haute-Garonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12543",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Hauts-de-Seine",
+  "nomLocal": "Hauts-de-Seine",
+  "iso": "FR-92",
+  "coord": "Point(2.2 48.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q13917",
+  "itemLabel": "Hauts-de-Seine"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12545",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/H%C3%A9rault_(d%C3%A9partement)",
+  "nomLocal": "Hérault",
+  "iso": "FR-34",
+  "coord": "Point(3.877230555 43.610919444)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Hérault"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12549",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ille-et-Vilaine",
+  "nomLocal": "Ille-et-Vilaine",
+  "iso": "FR-35",
+  "coord": "Point(-1.666666666 48.166666666)",
+  "parent": "http://www.wikidata.org/entity/Q12130",
+  "itemLabel": "Ille-et-Vilaine"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12553",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Indre_(d%C3%A9partement)",
+  "nomLocal": "Indre",
+  "iso": "FR-36",
+  "coord": "Point(1.6 46.766666666)",
+  "parent": "http://www.wikidata.org/entity/Q13947",
+  "itemLabel": "Indre"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12559",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Is%C3%A8re_(d%C3%A9partement)",
+  "nomLocal": "Isère",
+  "iso": "FR-38",
+  "coord": "Point(5.716666666 45.183333333)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Isère"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12556",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Indre-et-Loire",
+  "nomLocal": "Indre-et-Loire",
+  "iso": "FR-37",
+  "coord": "Point(0.666666666 47.25)",
+  "parent": "http://www.wikidata.org/entity/Q13947",
+  "itemLabel": "Indre-et-Loire"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12563",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Landes_(d%C3%A9partement)",
+  "nomLocal": "Landes",
+  "iso": "FR-40",
+  "coord": "Point(-0.867777777 43.878055555)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Landes"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12564",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Loir-et-Cher",
+  "nomLocal": "Loir-et-Cher",
+  "iso": "FR-41",
+  "coord": "Point(0.666666666 47.266666666)",
+  "parent": "http://www.wikidata.org/entity/Q13947",
+  "itemLabel": "Loir-et-Cher"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12569",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Loire_(d%C3%A9partement)",
+  "nomLocal": "Loire",
+  "iso": "FR-42",
+  "coord": "Point(4.224722222 45.753888888)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Loire"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12574",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Loiret_(d%C3%A9partement)",
+  "nomLocal": "Loiret",
+  "iso": "FR-45",
+  "coord": "Point(2.166666666 47.916666666)",
+  "parent": "http://www.wikidata.org/entity/Q13947",
+  "itemLabel": "Loiret"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12572",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haute-Loire",
+  "nomLocal": "Haute-Loire",
+  "iso": "FR-43",
+  "coord": "Point(4.0 45.0)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Haute-Loire"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12578",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Lot-et-Garonne",
+  "nomLocal": "Lot-et-Garonne",
+  "iso": "FR-47",
+  "coord": "Point(0.5 44.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Lot-et-Garonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12578",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Lot-et-Garonne",
+  "nomLocal": "Lot-et-Garonne",
+  "iso": "FR-47",
+  "coord": "Point(0.5 44.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Lot-et-Garonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12578",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Lot-et-Garonne",
+  "nomLocal": "Lot-et-Garonne",
+  "iso": "FR-47",
+  "coord": "Point(0.5 44.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q1179",
+  "itemLabel": "Lot-et-Garonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12578",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Lot-et-Garonne",
+  "nomLocal": "Lot-et-Garonne",
+  "iso": "FR-47",
+  "coord": "Point(0.5 44.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q1179",
+  "itemLabel": "Lot-et-Garonne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12576",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Lot_(d%C3%A9partement)",
+  "nomLocal": "Lot",
+  "iso": "FR-46",
+  "coord": "Point(1.576388888 44.558888888)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Lot"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12580",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Loz%C3%A8re_(d%C3%A9partement)",
+  "nomLocal": "Lozère",
+  "iso": "FR-48",
+  "coord": "Point(3.6 44.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Lozère"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12584",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Maine-et-Loire",
+  "nomLocal": "Maine-et-Loire",
+  "iso": "FR-49",
+  "coord": "Point(-0.6 47.45)",
+  "parent": "http://www.wikidata.org/entity/Q16994",
+  "itemLabel": "Maine-et-Loire"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12589",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Manche_(d%C3%A9partement)",
+  "nomLocal": "Manche",
+  "iso": "FR-50",
+  "coord": "Point(-1.25 49.05)",
+  "parent": "http://www.wikidata.org/entity/Q18677875",
+  "itemLabel": "Manche"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12594",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Marne_(d%C3%A9partement)",
+  "nomLocal": "Marne",
+  "iso": "FR-51",
+  "coord": "Point(4.25 49.0)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Marne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12607",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haute-Marne",
+  "nomLocal": "Haute-Marne",
+  "iso": "FR-52",
+  "coord": "Point(5.25 48.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Haute-Marne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12620",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Mayenne_(d%C3%A9partement)",
+  "nomLocal": "Mayenne",
+  "iso": "FR-53",
+  "coord": "Point(-0.666666666 48.166666666)",
+  "parent": "http://www.wikidata.org/entity/Q16994",
+  "itemLabel": "Mayenne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12626",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Meurthe-et-Moselle",
+  "nomLocal": "Meurthe-et-Moselle",
+  "iso": "FR-54",
+  "coord": "Point(6.166666666 48.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Meurthe-et-Moselle"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12631",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Meuse_(d%C3%A9partement)",
+  "nomLocal": "Meuse",
+  "iso": "FR-55",
+  "coord": "Point(5.377777777 48.965555555)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Meuse"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12642",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Morbihan",
+  "nomLocal": "Morbihan",
+  "iso": "FR-56",
+  "coord": "Point(-2.833333333 47.833333333)",
+  "parent": "http://www.wikidata.org/entity/Q12130",
+  "itemLabel": "Morbihan"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12652",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Moselle_(d%C3%A9partement)",
+  "nomLocal": "Moselle",
+  "iso": "FR-57",
+  "coord": "Point(6.661944444 49.033888888)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Moselle"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12657",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Ni%C3%A8vre_(d%C3%A9partement)",
+  "nomLocal": "Nièvre",
+  "iso": "FR-58",
+  "coord": "Point(3.5 47.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Nièvre"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12661",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Nord_(d%C3%A9partement_fran%C3%A7ais)",
+  "nomLocal": "Nord",
+  "iso": "FR-59",
+  "coord": "Point(3.032222222 50.621388888)",
+  "parent": "http://www.wikidata.org/entity/Q18677767",
+  "itemLabel": "Nord"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12675",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Oise_(d%C3%A9partement)",
+  "nomLocal": "Oise",
+  "iso": "FR-60",
+  "coord": "Point(2.416666666 49.383333333)",
+  "parent": "http://www.wikidata.org/entity/Q18677767",
+  "itemLabel": "Oise"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12679",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Orne_(d%C3%A9partement)",
+  "nomLocal": "Orne",
+  "iso": "FR-61",
+  "coord": "Point(0.0 48.7)",
+  "parent": "http://www.wikidata.org/entity/Q18677875",
+  "itemLabel": "Orne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12689",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Pas-de-Calais",
+  "nomLocal": "Pas-de-Calais",
+  "iso": "FR-62",
+  "coord": "Point(1.85 50.95)",
+  "parent": "http://www.wikidata.org/entity/Q18677767",
+  "itemLabel": "Pas-de-Calais"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12694",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Puy-de-D%C3%B4me",
+  "nomLocal": "Puy-de-Dôme",
+  "iso": "FR-63",
+  "coord": "Point(3.216666666 45.7)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Puy-de-Dôme"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12703",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Pyr%C3%A9n%C3%A9es-Atlantiques",
+  "nomLocal": "Pyrénées-Atlantiques",
+  "iso": "FR-64",
+  "coord": "Point(-0.833333333 43.25)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Pyrénées-Atlantiques"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12700",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Hautes-Pyr%C3%A9n%C3%A9es",
+  "nomLocal": "Hautes-Pyrénées",
+  "iso": "FR-65",
+  "coord": "Point(0.068055555 43.233333333)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Hautes-Pyrénées"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12709",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Pyr%C3%A9n%C3%A9es-Orientales",
+  "nomLocal": "Pyrénées-Orientales",
+  "iso": "FR-66",
+  "coord": "Point(2.75 42.5)",
+  "parent": "http://www.wikidata.org/entity/Q18678265",
+  "itemLabel": "Pyrénées-Orientales"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q22010895",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q22010895",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q2982948",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q2982948",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q2677074",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12717",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Bas-Rhin",
+  "nomLocal": "Bas-Rhin",
+  "iso": "FR-67",
+  "coord": "Point(7.783333333 48.816666666)",
+  "parent": "http://www.wikidata.org/entity/Q2677074",
+  "itemLabel": "Bas-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12722",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haut-Rhin",
+  "nomLocal": "Haut-Rhin",
+  "iso": "FR-68",
+  "coord": "Point(7.319722222 47.964166666)",
+  "parent": "http://www.wikidata.org/entity/Q22010895",
+  "itemLabel": "Haut-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12722",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haut-Rhin",
+  "nomLocal": "Haut-Rhin",
+  "iso": "FR-68",
+  "coord": "Point(7.319722222 47.964166666)",
+  "parent": "http://www.wikidata.org/entity/Q22010895",
+  "itemLabel": "Haut-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12722",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haut-Rhin",
+  "nomLocal": "Haut-Rhin",
+  "iso": "FR-68",
+  "coord": "Point(7.319722222 47.964166666)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Haut-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12722",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haut-Rhin",
+  "nomLocal": "Haut-Rhin",
+  "iso": "FR-68",
+  "coord": "Point(7.319722222 47.964166666)",
+  "parent": "http://www.wikidata.org/entity/Q18677983",
+  "itemLabel": "Haut-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12722",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haut-Rhin",
+  "nomLocal": "Haut-Rhin",
+  "iso": "FR-68",
+  "coord": "Point(7.319722222 47.964166666)",
+  "parent": "http://www.wikidata.org/entity/Q2982948",
+  "itemLabel": "Haut-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12722",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haut-Rhin",
+  "nomLocal": "Haut-Rhin",
+  "iso": "FR-68",
+  "coord": "Point(7.319722222 47.964166666)",
+  "parent": "http://www.wikidata.org/entity/Q2982948",
+  "itemLabel": "Haut-Rhin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12730",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haute-Sa%C3%B4ne",
+  "nomLocal": "Haute-Saône",
+  "iso": "FR-70",
+  "coord": "Point(6.0 47.583333333)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Haute-Saône"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12736",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Sa%C3%B4ne-et-Loire",
+  "nomLocal": "Saône-et-Loire",
+  "iso": "FR-71",
+  "coord": "Point(4.7 46.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q18578267",
+  "itemLabel": "Saône-et-Loire"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12740",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Sarthe_(d%C3%A9partement)",
+  "nomLocal": "Sarthe",
+  "iso": "FR-72",
+  "coord": "Point(0.216666666 48.283333333)",
+  "parent": "http://www.wikidata.org/entity/Q16994",
+  "itemLabel": "Sarthe"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12745",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Savoie_(d%C3%A9partement)",
+  "nomLocal": "Savoie",
+  "iso": "FR-73",
+  "coord": "Point(6.333333333 45.583333333)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Savoie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12751",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Haute-Savoie",
+  "nomLocal": "Haute-Savoie",
+  "iso": "FR-74",
+  "coord": "Point(6.333333333 46.0)",
+  "parent": "http://www.wikidata.org/entity/Q18338206",
+  "itemLabel": "Haute-Savoie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12753",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Seine-et-Marne",
+  "nomLocal": "Seine-et-Marne",
+  "iso": "FR-77",
+  "coord": "Point(3.0 48.6)",
+  "parent": "http://www.wikidata.org/entity/Q13917",
+  "itemLabel": "Seine-et-Marne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12758",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Seine-Maritime",
+  "nomLocal": "Seine-Maritime",
+  "iso": "FR-76",
+  "coord": "Point(0.833333333 49.666666666)",
+  "parent": "http://www.wikidata.org/entity/Q18677875",
+  "itemLabel": "Seine-Maritime"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12761",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Seine-Saint-Denis",
+  "nomLocal": "Seine-Saint-Denis",
+  "iso": "FR-93",
+  "coord": "Point(2.483333333 48.9)",
+  "parent": "http://www.wikidata.org/entity/Q13917",
+  "itemLabel": "Seine-Saint-Denis"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q12765",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Deux-S%C3%A8vres",
+  "nomLocal": "Deux-Sèvres",
+  "iso": "FR-79",
+  "coord": "Point(-0.462222222 46.325)",
+  "parent": "http://www.wikidata.org/entity/Q18678082",
+  "itemLabel": "Deux-Sèvres"
+ }
+]

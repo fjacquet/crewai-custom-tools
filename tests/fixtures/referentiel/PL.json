@@ -1,0 +1,262 @@
+[
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.631944444 50.8725)",
+  "parent": "http://www.wikidata.org/entity/Q25413548",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.627229193 50.866209579)",
+  "parent": "http://www.wikidata.org/entity/Q25413548",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.631944444 50.8725)",
+  "parent": "http://www.wikidata.org/entity/Q24932577",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.627229193 50.866209579)",
+  "parent": "http://www.wikidata.org/entity/Q24932577",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.631944444 50.8725)",
+  "parent": "http://www.wikidata.org/entity/Q920549",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.627229193 50.866209579)",
+  "parent": "http://www.wikidata.org/entity/Q920549",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.631944444 50.8725)",
+  "parent": "http://www.wikidata.org/entity/Q617213",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.627229193 50.866209579)",
+  "parent": "http://www.wikidata.org/entity/Q617213",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.631944444 50.8725)",
+  "parent": "http://www.wikidata.org/entity/Q54183",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q102317",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Kielce",
+  "nomLocal": "Kielce",
+  "iso": "PL-KI",
+  "coord": "Point(20.627229193 50.866209579)",
+  "parent": "http://www.wikidata.org/entity/Q54183",
+  "itemLabel": "Kielce"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54150",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Basse-Sil%C3%A9sie",
+  "nomLocal": "województwo dolnośląskie",
+  "iso": "PL-02",
+  "coord": "Point(16.383333333 51.083333333)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Basse-Silésie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54155",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Lublin",
+  "nomLocal": "województwo lubelskie",
+  "iso": "PL-06",
+  "coord": "Point(22.9 51.216666666)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Lublin"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54153",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Cou%C3%AFavie-Pom%C3%A9ranie",
+  "nomLocal": "województwo kujawsko-pomorskie",
+  "iso": "PL-04",
+  "coord": "Point(18.483333333 53.066666666)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Couïavie-Poméranie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54158",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_%C5%81%C3%B3d%C5%BA",
+  "nomLocal": "województwo łódzkie",
+  "iso": "PL-10",
+  "coord": "Point(19.416666666 51.6)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Łódź"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54159",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Petite-Pologne",
+  "nomLocal": "województwo małopolskie",
+  "iso": "PL-12",
+  "coord": "Point(20.266666666 49.85)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Petite-Pologne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54157",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Lubusz",
+  "nomLocal": "województwo lubuskie",
+  "iso": "PL-08",
+  "coord": "Point(15.333333333 52.183333333)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Lubusz"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54171",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_d%27Opole",
+  "nomLocal": "województwo opolskie",
+  "iso": "PL-16",
+  "coord": "Point(17.9 50.633333333)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie d'Opole"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54169",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Mazovie",
+  "nomLocal": "województwo mazowieckie",
+  "iso": "PL-14",
+  "coord": "Point(21.001666666 52.242777777)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Mazovie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54175",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_des_Basses-Carpates",
+  "nomLocal": "województwo podkarpackie",
+  "iso": "PL-18",
+  "coord": "Point(22.166666666 49.95)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "Basses-Carpates"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54177",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Podlachie",
+  "nomLocal": "województwo podlaskie",
+  "iso": "PL-20",
+  "coord": "Point(22.931938888 53.267219444)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Podlachie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54183",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Sainte-Croix",
+  "nomLocal": "województwo świętokrzyskie",
+  "iso": "PL-26",
+  "coord": "Point(20.766666666 50.75)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Sainte-Croix"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54180",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Pom%C3%A9ranie",
+  "nomLocal": "województwo pomorskie",
+  "iso": "PL-22",
+  "coord": "Point(18.0 54.183333333)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "Poméranie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54181",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Sil%C3%A9sie",
+  "nomLocal": "województwo śląskie",
+  "iso": "PL-24",
+  "coord": "Point(19.0 50.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Silésie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54187",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Grande-Pologne",
+  "nomLocal": "województwo wielkopolskie",
+  "iso": "PL-30",
+  "coord": "Point(17.233333333 52.333333333)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Grande-Pologne"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54184",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Varmie-Mazurie",
+  "nomLocal": "województwo warmińsko-mazurskie",
+  "iso": "PL-28",
+  "coord": "Point(20.816666666 53.85)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "voïvodie de Varmie-Mazurie"
+ },
+ {
+  "item": "http://www.wikidata.org/entity/Q54188",
+  "ancre": "true",
+  "art": "https://fr.wikipedia.org/wiki/Vo%C3%AFvodie_de_Pom%C3%A9ranie-Occidentale",
+  "nomLocal": "województwo zachodniopomorskie",
+  "iso": "PL-32",
+  "coord": "Point(15.533333333 53.6)",
+  "parent": "http://www.wikidata.org/entity/Q36",
+  "itemLabel": "Poméranie-Occidentale"
+ }
+]

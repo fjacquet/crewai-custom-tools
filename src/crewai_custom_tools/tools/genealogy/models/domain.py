@@ -304,3 +304,16 @@ class CollisionIso(BaseModel):
     iso: str
     qids: list[str]
     libelles: list[str]
+
+
+class EntiteEcartee(BaseModel):
+    """Une entité que les règles de filtrage n'ont pas retenue, et pourquoi.
+
+    Ce canal existe pour qu'aucune disparition ne soit muette : sans lui, « ce pays a 12
+    subdivisions » est indiscernable de « 113 entités sont tombées ».
+    """
+
+    qid: str
+    iso: str
+    libelle_fr: str
+    motif: str
