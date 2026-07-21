@@ -150,14 +150,19 @@ def test_type_connu_reste_insensible_aux_blancs():
     assert evaluer_preuve(b, a) == PREUVE_COORDONNEES
 
 
-def test_codes_blancs_ne_prouvent_rien():
+@pytest.mark.parametrize(
+    ("code_a", "code_b"),
+    [(" ", " "), (" ", "  "), ("\t", " ")],
+    ids=["memes-blancs", "blancs-de-longueurs-differentes", "tabulation-contre-espace"],
+)
+def test_codes_blancs_ne_prouvent_rien(code_a, code_b):
     """Un champ vidé en tapant une espace n'est pas un identifiant canonique.
 
-    `" "` est truthy en Python ; sans nettoyage, deux codes blancs se prouvent
-    l'un l'autre — et le code prouve quel que soit le type, donc jusqu'entre un
-    département et une commune."""
-    a = _lieu("P0301", code=" ", place_type="Department")
-    b = _lieu("P0008", code="  ", place_type="Municipality")
+    `" "` est truthy en Python ; sans nettoyage, deux codes blancs identiques se
+    prouvent l'un l'autre — et le code prouve quel que soit le type, donc
+    jusqu'entre un département et une commune."""
+    a = _lieu("P0301", code=code_a, place_type="Department")
+    b = _lieu("P0008", code=code_b, place_type="Municipality")
     assert evaluer_preuve(a, b) == ""
     assert evaluer_preuve(b, a) == ""
 
