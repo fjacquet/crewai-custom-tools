@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections import defaultdict
+from itertools import combinations
 
 from crewai_custom_tools.tools.genealogy.models.domain import (
     PlaceFacts, PlaceMergeProposition,
@@ -165,6 +166,36 @@ _MOTIFS = {
 }
 
 
+def _oppose_un_veto(a: PlaceFacts, b: PlaceFacts) -> bool:
+    """Deux codes officiels renseignés et différents : la preuve de deux entités. Pur.
+
+    `evaluer_preuve` connaît ce veto mais ne le distingue pas dans ce qu'elle
+    rend : la chaîne vide y confond « rien ne prouve » et « quelque chose
+    interdit ». Or les deux ne se propagent pas pareil — une absence de preuve
+    ne concerne que la paire, un veto disqualifie tout le groupe. D'où ce
+    prédicat séparé, qui laisse `evaluer_preuve` intacte.
+    """
+    code_a, code_b = _renseigne(a.code), _renseigne(b.code)
+    return bool(code_a and code_b and code_a != code_b)
+
+
+def _grappe_vetoee(membres: list[PlaceFacts]) -> bool:
+    """Vrai si UNE paire quelconque du groupe est vetoée — pas seulement avec le survivant.
+
+    La preuve n'était évaluée qu'entre le survivant et chaque absorbé, si bien
+    qu'une grappe pouvait porter la preuve qu'elle mélange deux entités réelles
+    distinctes et produire quand même des fusions automatiques : le membre sans
+    code se rattachait au survivant, et un simple compte de rétroliens de plus
+    chez un autre membre l'aurait rattaché à l'entité voisine. Une écriture
+    irréversible ne peut pas dépendre de ça. Si le groupe contient la preuve
+    qu'il mélange des entités distinctes, aucune de ses fusions n'est sûre.
+
+    Quadratique, mais sur des homonymes d'un même nom — quelques membres.
+    """
+    return any(_oppose_un_veto(a, b)
+               for a, b in combinations(membres, 2))
+
+
 def etager_lieux(lieux: list[PlaceFacts]) -> list[PlaceMergeProposition]:
     """Groupe les homonymes, choisit un survivant par groupe, évalue chaque autre. Pur.
 
@@ -173,6 +204,22 @@ def etager_lieux(lieux: list[PlaceFacts]) -> list[PlaceMergeProposition]:
     fusionner deux lieux n'en renomme aucun autre. C'est ce qui rend inutile la
     boucle de convergence que la déduplication des personnes exige — voir l'écart
     documenté en tête du plan.
+
+    Une preuve ne suffit pas à conclure « auto ». Deux gardes la dégradent en
+    relecture humaine, parce qu'une fusion automatique est irréversible et que
+    personne ne la relit :
+
+      - **perte réelle** : l'absorbé porte un attribut que le survivant n'a pas.
+        C'est `perte_evitee` appelée dans l'autre sens que pour le rapport —
+        (survivant, absorbe) au lieu de (absorbe, survivant) — donc exactement ce
+        que la fusion va effacer. Une fusion automatique ne détruit jamais
+        d'information ; c'est là qu'un humain doit trancher, et le motif nomme ce
+        qui disparaîtrait.
+      - **veto de grappe** : voir `_grappe_vetoee`. Le veto ne se lit pas dans le
+        verdict de la paire courante, il disqualifie le groupe entier.
+
+    Les deux se disent dans le `reason` : le modèle ne gagne aucun champ, le motif
+    porte seul l'explication.
     """
     groupes: dict[str, list[PlaceFacts]] = defaultdict(list)
     for lieu in lieux:
@@ -185,17 +232,28 @@ def etager_lieux(lieux: list[PlaceFacts]) -> list[PlaceMergeProposition]:
         if len(membres) < 2:
             continue
         survivant = choisir_survivant(membres)
+        vetoee = _grappe_vetoee(membres)
         for absorbe in sorted(membres, key=lambda p: p.gramps_id):
             if absorbe.handle == survivant.handle:
                 continue
             preuve = evaluer_preuve(survivant, absorbe)
+            # Ordre (survivant, absorbe) : le miroir exact de l'appel du champ
+            # `perte_evitee` plus bas. Ce que l'absorbé porte et que le survivant
+            # n'a pas, c'est ce que la fusion détruira réellement.
+            perte_subie = perte_evitee(survivant, absorbe)
+            auto = bool(preuve) and not perte_subie and not vetoee
+            motifs = [_MOTIFS[preuve] if preuve else "aucune preuve"]
+            if perte_subie:
+                motifs.append(f"perte irréversible ({perte_subie})")
+            if vetoee:
+                motifs.append("veto de grappe — codes officiels distincts entre deux membres")
             propositions.append(PlaceMergeProposition(
                 gramps_id_keep=survivant.gramps_id, handle_keep=survivant.handle,
                 gramps_id_merge=absorbe.gramps_id, handle_merge=absorbe.handle,
                 canonical=survivant.nom,
-                reason=(f"homonymes — {_MOTIFS[preuve]}" if preuve
-                        else "homonymes — aucune preuve : relecture humaine"),
-                verdict="auto" if preuve else "arbitrage",
+                reason=("homonymes — " + " ; ".join(motifs)
+                        + ("" if auto else " : relecture humaine")),
+                verdict="auto" if auto else "arbitrage",
                 # Ordre (absorbe, survivant) à dessein, PAS (survivant, absorbe) :
                 # perte_evitee(a, b) rapporte les champs présents chez « b » et
                 # absents chez « a ». Le rapport doit nommer ce que le survivant

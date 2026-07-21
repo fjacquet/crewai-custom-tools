@@ -509,18 +509,101 @@ def test_etage_lieux_reason_arbitrage_mentionne_la_relecture_humaine():
 
 def test_etage_lieux_verdicts_mixtes_dans_une_meme_grappe():
     """Un survivant peut prouver sa fusion avec un absorbé (code commun) tout en
-    n'en prouvant aucune avec un autre (code différent, veto) — les deux
-    propositions du même groupe portent alors des verdicts différents. Rien
-    dans le brief ne verrouillait ce mélange (la grappe de trois testée
-    n'exerçait que le cas 'tout auto')."""
+    n'en prouvant aucune avec un autre — les deux propositions du même groupe
+    portent alors des verdicts différents. Rien dans le brief ne verrouillait ce
+    mélange (la grappe de trois testée n'exerçait que le cas 'tout auto').
+
+    L'absence de preuve pour C vient ici de son TYPE (Department contre
+    Municipality, sans code pour trancher), et non plus d'un code officiel
+    différent : depuis la propagation du veto à la grappe, un code distinct
+    disqualifierait le groupe entier et le mélange de verdicts serait
+    impossible — c'est précisément ce que verrouille
+    `test_un_veto_entre_deux_absorbes_bloque_toute_la_grappe`. Le mélange
+    lui-même reste réel, et c'est lui que ce test protège.
+    """
     props = etager_lieux([
         _commune("S", "Groupe", code="18044", lat="47.1", long="2.3", retroliens=100),
         _commune("B", "Groupe", code="18044", retroliens=5),
-        _commune("C", "Groupe", code="99999", retroliens=1),
+        _commune("C", "Groupe", place_type="Department", retroliens=1),
     ])
     assert len(props) == 2
     verdicts = {p.gramps_id_merge: p.verdict for p in props}
     assert verdicts == {"B": "auto", "C": "arbitrage"}
+
+
+def test_une_fusion_auto_ne_detruit_jamais_un_attribut_du_lieu_absorbe():
+    """C1 — le survivant peut être choisi SANS code face à un absorbé qui en porte un.
+
+    Deux « Cerbois » de richesse égale (2 chacun) : P1 porte coordonnées +
+    rattachement, P2 coordonnées + le code officiel 18044. La richesse ne
+    départage pas, les rétroliens si — 99 contre 1 — et P1 survit. Les types
+    sont égaux et les coordonnées identiques, donc la voie des coordonnées
+    conclut : verdict automatique, irréversible, que personne ne relit. Le
+    18044 — « l'identifiant canonique » de la docstring du module, ce qui fonde
+    toute la force de la preuve — serait écrasé, et le rapport annoncerait la
+    perte ÉVITÉE (« rattachement ») sans jamais nommer la perte SUBIE.
+
+    Une fusion automatique ne doit rien détruire : dès que l'absorbé porte un
+    attribut absent du survivant, c'est à un humain de trancher, et le motif
+    doit nommer ce qui disparaîtrait.
+    """
+    props = etager_lieux([
+        _commune("P1", "Cerbois", lat="47.1", long="2.3", a_parent=True, retroliens=99),
+        _commune("P2", "Cerbois", lat="47.1", long="2.3", code="18044", retroliens=1),
+    ])
+    assert len(props) == 1
+    p = props[0]
+    assert (p.gramps_id_keep, p.gramps_id_merge) == ("P1", "P2")
+    assert p.perte_evitee == "rattachement"       # ce que l'ordre inverse aurait coûté
+    assert p.verdict == "arbitrage"
+    assert "perte" in p.reason and "code" in p.reason
+    assert "relecture humaine" in p.reason
+
+
+def test_un_veto_entre_deux_absorbes_bloque_toute_la_grappe():
+    """C2 — la preuve n'était évaluée qu'entre le survivant et chaque absorbé.
+
+    Trois « Bourges » aux mêmes coordonnées : P0010 (code 18033, 40 rétroliens),
+    P0011 (code 18034, 39 rétroliens) et P0012 (sans code, 5 rétroliens). Le
+    couple P0010/P0011 est vetoé — deux codes officiels distincts, donc deux
+    entités réelles. Mais P0012, comparé au seul survivant, prouvait par
+    coordonnées et partait en fusion automatique irréversible ; et il suffirait
+    que P0011 passe à 41 rétroliens pour qu'il soit absorbé dans l'AUTRE entité.
+    Un rattachement irréversible ne peut pas basculer sur un compte de
+    rétroliens quand l'algorithme a lui-même établi que la grappe mélange deux
+    entités distinctes : le veto se propage à tout le groupe.
+    """
+    props = etager_lieux([
+        _commune("P0010", "Bourges", code="18033", lat="47.08", long="2.39", retroliens=40),
+        _commune("P0011", "Bourges", code="18034", lat="47.08", long="2.39", retroliens=39),
+        _commune("P0012", "Bourges", lat="47.08", long="2.39", retroliens=5),
+    ])
+    assert len(props) == 2
+    assert {p.gramps_id_keep for p in props} == {"P0010"}
+    assert all(p.verdict == "arbitrage" for p in props)
+    contamine = next(p for p in props if p.gramps_id_merge == "P0012")
+    assert "grappe" in contamine.reason
+    assert "relecture humaine" in contamine.reason
+
+
+def test_une_grappe_saine_fusionne_toujours_automatiquement():
+    """La porte reste ouverte : ni veto ni perte, donc les trois fusionnent seules.
+
+    Garde-fou contre un durcissement excessif des deux corrections ci-dessus —
+    trois lieux du même code officiel, tous également renseignés : rien à
+    détruire, aucune paire vetoée, la fusion automatique reste légitime.
+    """
+    props = etager_lieux([
+        _commune("P0178", "Verrens-Arvey", code="73312", lat="45.6", long="6.4",
+                 a_parent=True, retroliens=4),
+        _commune("P0192", "Verrens-Arvey", code="73312", lat="45.6", long="6.4",
+                 a_parent=True, retroliens=19),
+        _commune("P0198", "Verrens-Arvey", code="73312", lat="45.6", long="6.4",
+                 a_parent=True, retroliens=5),
+    ])
+    assert len(props) == 2
+    assert all(p.verdict == "auto" for p in props)
+    assert all(p.reason == "homonymes — code officiel identique" for p in props)
 
 
 def test_etage_lieux_ordonne_les_groupes_par_nom_normalise():
