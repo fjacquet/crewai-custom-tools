@@ -4,6 +4,49 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.25.0] - 2026-07-22
+
+### Added
+
+- **Référentiel des subdivisions administratives** — paquet `genealogy/referentiel/`, qui résout
+  depuis Wikidata les subdivisions d'un pays (coordonnées, QID, article Wikipédia) pour qu'un arbre
+  Gramps ait des contenants identifiés où rattacher ses communes. Neuf pays configurés : FR, IT, BE,
+  CH, DE, US, DZ, PL, SY.
+  - `config.py` — une ligne par pays : préfixe ISO, QID, langue du nom vernaculaire, types Gramps
+    par niveau. **Types natifs uniquement** : un type personnalisé est une ligne de plus à ne pas
+    oublier dans chaque filtre par type, avec un rattachement muet au bout.
+  - `wikidata.py` — sélection par **code ISO 3166-2 (`P300`)**, jamais par classe `P31` : mesuré, la
+    classe `provincia` rate Naples et Milan, qui sont des *villes métropolitaines*. Le mapper est
+    pur et testé hors ligne sur des **charges Wikidata réelles figées**.
+  - Le **niveau vient du rattachement `P131`**, jamais de la forme du code — en France les régions
+    sont alphabétiques et les départements numériques, en Italie c'est l'inverse.
+  - **Ancre pays** : les régions françaises pendent sous `Q212429` *France métropolitaine*, qui n'a
+    pas de code ISO. Sans ancre, 12 entités françaises survivaient sur 125, toutes ultramarines. La
+    requête demande donc si le pays est atteignable en un à trois sauts de `P131` — pas quatre, à
+    quatre elle repêche du bruit.
+  - **Rien n'est écarté en silence** : le mapper rend trois listes — retenues, collisions, et
+    écartées avec leur motif. C'est l'absence de ce troisième canal qui avait masqué le défaut
+    ci-dessus.
+  - `chargement.py` — transport temporisé avec reprises. Un pays qui échoue après reprises est
+    *signalé*, jamais fatal : les autres sont livrés.
+- `Subdivision`, `CollisionIso` et `EntiteEcartee` (`models/domain.py`).
+
+### Fixed
+
+- **Le canton suisse prend le type Gramps natif `State`** au lieu du type personnalisé `Canton`.
+- **`parse_pname` reconnaît un nom sans virgule suffixé d'un code cantonal** — `Montreux (VD)`.
+  Sans cette règle, le pays restait vide, `resolve_ch` n'était **jamais appelé**, et le géocodeur
+  mondial de repli rendait une hiérarchie sans canton. Dix-neuf lieux d'un arbre réel étaient dans
+  ce cas. La garde « sans virgule » est délibérée : `(XX)` en suffixe existe ailleurs, et `GE`,
+  `BE`, `JU` sont des chaînes courtes.
+- **`DEFAULT_RATE_LIMITS` gagne une entrée `Wikidata`** — le nom de fournisseur était déjà employé
+  sans qu'aucune limite ne lui corresponde, donc le limiteur n'y freinait rien.
+
+> Note de publication : ce travail était présent dans `main` avant le tag `v0.24.0`, mais celui-ci
+> pointe sur un commit antérieur à sa fusion et ne le contient pas.
+
+---
+
 ## [0.24.0] - 2026-07-22
 
 ### Added
