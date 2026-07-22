@@ -18,6 +18,8 @@ _PROVIDER = "Swisstopo"
 
 # swisstopo étiquette chaque commune "Nom (XX)" où XX = code du canton. On récupère le canton
 # comme niveau parent (Suisse › Canton › Commune), analogue au département FR / Land DE.
+# Le type Gramps posé est `State` et non `Canton` : `Canton` n'est pas un type natif, et
+# chaque type personnalisé est une ligne de plus à ne pas oublier dans les filtres par type.
 _CANTON_RE = re.compile(r"\s*\(([A-Z]{2})\)\s*$")
 _CANTONS = {
     "AG": "Argovie", "AI": "Appenzell Rhodes-Intérieures", "AR": "Appenzell Rhodes-Extérieures",
@@ -39,6 +41,12 @@ def _split_label(label: str) -> tuple[str, str | None]:
     return label.strip(), None
 
 
+def split_canton_suffix(label: str) -> tuple[str, str | None]:
+    """'Montreux (VD)' -> ('Montreux', 'Vaud'). Alias public de `_split_label`, utilisé par
+    le parseur de lieux pour reconnaître un nom suisse dépourvu de segment pays."""
+    return _split_label(label)
+
+
 def _http_get(url: str, params: dict) -> dict:
     get_rate_limiter().acquire(_PROVIDER)
     resp = httpx.get(url, params=params, timeout=15.0)
@@ -58,7 +66,7 @@ def map_swiss(payload: dict, parsed: ParsedPlace) -> ResolvedPlace | None:
     name, canton = _split_label(labels[best])
     levels = [PlaceLevel(name="Suisse", place_type="Country")]
     if canton:
-        levels.append(PlaceLevel(name=canton, place_type="Canton"))
+        levels.append(PlaceLevel(name=canton, place_type="State"))
     return ResolvedPlace(
         name=name or parsed.commune, place_type="Municipality",
         lat=str(attrs["lat"]), long=str(attrs["lon"]),     # WGS84 ; jamais x/y (LV95)

@@ -49,6 +49,9 @@ DEFAULT_RATE_LIMITS: dict[str, RateLimit] = {
     "Nominatim": RateLimit(requests_per_minute=60, burst=1),   # ODbL: max 1 req/s, no burst
     "Swisstopo": RateLimit(requests_per_minute=600, burst=10),  # ~10 req/s, conservative
     "GeoApiGouvFr": RateLimit(requests_per_minute=600, burst=10),  # ~10 req/s, conservative
+    # Wikidata Query Service : aucune limite publiée, mais l'endpoint public étrangle
+    # agressivement — 502 puis 504 observés pendant la conception du référentiel.
+    "Wikidata": RateLimit(requests_per_minute=30, burst=5),
 }
 
 # env var -> (provider, premium limit); mirrors finwiz's premium-tier switches

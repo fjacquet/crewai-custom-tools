@@ -1,6 +1,6 @@
 """Centralized CrewAI custom tools library."""
 
-__version__ = "0.23.1"
+__version__ = "0.24.0"
 
 # 1. Web Search & Scraping
 from crewai_custom_tools.tools.web.perplexity import PerplexitySearchTool

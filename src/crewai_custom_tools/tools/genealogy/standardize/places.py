@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
+from crewai_custom_tools.tools.genealogy.geo.suisse import split_canton_suffix
 from crewai_custom_tools.tools.genealogy.models.domain import ParsedPlace
 
 CORSICA_RE = re.compile(r"^2[AB]\d{3}$")             # 2A004 : unambiguously INSEE
@@ -95,6 +96,16 @@ def parse_pname(raw: str) -> ParsedPlace:
         commune = segments[country_idx]
         commune_idx = country_idx
         country = ""
+
+    # Forme `Montreux (VD)` : un nom sans virgule suffixé d'un code cantonal suisse. Le
+    # segment unique a été pris pour la commune et le pays est resté vide, donc resolve_ch
+    # n'aurait jamais été appelé. La condition « sans virgule » est le garde-fou : `(XX)`
+    # en suffixe existe ailleurs (`(NY)`), et `GE`/`BE`/`JU` sont des chaînes courtes.
+    if not country and len(segments) == 1:
+        nom_nu, canton = split_canton_suffix(commune)
+        if canton:
+            commune = nom_nu
+            country = "Suisse"
 
     # Département / région = remaining non-empty segments, excluded BY INDEX (not value).
     used = {country_idx, insee_idx, postal_idx, ags_idx, commune_idx}

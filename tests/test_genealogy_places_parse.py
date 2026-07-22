@@ -114,3 +114,44 @@ def test_parse_no_ags_when_no_8_digit_segment():
     p = parse_pname(", , Bourges, 18033, 18000, Cher, Centre-Val de Loire, France")
     assert p.ags is None                 # non-régression: 5 chiffres reste INSEE/postal
     assert p.insee == "18033"
+
+
+def test_suffixe_de_code_cantonal_sur_un_nom_sans_virgule_donne_la_suisse():
+    """Forme réelle de 19 lieux de l'arbre : `Montreux (VD)`. Sans cette règle, le pays
+    reste vide, resolve_ch n'est jamais appelé et la hiérarchie revient vide."""
+    from crewai_custom_tools.tools.genealogy.standardize.places import parse_pname
+
+    parsed = parse_pname("Montreux (VD)")
+    assert parsed.country == "Suisse"
+    assert parsed.commune == "Montreux"
+
+
+def test_le_suffixe_est_retire_de_la_commune_interrogee():
+    from crewai_custom_tools.tools.genealogy.standardize.places import parse_pname
+
+    assert parse_pname("Genève (GE)").commune == "Genève"
+
+
+def test_un_nom_a_virgules_ne_declenche_pas_la_regle_cantonale():
+    """Un nom à virgules a déjà un segment pays exploitable : la règle n'a pas à s'en mêler."""
+    from crewai_custom_tools.tools.genealogy.standardize.places import parse_pname
+
+    parsed = parse_pname("Springfield (BE), Illinois, United States")
+    assert parsed.country == "États-Unis"
+
+
+def test_un_suffixe_a_deux_lettres_hors_table_reste_non_suisse():
+    from crewai_custom_tools.tools.genealogy.standardize.places import parse_pname
+
+    parsed = parse_pname("Springfield (NY)")
+    assert parsed.country != "Suisse"
+
+
+def test_un_nom_a_virgule_finale_tronquee_ne_declenche_pas_la_regle_cantonale():
+    """Sans la garde `len(segments) == 1`, `Springfield (BE),` — artefact d'un titre tronqué —
+    passerait pour suisse : le pays reste vide après le repli, et le suffixe `(BE)` suffirait
+    à lui seul à déclencher la règle."""
+    from crewai_custom_tools.tools.genealogy.standardize.places import parse_pname
+
+    parsed = parse_pname("Springfield (BE),")
+    assert parsed.country != "Suisse"
