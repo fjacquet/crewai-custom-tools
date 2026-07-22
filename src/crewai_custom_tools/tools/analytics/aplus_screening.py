@@ -169,16 +169,19 @@ class APlusScreeningTool(BaseTool):
                     # Get basic market data for the symbol
                     market_data = self._utils.get_basic_market_data(symbol, asset_type)
 
-                    if market_data and "error" not in market_data:
-                        # Apply asset-specific filters
-                        if self._criteria.passes_screening_filters(market_data, asset_type, final_criteria):
-                            filtered_candidates.append(
-                                {
-                                    "symbol": symbol,
-                                    "market_data": market_data,
-                                    "screening_criteria": final_criteria,
-                                }
-                            )
+                    # Apply asset-specific filters
+                    if (
+                        market_data
+                        and "error" not in market_data
+                        and self._criteria.passes_screening_filters(market_data, asset_type, final_criteria)
+                    ):
+                        filtered_candidates.append(
+                            {
+                                "symbol": symbol,
+                                "market_data": market_data,
+                                "screening_criteria": final_criteria,
+                            }
+                        )
 
                 except (KeyError, TypeError, ValueError, AttributeError) as e:
                     # Skip symbols that fail to process

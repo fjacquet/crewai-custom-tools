@@ -175,18 +175,22 @@ class ETFAnalysisTool(BaseTool):
                 logger.debug(f"Concentration: Top 10 = {concentration['top_n_concentration'] * 100:.1f}%, Rating = {concentration['concentration_rating']}")
 
             # Overall efficiency score
-            if "tracking_error" in results["metrics"] and "expense_ratio_pct" in results["metrics"] and "liquidity" in results["metrics"]:
-                if input_data.expense_ratio is not None:
-                    efficiency = calculate_etf_efficiency_score(
-                        tracking_error=results["metrics"]["tracking_error"],
-                        expense_ratio=input_data.expense_ratio,
-                        liquidity_score=results["metrics"]["liquidity"]["liquidity_score"],
-                    )
+            if (
+                "tracking_error" in results["metrics"]
+                and "expense_ratio_pct" in results["metrics"]
+                and "liquidity" in results["metrics"]
+                and input_data.expense_ratio is not None
+            ):
+                efficiency = calculate_etf_efficiency_score(
+                    tracking_error=results["metrics"]["tracking_error"],
+                    expense_ratio=input_data.expense_ratio,
+                    liquidity_score=results["metrics"]["liquidity"]["liquidity_score"],
+                )
 
-                    results["metrics"]["efficiency"] = efficiency
-                    results["ratings"]["overall_efficiency"] = efficiency["efficiency_rating"]
+                results["metrics"]["efficiency"] = efficiency
+                results["ratings"]["overall_efficiency"] = efficiency["efficiency_rating"]
 
-                    logger.info(f"ETF efficiency score: {efficiency['efficiency_score']:.0f}/100 ({efficiency['efficiency_rating']})")
+                logger.info(f"ETF efficiency score: {efficiency['efficiency_score']:.0f}/100 ({efficiency['efficiency_rating']})")
 
             # Summary
             results["summary"] = {

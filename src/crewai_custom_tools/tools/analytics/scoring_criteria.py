@@ -26,10 +26,14 @@ def assess_market_regime(
     """Assess current market regime from context data."""
     try:
         # Use cached regime if recent (within 1 hour)
-        if cache and cache.get("regime") and cache.get("timestamp"):
-            if (datetime.now() - cache["timestamp"]).seconds < 3600:
-                regime: MarketRegime = cache["regime"]
-                return regime
+        if (
+            cache
+            and cache.get("regime")
+            and cache.get("timestamp")
+            and (datetime.now() - cache["timestamp"]).seconds < 3600
+        ):
+            regime: MarketRegime = cache["regime"]
+            return regime
 
         # Use real macro data when available
         macro_snapshot = market_context.get("macro_snapshot")
