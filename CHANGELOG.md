@@ -4,6 +4,43 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.24.0] - 2026-07-22
+
+### Added
+
+- **Détection des doublons de lieux** — `analysis/place_duplicates.py`, pur et testé hors ligne.
+  Pendant du détecteur de doublons de personnes, avec une différence décisive : une commune possède
+  un **identifiant canonique** (son code officiel) que les personnes n'ont pas, ce qui rend la preuve
+  plus forte et plus simple à énoncer. La doctrine, elle, ne change pas (ADR 0013) : **la ressemblance
+  ne prouve jamais l'identité**.
+  - `normaliser_nom_lieu` — clé de comparaison : casse, accents, séparateurs, ligatures (`œ`, `æ`) et
+    apostrophe typographique neutralisés. L'apostrophe reste un **séparateur** et non un caractère
+    supprimé, sans quoi `L'Isle-Adam` se confondrait avec `Lisle-Adam`. Les lettres barrées (`ø`) sont
+    délibérément hors périmètre, et un test verrouille cette frontière.
+  - `evaluer_preuve` — **veto** d'abord : deux codes officiels renseignés et différents interdisent la
+    fusion, quels que soient les types et les coordonnées. C'est lui qui protège le cas réel de Paris,
+    présent en `Department` code 75 **et** en `Municipality` code 75056 — deux entités administratives
+    distinctes. Hors veto, deux voies : codes identiques (canonique, vaut entre types différents), ou
+    même type **connu** et coordonnées identiques. Les coordonnées ne prouvent **jamais** rien entre
+    types différents ni entre types inconnus — un contenant géocodé reçoit le point de son chef-lieu.
+  - `choisir_survivant` — richesse d'abord, rétroliens ensuite, identifiant en dernier recours (règle
+    **totale**, donc reproductible). La fusion Gramps unionne les listes mais conserve les **champs
+    simples** du survivant : garder une coquille vide effacerait définitivement code et coordonnées.
+  - `etager_lieux` — groupement par égalité de nom normalisé, une relation d'équivalence : les groupes
+    sont complets dès la lecture et fusionner deux lieux n'en renomme aucun autre. **Aucune boucle de
+    convergence n'est donc nécessaire**, contrairement aux personnes. Une fusion automatique ne
+    détruit jamais d'information — dès que le lieu absorbé porte un attribut simple que le survivant
+    n'a pas, ou une **valeur concurrente**, la paire part en relecture humaine. Le veto se propage à
+    toute la grappe, mais **épargne les paires prouvées par un code identique** : sur les grappes à
+    deux entités, 92 % des paires qu'il dégradait étaient prouvées canoniquement.
+- `PlaceFacts` et les champs `verdict` / `perte_evitee` de `PlaceMergeProposition` (`models/domain.py`).
+  `PlaceFacts` porte l'**identifiant du contenant** et non un booléen : deux communes homonymes
+  rattachées à des contenants différents sont des entités distinctes, et ne fusionnent pas.
+- `PropositionAudit` gagne `date_iso` et `lieu_nom` — la donnée machine à côté de la phrase française,
+  pour qu'une commande d'application n'ait jamais à re-parser de la prose.
+
+---
+
 ## [0.22.0] - 2026-07-21
 
 ### Added
