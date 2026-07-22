@@ -1,6 +1,6 @@
 """Centralized CrewAI custom tools library."""
 
-__version__ = "0.26.0"
+__version__ = "0.27.0"
 
 # 1. Web Search & Scraping
 # 9. Core helpers (programmatic consumers)
