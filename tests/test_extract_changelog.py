@@ -99,6 +99,28 @@ def test_main_echoue_bruyamment_si_la_version_est_absente(tmp_path, capsys):
     assert capture.out == ""
 
 
+def test_main_echoue_sur_une_section_vide(tmp_path, capsys):
+    """Un heading ajouté mais pas encore rempli ne doit pas publier de page blanche."""
+    fichier = tmp_path / "CHANGELOG.md"
+    fichier.write_text(
+        "## [0.28.0] - 2026-07-23 — Section vide\n\n## [0.27.0] - 2026-07-22\n\n- Rempli.\n",
+        encoding="utf-8",
+    )
+    code = main(["v0.28.0", "--fichier", str(fichier)])
+    assert code == 1
+    capture = capsys.readouterr()
+    assert "vide" in capture.err
+    assert capture.out == ""
+
+
+def test_main_echoue_si_le_fichier_est_illisible(tmp_path, capsys):
+    code = main(["v0.28.0", "--fichier", str(tmp_path / "absent.md")])
+    assert code == 1
+    capture = capsys.readouterr()
+    assert "illisible" in capture.err
+    assert capture.out == ""
+
+
 def test_le_changelog_reel_expose_la_version_courante():
     """Garde de non-régression : le vrai CHANGELOG reste lisible par le script.
 

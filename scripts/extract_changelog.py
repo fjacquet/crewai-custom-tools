@@ -89,6 +89,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Aucune section « ## [{version}] » dans {args.fichier}", file=sys.stderr)
         return 1
 
+    if not corps.strip():
+        print(f"Section « ## [{version}] » vide dans {args.fichier}", file=sys.stderr)
+        return 1
+
     print(titre if args.titre else corps)
     return 0
 

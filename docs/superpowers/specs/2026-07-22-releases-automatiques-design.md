@@ -107,8 +107,10 @@ doit rien casser. Les lignes vides de bord sont retirées dans les deux cas.
 
 **Panne**
 
-Version introuvable → message sur `stderr` et code de sortie non nul. Jamais de release au corps
-vide : un CHANGELOG oublié doit faire rougir le workflow, pas publier une page blanche.
+Deux cas font échouer le script, tous deux avec message sur `stderr` et code de sortie non nul :
+version introuvable, **et** section présente mais vide (le heading ajouté avant que son contenu
+soit écrit). Jamais de release au corps vide : un CHANGELOG oublié — ou pas encore rempli — doit
+faire rougir le workflow, pas publier une page blanche.
 
 ### 3.2 `.github/workflows/release.yml`
 
@@ -145,6 +147,7 @@ valeurs rendues :
 | Section suivie d'une autre, **sans** `---` de fin | Le corps s'arrête au `## [` suivant ; dernière ligne de contenu préservée |
 | **Dernière** section du fichier | Le corps court jusqu'à EOF, sans déborder |
 | Version absente du CHANGELOG | Sortie non nulle, message explicite sur `stderr` |
+| Section présente mais **vide** | Sortie non nulle : un heading ajouté sans contenu ne publie pas de page blanche |
 | Argument `v0.28.0` vs `0.28.0` | Résultat identique |
 
 Le workflow lui-même n'est pas testé en CI — il n'est vérifiable qu'à l'exécution. Le rattrapage de
