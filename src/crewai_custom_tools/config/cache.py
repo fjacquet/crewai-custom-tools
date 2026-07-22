@@ -5,6 +5,7 @@ This module provides a simple file-based and memory caching system for API calls
 to avoid repeated requests and respect rate limits using SHA-256.
 """
 
+import contextlib
 import hashlib
 import json
 import logging
@@ -70,10 +71,8 @@ class CacheManager:
                     if ttl is not None:
                         if time.time() - timestamp >= ttl:
                             del self.memory_cache[key]
-                            try:
+                            with contextlib.suppress(OSError):
                                 filepath.unlink()
-                            except OSError:
-                                pass
                             return None
                         return val
 
@@ -82,10 +81,8 @@ class CacheManager:
                         return val
                     else:
                         del self.memory_cache[key]
-                        try:
+                        with contextlib.suppress(OSError):
                             filepath.unlink()
-                        except OSError:
-                            pass
                         return None
             except OSError:
                 # File deleted or cannot be stat'ed, invalidate memory cache
@@ -110,10 +107,8 @@ class CacheManager:
 
             if ttl is not None:
                 if time.time() - timestamp >= ttl:
-                    try:
+                    with contextlib.suppress(OSError):
                         filepath.unlink()
-                    except OSError:
-                        pass
                     return None
                 self.memory_cache[key] = (val, timestamp, expiry, mtime)
                 return val
@@ -122,16 +117,12 @@ class CacheManager:
                 self.memory_cache[key] = (val, timestamp, expiry, mtime)
                 return val
             else:
-                try:
+                with contextlib.suppress(OSError):
                     filepath.unlink()
-                except OSError:
-                    pass
         except (json.JSONDecodeError, OSError, KeyError, ValueError) as e:
             logger.warning(f"Purging corrupted cache file {filepath} due to error: {e}")
-            try:
+            with contextlib.suppress(OSError):
                 filepath.unlink()
-            except OSError:
-                pass
         return None
 
     def set(self, key: str, value: Any, ttl: int | None = None) -> None:
@@ -153,10 +144,8 @@ class CacheManager:
         """Clear all cached data."""
         self.memory_cache.clear()
         for filepath in self.cache_dir.glob("*.json"):
-            try:
+            with contextlib.suppress(OSError):
                 filepath.unlink()
-            except OSError:
-                pass
 
     def clear_expired(self, ttl: int | None = None) -> int:
         """Clear expired cache entries from memory and disk."""
@@ -201,17 +190,13 @@ class CacheManager:
                         is_expired = True
 
                 if is_expired:
-                    try:
+                    with contextlib.suppress(OSError):
                         filepath.unlink()
-                    except OSError:
-                        pass
                     removed_count += 1
             except (json.JSONDecodeError, OSError, KeyError, ValueError):
                 # Invalid or corrupt cache file, remove it
-                try:
+                with contextlib.suppress(OSError):
                     filepath.unlink()
-                except OSError:
-                    pass
                 removed_count += 1
         return removed_count
 

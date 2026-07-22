@@ -1,6 +1,7 @@
 """Twelve Data technical-indicator tools (RSI, MACD, Bollinger Bands)."""
 
 import os
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field

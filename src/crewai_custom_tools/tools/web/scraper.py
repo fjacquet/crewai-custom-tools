@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+
 import requests
 from bs4 import BeautifulSoup
 from crewai.tools import BaseTool
