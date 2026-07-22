@@ -12,7 +12,7 @@ def test_charger_pays_rend_les_subdivisions(monkeypatch):
     # dont l'unique parent EST le pays n'est rattachée à aucune ligne de l'univers et
     # `map_subdivisions` l'écarte comme « rattachement introuvable » (vérifié par essai).
     monkeypatch.setattr(chargement, "sparql_rows", lambda q, timeout=0: [
-        {"item": ENTITE + "Q1273", "itemLabel": "Vaud", "iso": "CH-VD",
+        {"item": ENTITE + "Q12771", "itemLabel": "Vaud", "iso": "CH-VD",
          "parent": ENTITE + "Q39", "ancre": "true"}])
     res = chargement.charger_pays(CH)
     assert res.erreur is None
@@ -26,7 +26,7 @@ def test_charger_pays_reessaye_puis_reussit(monkeypatch):
         appels["n"] += 1
         if appels["n"] < 3:
             raise chargement.RequestException("502 Bad Gateway")
-        return [{"item": ENTITE + "Q1273", "itemLabel": "Vaud", "iso": "CH-VD",
+        return [{"item": ENTITE + "Q12771", "itemLabel": "Vaud", "iso": "CH-VD",
                  "parent": ENTITE + "Q39", "ancre": "true"}]
 
     monkeypatch.setattr(chargement, "sparql_rows", flaky)
