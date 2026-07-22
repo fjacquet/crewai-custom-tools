@@ -4,7 +4,7 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
-## [0.27.0] - 2026-07-22
+## [0.27.0] - 2026-07-22 — Configuration de ruff et mise en conformité
 
 ### Changed
 
@@ -35,7 +35,7 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
-## [0.26.0] - 2026-07-22
+## [0.26.0] - 2026-07-22 — Champs structurés sur PropositionAudit
 
 ### Added
 
@@ -45,7 +45,7 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
-## [0.25.0] - 2026-07-22
+## [0.25.0] - 2026-07-22 — Référentiel des subdivisions administratives
 
 ### Added
 

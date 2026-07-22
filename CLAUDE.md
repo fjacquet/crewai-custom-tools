@@ -23,11 +23,12 @@ uv run pytest tests/test_osint_tools.py::test_github_search_success   # Single t
 uv run crewai-custom-tools-mcp         # Launch the FastMCP stdio server
 mkdocs build                           # Build docs site into site/ (also mkdocs serve)
 python scripts/generate_sbom.py        # Regenerate sbom.json
+uv run python scripts/extract_changelog.py vX.Y.Z   # Corps de la release d'un tag (--titre pour le titre)
 ```
 
 CI (`.github/workflows/ci.yml`) runs `python -m pytest -v` against Python 3.11, 3.12, and 3.13 on every push/PR to `main`. Docs deploy to GitHub Pages on push to `main`.
 
-Ruff runs in CI as its own `lint` job (`ruff check src tests`, must be clean) and ships in `[dev]`, so `uv run ruff check src tests` locally uses the same version. `models/__init__.py` and `models/reports/__init__.py` ignore `F403` via `[tool.ruff.lint.per-file-ignores]` — they are pure re-export aggregators.
+Ruff runs in CI as its own `lint` job (`ruff check src tests scripts`, must be clean) and ships in `[dev]`, so `uv run ruff check src tests scripts` locally uses the same version. `models/__init__.py` and `models/reports/__init__.py` ignore `F403` via `[tool.ruff.lint.per-file-ignores]` — they are pure re-export aggregators.
 
 ## Architecture
 
@@ -82,4 +83,5 @@ HTML templates live **inside the package** at `reporting/templates/` and are res
 - Architectural decisions are recorded as ADRs in `docs/adr/` — read the relevant ADR before changing packaging, MCP, auth, or deployment behavior, and add a new ADR for significant decisions.
 - Design specs and plans live under `docs/superpowers/`; the SDD progress ledger is in `.superpowers/sdd/`.
 - Bump `__version__` in `src/crewai_custom_tools/__init__.py` **and** `version` in `pyproject.toml` together — `tests/test_scaffold.py` compares the two sources, so they cannot drift silently (they did, 0.12.0→0.16.0, when the test still asserted a hardcoded literal).
-- Releasing is not done until the tag exists: bump both versions → CHANGELOG entry → `git tag -a vX.Y.Z` → `gh release create`. Five versions shipped to `main` untagged before this was written.
+- Releasing: bump both versions → CHANGELOG entry, **with a descriptor in the heading** (`## [0.28.0] - 2026-07-22 — Fusion des lieux`) → `git tag -a vX.Y.Z` → `git push origin main --follow-tags`. `--follow-tags` pushes the branch **and** the annotated tags it reaches; a bare `git push --tags` pushes the tag alone, and the workflow would then publish a release for a commit that sits on no branch. `.github/workflows/release.yml` publishes the GitHub Release on tag push, title and body extracted from that CHANGELOG section by `scripts/extract_changelog.py`. On the nominal path, don't run `gh release create` by hand — it collides with the workflow. Thirteen tags never got a release while this step was manual, which is why `v0.24.0` sat as "Latest" while the code said 0.27.0.
+- When a release run fails — missing or empty CHANGELOG section, tag/version mismatch, release already exists — fix `CHANGELOG.md` on `main`, then re-trigger with `git tag -f -a vX.Y.Z -m "vX.Y.Z" <commit> && git push --force origin vX.Y.Z` (`-m` matters: `git tag -a -f` without it opens an editor, which stalls a copy-pasted recovery). If the tag is already right and only the publication failed, `gh release create` by hand **is** the correct recovery; the prohibition above covers the nominal path only.
