@@ -41,6 +41,53 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.23.1] - 2026-07-21
+
+> Entrée **reconstituée a posteriori** (2026-07-22) depuis l'historique `v0.23.0..v0.23.1` :
+> cette version avait été taguée sans passer par le journal.
+
+### Fixed
+
+- `GrampsCreateEventTool` — le rattachement ne captait que `httpx.HTTPStatusError`. Une **coupure
+  réseau** (`RequestError`) survenant entre le POST réussi de l'événement et son rattachement
+  échappait donc à la garde, remontait en exception avalée par `@api_tool`, et **perdait le handle
+  de l'orphelin** — le défaut même que la 0.23.0 venait de corriger, par l'autre porte.
+  `httpx.HTTPError`, base commune, couvre les statuts **et** le réseau. Relevé en revue CodeRabbit.
+- Couverture ajoutée pour l'échec du POST lui-même (`success=False`) sur les deux outils de création,
+  plus un test d'échec réseau au rattachement.
+
+---
+
+## [0.23.0] - 2026-07-21
+
+> Entrée **reconstituée a posteriori** (2026-07-22) depuis l'historique `v0.22.0..v0.23.0` :
+> cette version avait été taguée sans passer par le journal.
+
+### Added
+
+- **Deux outils d'écriture pour l'import de relevés**, dans `gramps/write_tools.py` :
+  - `GrampsCreatePersonTool` — crée une personne **nue** : nom principal et genre, rien d'autre.
+    Ni événement, ni filiation — ce sont des écritures séparées et explicites. La casse du nom
+    reste à la charge de l'appelant, comme partout dans la couche d'écriture.
+  - `GrampsCreateEventTool` — crée un événement (type, date, lieu, citation) et le rattache à une
+    personne en **append-only** sur `event_ref_list`. `birth_ref_index` / `death_ref_index` ne sont
+    posés **que s'ils étaient absents** : un pointeur vital existant n'est jamais écrasé. Un handle
+    synthétique `DRYRUN:` n'entre jamais dans un objet réellement écrit.
+
+### Fixed
+
+- `GrampsCreateEventTool` — **l'orphelin est désormais signalé**. Le rattachement est un second
+  write non transactionnel : s'il échoue, l'événement **existe déjà**. Laisser `@api_tool` tout
+  avaler en une erreur indistincte perdait le handle et faisait passer une création réussie pour
+  un refus. L'outil rend donc un **succès qualifié** — `attached: False` plus le handle de
+  l'orphelin, seule prise pour le retrouver.
+
+### Changed
+
+- CI : actions GitHub portées sur Node 24, fin des avertissements Node 20.
+
+---
+
 ## [0.22.0] - 2026-07-21
 
 ### Added
