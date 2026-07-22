@@ -328,10 +328,9 @@ class PositionSizingTool:
         avg_portfolio_risk = 2.5
         total_portfolio_risk = avg_portfolio_risk * (portfolio.total_allocated_pct / 100.0)
 
-        if total_portfolio_risk > 0:
-            risk_contribution_pct = (risk_contribution / total_portfolio_risk) * 100.0
-        else:
-            risk_contribution_pct = 0.0
+        risk_contribution_pct = (
+            (risk_contribution / total_portfolio_risk) * 100.0 if total_portfolio_risk > 0 else 0.0
+        )
 
         return round(min(risk_contribution_pct, 100.0), 2)
 

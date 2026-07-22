@@ -451,17 +451,19 @@ def calculate_support_resistance_targets(prices: pd.Series, current_price: float
 
         # Identify resistance levels (local maxima above current price)
         resistance_levels = prices[(prices == local_max) & (prices > current_price)]
-        if len(resistance_levels) > 0:
-            resistance_price = float(resistance_levels.min())  # Nearest resistance
-        else:
-            resistance_price = current_price * 1.10  # Default 10% above
+        resistance_price = (
+            float(resistance_levels.min())  # Nearest resistance
+            if len(resistance_levels) > 0
+            else current_price * 1.10  # Default 10% above
+        )
 
         # Identify support levels (local minima below current price)
         support_levels = prices[(prices == local_min) & (prices < current_price)]
-        if len(support_levels) > 0:
-            support_price = float(support_levels.max())  # Nearest support
-        else:
-            support_price = current_price * 0.90  # Default 10% below
+        support_price = (
+            float(support_levels.max())  # Nearest support
+            if len(support_levels) > 0
+            else current_price * 0.90  # Default 10% below
+        )
 
         # Confidence based on how established the levels are
         confidence = 0.55
