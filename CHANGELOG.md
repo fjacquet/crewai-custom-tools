@@ -4,6 +4,16 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.26.0] - 2026-07-22
+
+### Added
+
+- `PropositionAudit` gagne `date_iso` et `lieu_nom` — la donnée machine à côté de la phrase
+  française, pour qu'une commande d'application n'ait jamais à re-parser de la prose. Requis par
+  la cible `apply deaths` de genecrew.
+
+---
+
 ## [0.25.0] - 2026-07-22
 
 ### Added
