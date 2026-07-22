@@ -11,24 +11,25 @@
 
 ## 📖 Welcome
 
-`crewai-custom-tools` unifies and centralizes overlapping, duplicated, and specialized multi-agent toolkits from five distinct source codebases into a single, cohesive **Universal Monolith (Approach A)** package.
+`crewai-custom-tools` unifies and centralizes overlapping, duplicated, and specialized multi-agent toolkits from three source codebases — `finwiz`, `osint_tools` and `epic_news` — into a single, cohesive **Universal Monolith (Approach A)** package.
 
 - **Source Code Repository**: [GitHub - fjacquet/crewai-custom-tools](https://github.com/fjacquet/crewai-custom-tools)
-- **Current Version**: [v0.11.0](https://github.com/fjacquet/crewai-custom-tools/blob/main/CHANGELOG.md#0110---2026-07-18)
+- **Changelog**: [CHANGELOG.md](https://github.com/fjacquet/crewai-custom-tools/blob/main/CHANGELOG.md) — the current version is the one in the release badge above.
 - **Interactive Documentation**: [GitHub Pages User Guide](https://fjacquet.github.io/crewai-custom-tools)
 
 ---
 
 ## 🛠️ Superpower Domains Included
 
-The library packs **111 standardized, Pydantic-validated tools** across six major categories:
+Every tool is a Pydantic-validated `BaseTool` returning the same `ToolResult` envelope, across seven domains:
 
 1. **Web Search & Scraping**: Perplexity AI queries, Serper.dev, auto-escalating crawlers (BeautifulSoup -> ScrapeNinja -> Firecrawl), Wikipedia REST interfaces, and RSS parsers.
 2. **Quantitative Stocks & Markets**: Yahoo Finance metrics, ETF holdings, CoinMarketCap quotes, Kraken balances, FRED macroeconomic observations, CNN Fear/Greed sentiment indexes, exchange rates, and pure-function analytics (valuation, ETF analysis, regulatory compliance, position sizing, price targets, A+ scoring/screening).
 3. **OSINT Cyber Recon**: Multi-platform username scanner, crt.sh subdomains, whodap RDAP registrar lookup, and French public registries (recherche-entreprises API).
-4. **Rich Document Compilation**: Standardized HTML layout renderers (PESTEL, Financial) and WeasyPrint PDF compile-dossiers.
-5. **Workspace Enterprise**: Todoist tasks, Airtable databases, AccuWeather climates, and Vector DB RAG database storages.
-6. **Files**: `FileReadTool` / `DirectoryReadTool` for local file and directory reads.
+4. **Genealogy**: Gramps API read and write tools, consistency rules, duplicate detection, name standardization, gender inference, and archive-source leads (matchID, Wikidata, DHS). Consumed by the sibling `genecrew` project.
+5. **Rich Document Compilation**: Standardized HTML layout renderers (PESTEL, Financial) and WeasyPrint PDF compile-dossiers.
+6. **Workspace Enterprise**: Todoist tasks, Airtable databases, AccuWeather climates, and Vector DB RAG database storages.
+7. **Files**: `FileReadTool` / `DirectoryReadTool` for local file and directory reads.
 
 ---
 
@@ -69,10 +70,15 @@ To activate and configure our external API integrations, set the following envir
 ## ⚡ Quickstart
 
 ```bash
-# Install editable local package with development dependencies
-uv add --editable /Users/fjacquet/Projects/crewai_custom_tools
+# Add it to your project, straight from GitHub
+uv add "git+https://github.com/fjacquet/crewai-custom-tools"
 
-# Run our local FastMCP stdio server
+# Or, to hack on the library itself: clone, then install it editable
+git clone https://github.com/fjacquet/crewai-custom-tools
+cd crewai-custom-tools
+uv pip install -e ".[dev]"
+
+# Run the local FastMCP stdio server
 uv run crewai-custom-tools-mcp
 ```
 
@@ -93,5 +99,5 @@ print(registry._run(query="LVMH"))
 - **Uniform `ToolResult` envelope**: every tool returns `{"success", "data", "error"}` as a JSON string, so an agent can always distinguish a genuine failure from an empty-but-successful result.
 - **Decorated API Resiliency**: the `@api_tool` wrapper adds per-call timeouts (via a `ThreadPoolExecutor`, to prevent hanging multi-agent loops), one automatic retry on HTTP 429, and converts any failure into a JSON error envelope.
 - **SHA-256 TTL caching**: thread-safe memory and disk cache with automatic corruption recovery, used by the Yahoo Finance tools.
-- **423 offline, mocked tests** covering the tools and infrastructure, running in seconds.
-- **Full MCP parity**: the FastMCP stdio server auto-exposes all 93 tools (`uv run crewai-custom-tools-mcp`).
+- **Fully offline test suite**: every test is mocked, so the whole suite runs in seconds with no network and no API key.
+- **Full MCP parity**: the FastMCP stdio server auto-registers every tool exported from `__all__`, deriving each MCP signature from the tool's `args_schema` — a new library export appears in MCP with no per-tool wrapper (`uv run crewai-custom-tools-mcp`).
