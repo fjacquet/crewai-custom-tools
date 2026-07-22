@@ -3,6 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main ]
+    # Les tags aussi : sans eux, rien ne vérifiait qu'un commit tagué était vert.
+    # `release.yml` publie de son côté et n'attend pas ce job — les deux partent en
+    # parallèle. Ce qu'on gagne, c'est qu'un échec soit visible sur le bon commit,
+    # au lieu de ne jamais être mesuré.
+    tags: [ "v*" ]
   pull_request:
     branches: [ main ]
 
