@@ -146,7 +146,28 @@ def perte_evitee(survivant: PlaceFacts, absorbe: PlaceFacts) -> str:
     """Ce que l'ordre inverse aurait effacé, en clair ; vide s'il n'y a rien. Pur.
 
     Sert le rapport : une règle de sélection qu'on ne peut pas vérifier après coup
-    est une règle qu'on croit sur parole.
+    est une règle qu'on croit sur parole. Sert aussi de garde dans `etager_lieux`,
+    appelée dans l'autre sens — d'où l'exigence que la liste surveillée soit
+    calquée sur le comportement réel de Gramps, pas sur une intuition.
+
+    **Les attributs surveillés sont les CHAMPS SIMPLES** — code, coordonnées,
+    type — parce que ce sont les seuls que la fusion Gramps écrase : elle unionne
+    les listes et ne conserve, pour le reste, que les valeurs du survivant.
+
+    Le **rattachement** à un contenant n'y figure donc pas : c'est une liste de
+    références (`placeref_list`), unionnée comme les autres, qui SURVIT à la
+    fusion. L'annoncer perdu dégradait en relecture des fusions ne détruisant
+    rien, et l'état « rattaché » est massivement répandu dans l'arbre.
+
+    Le **type**, à l'inverse, est un champ simple bel et bien écrasé. Son absence
+    de la liste laissait disparaître en silence le seul enregistrement typé d'une
+    grappe — et cette perte-là se paie deux fois, puisque `evaluer_preuve` fait
+    dépendre sa voie des coordonnées de deux types CONNUS : chaque type effacé
+    dégrade la capacité du module à prouver au tour suivant.
+
+    « Perdu » s'entend au même sens pour les trois : l'absorbé le renseigne et le
+    survivant non. Deux valeurs renseignées mais différentes ne se rapportent pas
+    ici — le module n'arbitre pas entre deux valeurs concurrentes.
     """
     manquants = []
     if (_renseigne(absorbe.lat) and _renseigne(absorbe.long)) and not (
@@ -155,8 +176,8 @@ def perte_evitee(survivant: PlaceFacts, absorbe: PlaceFacts) -> str:
         manquants.append("coordonnées")
     if _renseigne(absorbe.code) and not _renseigne(survivant.code):
         manquants.append("code")
-    if absorbe.a_parent and not survivant.a_parent:
-        manquants.append("rattachement")
+    if _type_connu(absorbe) and not _type_connu(survivant):
+        manquants.append("type")
     return ", ".join(manquants)
 
 
@@ -187,8 +208,17 @@ def _grappe_vetoee(membres: list[PlaceFacts]) -> bool:
     distinctes et produire quand même des fusions automatiques : le membre sans
     code se rattachait au survivant, et un simple compte de rétroliens de plus
     chez un autre membre l'aurait rattaché à l'entité voisine. Une écriture
-    irréversible ne peut pas dépendre de ça. Si le groupe contient la preuve
-    qu'il mélange des entités distinctes, aucune de ses fusions n'est sûre.
+    irréversible ne peut pas dépendre de ça.
+
+    **Portée du veto** : il dégrade les preuves NON canoniques du groupe, pas
+    toutes. Une paire prouvée par un code officiel identique reste automatique —
+    un code est un identifiant canonique, et que deux AUTRES membres de la
+    grappe portent des codes différents ne fragilise en rien la preuve que ces
+    deux-là sont le même lieu (quatre « Saint-Palais », deux 18205 et deux
+    17398 : la fusion des deux 18205 entre eux reste prouvée). Une preuve par
+    coordonnées, elle, repose sur une égalité de position que deux entités
+    voisines peuvent partager : c'est celle-là que le mélange avéré d'entités
+    disqualifie. Voir `etager_lieux`, seul appelant.
 
     Quadratique, mais sur des homonymes d'un même nom — quelques membres.
     """
@@ -209,17 +239,24 @@ def etager_lieux(lieux: list[PlaceFacts]) -> list[PlaceMergeProposition]:
     relecture humaine, parce qu'une fusion automatique est irréversible et que
     personne ne la relit :
 
-      - **perte réelle** : l'absorbé porte un attribut que le survivant n'a pas.
-        C'est `perte_evitee` appelée dans l'autre sens que pour le rapport —
+      - **perte réelle** : l'absorbé porte un champ simple que le survivant n'a
+        pas. C'est `perte_evitee` appelée dans l'autre sens que pour le rapport —
         (survivant, absorbe) au lieu de (absorbe, survivant) — donc exactement ce
         que la fusion va effacer. Une fusion automatique ne détruit jamais
         d'information ; c'est là qu'un humain doit trancher, et le motif nomme ce
         qui disparaîtrait.
       - **veto de grappe** : voir `_grappe_vetoee`. Le veto ne se lit pas dans le
-        verdict de la paire courante, il disqualifie le groupe entier.
+        verdict de la paire courante, il disqualifie les preuves non canoniques
+        du groupe entier — le code officiel, lui, prouve seul et n'en dépend pas.
 
     Les deux se disent dans le `reason` : le modèle ne gagne aucun champ, le motif
     porte seul l'explication.
+
+    Une paire dont les codes officiels s'opposent ne produit **aucune**
+    proposition : le module a prouvé que ces deux lieux sont deux entités
+    différentes, ce n'est pas un doublon à trancher mais une non-fusion établie.
+    L'inscrire au fichier relu offrirait à un humain pressé un bouton pour
+    détruire irréversiblement ce que l'algorithme venait d'établir.
     """
     groupes: dict[str, list[PlaceFacts]] = defaultdict(list)
     for lieu in lieux:
@@ -236,16 +273,22 @@ def etager_lieux(lieux: list[PlaceFacts]) -> list[PlaceMergeProposition]:
         for absorbe in sorted(membres, key=lambda p: p.gramps_id):
             if absorbe.handle == survivant.handle:
                 continue
+            if _oppose_un_veto(survivant, absorbe):
+                continue                        # non-fusion établie, pas un doublon
             preuve = evaluer_preuve(survivant, absorbe)
             # Ordre (survivant, absorbe) : le miroir exact de l'appel du champ
             # `perte_evitee` plus bas. Ce que l'absorbé porte et que le survivant
             # n'a pas, c'est ce que la fusion détruira réellement.
             perte_subie = perte_evitee(survivant, absorbe)
-            auto = bool(preuve) and not perte_subie and not vetoee
+            # Le veto de grappe ne mord que sur les preuves non canoniques : un
+            # code officiel identique prouve à lui seul, indépendamment de ce que
+            # portent les autres membres du groupe.
+            degrade_par_grappe = vetoee and preuve != PREUVE_CODE
+            auto = bool(preuve) and not perte_subie and not degrade_par_grappe
             motifs = [_MOTIFS[preuve] if preuve else "aucune preuve"]
             if perte_subie:
                 motifs.append(f"perte irréversible ({perte_subie})")
-            if vetoee:
+            if degrade_par_grappe:
                 motifs.append("veto de grappe — codes officiels distincts entre deux membres")
             propositions.append(PlaceMergeProposition(
                 gramps_id_keep=survivant.gramps_id, handle_keep=survivant.handle,

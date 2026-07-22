@@ -375,13 +375,31 @@ def test_richesse_exige_les_deux_coordonnees_jamais_une_seule():
     assert richesse(_lieu("P1", long="2.3")) == 0
 
 
-def test_perte_evitee_signale_le_rattachement_manquant():
-    """Branche « rattachement » : l'absorbé est rattaché à un contenant, le
-    survivant ne l'est pas, rien d'autre (code, coordonnées) ne distingue les
-    deux — seule la perte du rattachement doit être rapportée."""
+def test_perte_evitee_signale_le_type_manquant():
+    """Branche « type » : l'absorbé est typé, le survivant ne l'est pas, rien
+    d'autre (code, coordonnées) ne distingue les deux — seule la perte du type
+    doit être rapportée.
+
+    Remplace `test_perte_evitee_signale_le_rattachement_manquant`, qui exerçait
+    la branche « rattachement » : celle-ci a disparu parce que la fusion Gramps
+    unionne les listes de références, donc le rattachement SURVIT (voir la
+    docstring de `perte_evitee`). Le type, lui, est un champ simple bel et bien
+    écrasé — c'est la branche équivalente sur un attribut réellement détruit.
+    """
+    survivant = _lieu("P1", lat="47.1", long="2.3", code="18044", place_type="")
+    absorbe = _lieu("P2", lat="47.1", long="2.3", code="18044",
+                    place_type="Municipality")
+    assert perte_evitee(survivant, absorbe) == "type"
+
+
+def test_perte_evitee_ignore_le_rattachement_que_la_fusion_conserve():
+    """Le rattachement est une LISTE de références : Gramps l'unionne, donc il
+    survit à la fusion. L'annoncer comme perdu ferait partir en relecture des
+    fusions qui ne détruisent rien — et l'état « rattaché » est massivement
+    répandu dans l'arbre réel."""
     survivant = _lieu("P1", lat="47.1", long="2.3", code="18044", a_parent=False)
     absorbe = _lieu("P2", lat="47.1", long="2.3", code="18044", a_parent=True)
-    assert perte_evitee(survivant, absorbe) == "rattachement"
+    assert perte_evitee(survivant, absorbe) == ""
 
 
 def _commune(gid, nom, **kw):
@@ -427,16 +445,27 @@ def test_types_differents_sans_code_partagent_le_nom_mais_partent_en_arbitrage()
     assert props[0].verdict == "arbitrage"
 
 
-def test_paris_part_en_arbitrage_et_jamais_en_auto():
-    """Le cas qui doit rester rouge si le veto disparaît."""
+def test_paris_ne_produit_aucune_proposition_de_fusion():
+    """D3 — une paire dont les codes officiels s'opposent n'est pas un doublon.
+
+    Remplace `test_paris_part_en_arbitrage_et_jamais_en_auto`, qui attendait
+    une proposition d'arbitrage. Le module a PROUVÉ que le département 75 et la
+    commune 75056 sont deux entités réelles distinctes : proposer quand même
+    leur fusion à un humain, dans un fichier qu'une commande irréversible
+    exécute après relecture, c'est offrir un bouton pour détruire ce que
+    l'algorithme vient d'établir. Ce n'est pas un doublon à trancher, c'est une
+    non-fusion établie — donc rien à proposer.
+
+    Le cas reste celui qui doit devenir rouge si le veto disparaît : sans lui,
+    la paire réapparaît (et le YAML de fusion la propose).
+    """
     props = etager_lieux([
         PlaceFacts(gramps_id="P0301", handle="HA", nom="Paris", place_type="Department",
                    code="75", lat="48.8589", long="2.347"),
         PlaceFacts(gramps_id="P0008", handle="HB", nom="Paris", place_type="Municipality",
                    code="75056", lat="48.8589", long="2.347"),
     ])
-    assert len(props) == 1
-    assert props[0].verdict == "arbitrage"
+    assert props == []
 
 
 def test_grappe_de_trois_produit_deux_propositions_sur_le_meme_survivant():
@@ -554,10 +583,99 @@ def test_une_fusion_auto_ne_detruit_jamais_un_attribut_du_lieu_absorbe():
     assert len(props) == 1
     p = props[0]
     assert (p.gramps_id_keep, p.gramps_id_merge) == ("P1", "P2")
-    assert p.perte_evitee == "rattachement"       # ce que l'ordre inverse aurait coûté
+    # Le champ `perte_evitee` était « rattachement » tant que la garde surveillait
+    # cet attribut. Il ne le surveille plus (la fusion Gramps unionne les listes,
+    # le rattachement survit) et P1 ne porte, parmi les champs réellement écrasés,
+    # rien que P2 n'ait : le rapport n'a donc aucune perte évitée à annoncer. Le
+    # cœur du test — un survivant SANS code face à un absorbé qui en porte un, et
+    # la fusion automatique refusée pour cela — est inchangé.
+    assert p.perte_evitee == ""
     assert p.verdict == "arbitrage"
     assert "perte" in p.reason and "code" in p.reason
     assert "relecture humaine" in p.reason
+
+
+def test_une_fusion_auto_ne_detruit_jamais_le_type_du_lieu_absorbe():
+    """D1 — le seul enregistrement TYPÉ de la grappe ne doit pas disparaître en silence.
+
+    Deux « Vierzon » du même code officiel 18279, mêmes coordonnées, tous deux
+    rattachés : la preuve canonique conclut. Mais P1, le survivant (80
+    rétroliens contre 3), n'a pas de type, et P2 en a un. `place_type` est un
+    champ SIMPLE — la fusion Gramps ne garde que ceux du survivant — donc la
+    fusion automatique effacerait « Municipality » sans que personne ne le
+    relise ni ne le sache.
+
+    C'est doublement grave : `evaluer_preuve` fait dépendre sa voie des
+    coordonnées de DEUX types connus et égaux. Fusionner ainsi dégrade la
+    capacité du module à prouver au tour suivant. Et l'absence de type est
+    l'état majoritaire de l'arbre réel : le montage est courant, pas exotique.
+    """
+    props = etager_lieux([
+        _commune("P1", "Vierzon", place_type="", code="18279", lat="47.22",
+                 long="2.07", a_parent=True, retroliens=80),
+        _commune("P2", "Vierzon", place_type="Municipality", code="18279",
+                 lat="47.22", long="2.07", a_parent=True, retroliens=3),
+    ])
+    assert len(props) == 1
+    p = props[0]
+    assert (p.gramps_id_keep, p.gramps_id_merge) == ("P1", "P2")
+    assert p.verdict == "arbitrage"
+    assert "type" in p.reason
+    assert "relecture humaine" in p.reason
+
+
+def test_le_veto_de_grappe_epargne_les_paires_prouvees_par_un_code_identique():
+    """D2 — un code officiel est canonique : un veto ailleurs ne l'affaiblit pas.
+
+    Quatre « Saint-Palais » : deux portant 18205 (le Cher) et deux portant 17398
+    (la Charente-Maritime). La grappe est bel et bien vetoée — elle mélange deux
+    entités réelles — mais que 17398 existe à côté ne fragilise en RIEN la preuve
+    que les deux 18205 sont le même lieu. Dégrader cette fusion-là en relecture
+    vidait la commande de son intérêt : sur les grappes à deux entités, 92 % des
+    paires dégradées par le veto de grappe étaient prouvées par un code identique.
+
+    Le veto ne doit donc mordre que sur les preuves NON canoniques (coordonnées).
+    Les deux paires 18205/17398 qui touchent le survivant, elles, ne sont plus
+    proposées du tout (D3).
+    """
+    props = etager_lieux([
+        _commune("P0205", "Saint-Palais", code="18205", lat="47.2", long="2.1",
+                 retroliens=30),
+        _commune("P0206", "Saint-Palais", code="18205", lat="47.2", long="2.1",
+                 retroliens=12),
+        _commune("P0398", "Saint-Palais", code="17398", lat="45.6", long="-0.4",
+                 retroliens=8),
+        _commune("P0399", "Saint-Palais", code="17398", lat="45.6", long="-0.4",
+                 retroliens=4),
+    ])
+    assert {p.gramps_id_merge: p.verdict for p in props} == {"P0206": "auto"}
+    assert props[0].reason == "homonymes — code officiel identique"
+
+
+def test_le_veto_de_grappe_mord_toujours_sur_une_preuve_par_coordonnees():
+    """D2, la borne haute : la permissivité s'arrête au code officiel.
+
+    Miroir exact du test précédent, un seul changement — le membre qui prouve ne
+    porte AUCUN code et conclut par la position (P0206 : mêmes type et
+    coordonnées que le survivant). Une preuve par coordonnées n'est pas
+    canonique : elle repose sur une égalité de position que deux entités
+    voisines peuvent partager, et c'est exactement ce que le veto de grappe
+    protège. Sans ce test, une correction plus permissive — épargner toute paire
+    prouvée, quelle que soit la voie — serait indiscernable de celle qui est
+    livrée.
+    """
+    props = etager_lieux([
+        _commune("P0205", "Saint-Palais", code="18205", lat="47.2", long="2.1",
+                 retroliens=30),
+        _commune("P0206", "Saint-Palais", lat="47.2", long="2.1", retroliens=12),
+        _commune("P0398", "Saint-Palais", code="17398", lat="45.6", long="-0.4",
+                 retroliens=8),
+        _commune("P0399", "Saint-Palais", code="17398", lat="45.6", long="-0.4",
+                 retroliens=4),
+    ])
+    contamine = next(p for p in props if p.gramps_id_merge == "P0206")
+    assert contamine.verdict == "arbitrage"
+    assert "grappe" in contamine.reason
 
 
 def test_un_veto_entre_deux_absorbes_bloque_toute_la_grappe():
@@ -578,10 +696,14 @@ def test_un_veto_entre_deux_absorbes_bloque_toute_la_grappe():
         _commune("P0011", "Bourges", code="18034", lat="47.08", long="2.39", retroliens=39),
         _commune("P0012", "Bourges", lat="47.08", long="2.39", retroliens=5),
     ])
-    assert len(props) == 2
+    # La paire vetoée elle-même (P0010/P0011) n'est plus proposée du tout : ce
+    # n'est pas un doublon à trancher mais une non-fusion établie (D3). Le test
+    # comptait 2 propositions quand elle en faisait partie ; seul P0012, le
+    # membre réellement contaminé, subsiste — et c'est lui que ce test protège.
+    assert {p.gramps_id_merge for p in props} == {"P0012"}
     assert {p.gramps_id_keep for p in props} == {"P0010"}
     assert all(p.verdict == "arbitrage" for p in props)
-    contamine = next(p for p in props if p.gramps_id_merge == "P0012")
+    contamine = props[0]
     assert "grappe" in contamine.reason
     assert "relecture humaine" in contamine.reason
 
