@@ -5,7 +5,9 @@ from crewai_custom_tools.tools.genealogy.analysis.corrections import (
     suggest_misattached_parent_event,
 )
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    EventFact, FamilyFacts, PersonFacts,
+    EventFact,
+    FamilyFacts,
+    PersonFacts,
 )
 
 

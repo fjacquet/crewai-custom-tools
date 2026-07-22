@@ -20,10 +20,10 @@ class AlphaVantageNewsSentimentInput(BaseModel):
 
     tickers: str = Field(..., description="Comma-separated tickers, e.g. 'AAPL,MSFT'.")
     sort: str = Field("LATEST", description="Sort order: LATEST, EARLIEST, RELEVANCE.")
-    time_from: Optional[str] = Field(None, description="Start time, YYYYMMDDTHHMM.")
-    time_to: Optional[str] = Field(None, description="End time, YYYYMMDDTHHMM.")
+    time_from: str | None = Field(None, description="Start time, YYYYMMDDTHHMM.")
+    time_to: str | None = Field(None, description="End time, YYYYMMDDTHHMM.")
     limit: int = Field(50, description="Max number of articles.")
-    topics: Optional[str] = Field(None, description="Comma-separated topics filter.")
+    topics: str | None = Field(None, description="Comma-separated topics filter.")
 
 
 class AlphaVantageNewsSentimentTool(BaseTool):
@@ -41,10 +41,10 @@ class AlphaVantageNewsSentimentTool(BaseTool):
         self,
         tickers: str,
         sort: str = "LATEST",
-        time_from: Optional[str] = None,
-        time_to: Optional[str] = None,
+        time_from: str | None = None,
+        time_to: str | None = None,
         limit: int = 50,
-        topics: Optional[str] = None,
+        topics: str | None = None,
     ) -> str:
         """Fetch news + sentiment from Alpha Vantage."""
         api_key = os.getenv("ALPHA_VANTAGE_API_KEY") or os.getenv("ALPHA_VANTAGE_KEY")

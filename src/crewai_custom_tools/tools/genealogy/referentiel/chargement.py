@@ -14,11 +14,16 @@ from requests.exceptions import RequestException
 from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.tools.genealogy.geo.france_ex_communes import parse_wkt_point
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    CollisionIso, EntiteEcartee, Subdivision,
+    CollisionIso,
+    EntiteEcartee,
+    Subdivision,
 )
 from crewai_custom_tools.tools.genealogy.referentiel.config import PaysReferentiel
 from crewai_custom_tools.tools.genealogy.referentiel.wikidata import (
-    build_query, build_query_pays, map_subdivisions, qid_of,
+    build_query,
+    build_query_pays,
+    map_subdivisions,
+    qid_of,
 )
 from crewai_custom_tools.tools.web.wikidata import sparql_rows
 

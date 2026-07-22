@@ -1,9 +1,11 @@
 """Tests des règles famille R3, R4, R5 (pures)."""
 
-from crewai_custom_tools.tools.genealogy.models.domain import (
-    EventFact, FamilyFacts, PersonFacts,
-)
 from crewai_custom_tools.tools.genealogy.analysis.rules import check_family
+from crewai_custom_tools.tools.genealogy.models.domain import (
+    EventFact,
+    FamilyFacts,
+    PersonFacts,
+)
 
 
 def _person(hid, sex, birth_sort=None, birth_year=None, death_sort=None, death_year=None):

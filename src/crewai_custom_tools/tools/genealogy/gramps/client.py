@@ -9,6 +9,7 @@ orchestrator (no LLM) and wrapped by the thin BaseTool classes in read_tools.py.
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import json
 import os
@@ -37,7 +38,7 @@ class GrampsConfig:
     password: str
 
     @staticmethod
-    def from_env() -> "GrampsConfig":
+    def from_env() -> GrampsConfig:
         try:
             return GrampsConfig(
                 api_url=os.environ["GRAMPS_API_URL"].rstrip("/"),
@@ -96,10 +97,8 @@ def _write_token_cache(path: Path, token: str, exp: int) -> None:
 
 
 def _invalidate_token_cache(path: Path) -> None:
-    try:
+    with contextlib.suppress(OSError):
         path.unlink()
-    except OSError:
-        pass
 
 
 class GrampsClient:

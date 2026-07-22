@@ -1,7 +1,10 @@
 # tests/test_genealogy_referentiel_wikidata.py
 """Construction de requête et helpers purs du référentiel."""
 from crewai_custom_tools.tools.genealogy.referentiel.wikidata import (
-    build_query, build_query_pays, code_sans_prefixe, qid_of,
+    build_query,
+    build_query_pays,
+    code_sans_prefixe,
+    qid_of,
 )
 
 

@@ -12,7 +12,7 @@ returns the tool's JSON ``{"success", "data", "error"}`` envelope. Launch via th
 import inspect
 import logging
 import re
-from typing import Any, List, Tuple
+from typing import Any
 
 from crewai.tools import BaseTool
 from mcp.server.fastmcp import FastMCP
@@ -44,7 +44,7 @@ def _iter_tool_classes():
             yield obj
 
 
-def _schema_params(instance: BaseTool) -> List[inspect.Parameter]:
+def _schema_params(instance: BaseTool) -> list[inspect.Parameter]:
     """Derive keyword-only parameters from a tool's args_schema (empty if none)."""
     schema = getattr(instance, "args_schema", None)
     if not (isinstance(schema, type) and issubclass(schema, BaseModel)):
@@ -64,7 +64,7 @@ def _schema_params(instance: BaseTool) -> List[inspect.Parameter]:
     return params
 
 
-def _make_handler(instance: BaseTool, params: List[inspect.Parameter]):
+def _make_handler(instance: BaseTool, params: list[inspect.Parameter]):
     """Build a handler with an explicit signature so FastMCP infers the input schema."""
 
     def handler(**kwargs: Any) -> str:
@@ -76,7 +76,7 @@ def _make_handler(instance: BaseTool, params: List[inspect.Parameter]):
     return handler
 
 
-def register_all() -> Tuple[int, List[Tuple[str, str]]]:
+def register_all() -> tuple[int, list[tuple[str, str]]]:
     """Register every exported tool with the FastMCP server.
 
     Returns ``(registered_count, skipped)`` where ``skipped`` is a list of
@@ -84,7 +84,7 @@ def register_all() -> Tuple[int, List[Tuple[str, str]]]:
     logged and skipped rather than breaking the whole server.
     """
     registered = 0
-    skipped: List[Tuple[str, str]] = []
+    skipped: list[tuple[str, str]] = []
     seen_names: set[str] = set()
     for cls in _iter_tool_classes():
         try:
@@ -97,7 +97,7 @@ def register_all() -> Tuple[int, List[Tuple[str, str]]]:
             mcp.add_tool(handler, name=name, description=instance.description)
             seen_names.add(name)
             registered += 1
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Skipping MCP registration for %s: %s", cls.__name__, e)
             skipped.append((cls.__name__, str(e)))
     return registered, skipped

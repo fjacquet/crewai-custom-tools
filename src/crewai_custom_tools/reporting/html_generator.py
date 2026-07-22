@@ -3,14 +3,16 @@
 import datetime as _dt
 import logging
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
+
 from bs4 import BeautifulSoup
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 from crewai.tools import BaseTool
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from markupsafe import Markup, escape
 from pydantic import BaseModel, Field, PrivateAttr
+
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import ok
-from markupsafe import Markup, escape
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ def validate_html(html: str, raise_on_error: bool = True) -> bool:
     return True
 
 
-def _sections_to_html(sections: Optional[List[dict]]) -> Markup:
+def _sections_to_html(sections: list[dict] | None) -> Markup:
     """Build a safe HTML body from sections, escaping all caller-supplied text.
 
     Returned as ``Markup`` so ``{{ report_body }}`` renders the wrapper tags while the
@@ -41,7 +43,7 @@ def _sections_to_html(sections: Optional[List[dict]]) -> Markup:
     return Markup("".join(parts))
 
 
-def _build_context(title: str, sections: Optional[List[dict]], **kwargs: Any) -> dict:
+def _build_context(title: str, sections: list[dict] | None, **kwargs: Any) -> dict:
     """Assemble a render context that satisfies every bundled template.
 
     The standard, professional (PESTEL) and data (financial) templates use different
@@ -74,7 +76,7 @@ def default_template_dir() -> Path:
     return Path(__file__).resolve().parent / "templates"
 
 
-def build_environment(template_dir: Optional[Any] = None) -> Environment:
+def build_environment(template_dir: Any | None = None) -> Environment:
     """Build an autoescaping Jinja2 Environment over the templates directory."""
     tdir = Path(template_dir) if template_dir else default_template_dir()
     if not tdir.exists():
@@ -89,17 +91,17 @@ class RenderReportToolSchema(BaseModel):
     """Input schema for RenderReportTool."""
 
     title: str = Field(..., description="The title of the HTML report.")
-    sections: List[dict] = Field(
+    sections: list[dict] = Field(
         ..., description="A list of sections, each with 'heading' and 'content' keys."
     )
-    images: Optional[List[dict]] = Field(
+    images: list[dict] | None = Field(
         default=None,
         description="Optional: list of image dicts with 'src', 'alt', 'caption'.",
     )
-    citations: Optional[List[str]] = Field(
+    citations: list[str] | None = Field(
         default=None, description="Optional: list of citation strings or URLs."
     )
-    template_name: Optional[str] = Field(
+    template_name: str | None = Field(
         default="report_template.html",
         description="The template file to use (e.g. 'report_template.html', 'professional_report_template.html').",
     )
@@ -114,11 +116,12 @@ class RenderReportTool(BaseTool):
     name: str = "render_html_report"
     description: str = (
         "Renders a standardized HTML report using a Jinja2 template and context values. "
-        "Inputs require: title, sections (list of dict with 'heading' and 'content'), and optional images and citations."
+        "Inputs require: title, sections (list of dict with 'heading' and 'content'), "
+        "and optional images and citations."
     )
     args_schema: type[BaseModel] = RenderReportToolSchema
 
-    def __init__(self, template_dir: Optional[str] = None, **kwargs: Any):
+    def __init__(self, template_dir: str | None = None, **kwargs: Any):
         """Initialize the Jinja2 environment."""
         super().__init__(**kwargs)
         # Templates are packaged inside the reporting/ package, so this resolves
@@ -141,7 +144,7 @@ class RenderReportTool(BaseTool):
             return date_str
 
     @api_tool(provider="Jinja2", endpoint="RenderReport")
-    def _run(self, title: str, sections: List[dict], **kwargs: Any) -> str:
+    def _run(self, title: str, sections: list[dict], **kwargs: Any) -> str:
         """Render the selected template with a context that satisfies every template."""
         template_name = kwargs.get("template_name") or "report_template.html"
         template = self._env.get_template(template_name)

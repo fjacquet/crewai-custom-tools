@@ -3,20 +3,20 @@
 
 def test_package_exports():
     from crewai_custom_tools import (
-        PerplexitySearchTool,
-        YahooFinanceTickerInfoTool,
-        YahooFinanceNewsTool,
-        SerperSearchTool,
-        UnifiedScraperTool,
         CoinMarketCapInfoTool,
+        EpieosEmailLookupTool,
         FREDMacroTool,
         GitHubSearchTool,
-        RenderReportTool,
-        HtmlToPdfTool,
-        TodoistTool,
-        EpieosEmailLookupTool,
         HoleheEmailScannerTool,
+        HtmlToPdfTool,
         OpenCorporatesSearchTool,
+        PerplexitySearchTool,
+        RenderReportTool,
+        SerperSearchTool,
+        TodoistTool,
+        UnifiedScraperTool,
+        YahooFinanceNewsTool,
+        YahooFinanceTickerInfoTool,
     )
 
     assert PerplexitySearchTool is not None

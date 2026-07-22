@@ -7,7 +7,11 @@ import httpx
 from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.tools.genealogy.geo.score import _norm
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
+    DatedChain,
+    DatedName,
+    ParsedPlace,
+    PlaceLevel,
+    ResolvedPlace,
 )
 
 _BASE = "https://geo.api.gouv.fr"

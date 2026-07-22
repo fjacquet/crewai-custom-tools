@@ -4,7 +4,8 @@ import httpx
 
 from crewai_custom_tools.tools.genealogy.analysis import tools as analysis_tools
 from crewai_custom_tools.tools.genealogy.analysis.tools import (
-    GenealogyCheckPersonTool, GenealogyFindDuplicatesTool,
+    GenealogyCheckPersonTool,
+    GenealogyFindDuplicatesTool,
 )
 from crewai_custom_tools.tools.genealogy.gramps.client import GrampsClient, GrampsConfig
 

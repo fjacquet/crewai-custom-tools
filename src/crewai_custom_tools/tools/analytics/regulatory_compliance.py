@@ -50,7 +50,10 @@ class RegulatoryComplianceTool(BaseTool):
     """
 
     name: str = "Regulatory Compliance Tool"
-    description: str = "Analyze cryptocurrency regulatory compliance across multiple jurisdictions including risk assessment, compliance status, and regulatory clarity indicators."
+    description: str = (
+        "Analyze cryptocurrency regulatory compliance across multiple jurisdictions including "
+        "risk assessment, compliance status, and regulatory clarity indicators."
+    )
     args_schema: type[BaseModel] = RegulatoryComplianceInput
 
     def _run(
@@ -71,7 +74,10 @@ class RegulatoryComplianceTool(BaseTool):
             if jurisdictions is None:
                 jurisdictions = ["US", "EU", "Switzerland", "UK", "Singapore"]
 
-            logger.info(f"Starting regulatory compliance analysis for {symbol} across {len(jurisdictions)} jurisdictions")
+            logger.info(
+                f"Starting regulatory compliance analysis for {symbol} across "
+                f"{len(jurisdictions)} jurisdictions"
+            )
 
             # Get crypto classification
             crypto_classification = self._classify_cryptocurrency(symbol)
@@ -85,7 +91,9 @@ class RegulatoryComplianceTool(BaseTool):
 
             # Compliance status analysis
             if include_compliance_status:
-                result["compliance_status"] = self._analyze_compliance_status(symbol, jurisdictions, crypto_classification)
+                result["compliance_status"] = self._analyze_compliance_status(
+                    symbol, jurisdictions, crypto_classification
+                )
 
             # Regulatory risk assessment
             if include_risk_assessment:
@@ -191,7 +199,9 @@ class RegulatoryComplianceTool(BaseTool):
             logger.error(f"Crypto classification failed for {symbol}: {e}")
             return {"error": f"Crypto classification failed: {e}"}
 
-    def _analyze_compliance_status(self, symbol: str, jurisdictions: list[str], classification: dict[str, Any]) -> dict[str, Any]:
+    def _analyze_compliance_status(
+        self, symbol: str, jurisdictions: list[str], classification: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze compliance status across jurisdictions."""
         try:
             compliance_status = {}
@@ -206,7 +216,9 @@ class RegulatoryComplianceTool(BaseTool):
             logger.error(f"Compliance status analysis failed for {symbol}: {e}")
             return {"error": f"Compliance status analysis failed: {e}"}
 
-    def _get_jurisdiction_compliance(self, symbol: str, jurisdiction: str, classification: dict[str, Any]) -> dict[str, Any]:
+    def _get_jurisdiction_compliance(
+        self, symbol: str, jurisdiction: str, classification: dict[str, Any]
+    ) -> dict[str, Any]:
         """Get compliance status for specific jurisdiction."""
         try:
             jurisdiction_frameworks = {
@@ -326,7 +338,9 @@ class RegulatoryComplianceTool(BaseTool):
             "notes": "Singapore has clear regulatory framework for crypto services",
         }
 
-    def _assess_regulatory_risk(self, symbol: str, jurisdictions: list[str], classification: dict[str, Any]) -> dict[str, Any]:
+    def _assess_regulatory_risk(
+        self, symbol: str, jurisdictions: list[str], classification: dict[str, Any]
+    ) -> dict[str, Any]:
         """Assess regulatory risk across jurisdictions."""
         try:
             risk_factors = []

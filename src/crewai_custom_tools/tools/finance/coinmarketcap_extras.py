@@ -14,7 +14,7 @@ _CMC_BASE = "https://pro-api.coinmarketcap.com"
 _SORT_FIELDS = {"market_cap", "volume_24h", "price", "percent_change_24h"}
 
 
-def _cmc_key() -> Optional[str]:
+def _cmc_key() -> str | None:
     """CoinMarketCap key — the shell-settable name first, header-style name as fallback."""
     return os.environ.get("COINMARKETCAP_API_KEY") or os.environ.get("X-CMC_PRO_API_KEY")
 
@@ -80,7 +80,7 @@ class CoinMarketCapListTool(BaseTool):
 class CoinMarketCapNewsInput(BaseModel):
     """Input schema for CoinMarketCapNewsTool."""
 
-    symbol: Optional[str] = Field(
+    symbol: str | None = Field(
         None, description="Optional cryptocurrency symbol (BTC) or slug (bitcoin) to filter news."
     )
     limit: int = Field(10, description="Maximum number of articles to return (max 50).")
@@ -97,7 +97,7 @@ class CoinMarketCapNewsTool(BaseTool):
     args_schema: type[BaseModel] = CoinMarketCapNewsInput
 
     @api_tool(provider="CoinMarketCap", endpoint="News")
-    def _run(self, symbol: Optional[str] = None, limit: int = 10) -> str:
+    def _run(self, symbol: str | None = None, limit: int = 10) -> str:
         if not _cmc_key():
             return err("CoinMarketCap API key not configured")
         params: dict = {"limit": min(limit, 50), "sort_by": "published_at"}

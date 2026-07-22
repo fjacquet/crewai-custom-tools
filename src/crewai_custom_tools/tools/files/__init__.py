@@ -7,4 +7,4 @@ agent reads. See :mod:`crewai_custom_tools.tools.files.file_tools`.
 
 from crewai_custom_tools.tools.files.file_tools import DirectoryReadTool, FileReadTool
 
-__all__ = ["FileReadTool", "DirectoryReadTool"]
+__all__ = ["DirectoryReadTool", "FileReadTool"]

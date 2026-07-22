@@ -1,7 +1,9 @@
 """Génération des paires candidates — c'est du RAPPEL, pas de la preuve."""
 
 from crewai_custom_tools.tools.genealogy.analysis.duplicates import (
-    MAX_BLOC, blocking_keys, candidate_pairs,
+    MAX_BLOC,
+    blocking_keys,
+    candidate_pairs,
 )
 from crewai_custom_tools.tools.genealogy.models.domain import EventFact, PersonFacts
 

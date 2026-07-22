@@ -21,5 +21,8 @@ class DelegatingEmailSearchInput(BaseModel):
     provider: str = Field(..., description="Email search provider: 'hunter' or 'serper'")
     query: str = Field(
         ...,
-        description="Domain name for 'hunter' (e.g., 'example.com'), or company name/general query for 'serper' (e.g., 'Example Inc')",
+        description=(
+            "Domain name for 'hunter' (e.g., 'example.com'), or company name/general "
+            "query for 'serper' (e.g., 'Example Inc')"
+        ),
     )

@@ -40,7 +40,7 @@ class AccuWeatherTool(BaseTool):
 
     def _get_current_conditions(
         self, location_key: str, api_key: str
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """Get the current weather conditions for a given location key."""
         url = f"{_BASE_URL}/currentconditions/v1/{location_key}"
         params = {"apikey": api_key}

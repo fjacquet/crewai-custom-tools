@@ -18,13 +18,13 @@ from crewai_custom_tools.tools.genealogy.models.domain import (
 )
 
 __all__ = [
-    "find_duplicates",
-    "normalize_name",
     "MAX_BLOC",
     "blocking_keys",
     "candidate_pairs",
     "date_complete",
     "etager",
+    "find_duplicates",
+    "normalize_name",
 ]
 
 BIRTH_YEAR_WINDOW = 2

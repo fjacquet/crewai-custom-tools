@@ -15,7 +15,11 @@ from pathlib import Path
 from crewai_custom_tools.tools.genealogy.analysis.gender import normkey
 from crewai_custom_tools.tools.genealogy.geo.score import fuzzy_score
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
+    DatedChain,
+    DatedName,
+    ParsedPlace,
+    PlaceLevel,
+    ResolvedPlace,
 )
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "us_places.csv"

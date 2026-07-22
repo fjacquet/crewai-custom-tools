@@ -21,7 +21,11 @@ from crewai_custom_tools.core.rate_limiter import get_rate_limiter
 from crewai_custom_tools.tools.genealogy.geo.france import _FIELDS as _COMMUNE_FIELDS
 from crewai_custom_tools.tools.genealogy.geo.france import map_commune, pick_exact_by_name
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
+    DatedChain,
+    DatedName,
+    ParsedPlace,
+    PlaceLevel,
+    ResolvedPlace,
 )
 from crewai_custom_tools.tools.web.wikidata import sparql_rows
 
@@ -208,12 +212,12 @@ def resolve_fr_ex_commune(parsed: ParsedPlace) -> ResolvedPlace | None:
     if concordant:
         chains = [
             DatedChain(levels=parents, date_qualifier=f"avant {facts.merged_on}"),
-            DatedChain(levels=parents + [chef_level],
+            DatedChain(levels=[*parents, chef_level],
                        date_qualifier=f"après {facts.merged_on}"),
         ]
         source = "geo.api.gouv.fr/communes_associees_deleguees + Wikidata"
     else:
-        chains = [DatedChain(levels=parents + [chef_level])]
+        chains = [DatedChain(levels=[*parents, chef_level])]
         source = "geo.api.gouv.fr/communes_associees_deleguees"
 
     # GPS : Wikidata (centre du bourg) de préférence au `centre` de l'API, qui est le

@@ -19,7 +19,11 @@ class FREDMacroInput(BaseModel):
 
     indicator: str = Field(
         ...,
-        description="The macro indicator to fetch. Options: 'fed_rate' (FEDFUNDS), 'cpi_yoy' (CPIAUCSL), 'unemployment_rate' (UNRATE), 'gdp_growth' (A191RL1Q225SBEA), 'treasury_10y' (DGS10), 'treasury_2y' (DGS2), 'vix' (VIXCLS).",
+        description=(
+            "The macro indicator to fetch. Options: 'fed_rate' (FEDFUNDS), 'cpi_yoy' "
+            "(CPIAUCSL), 'unemployment_rate' (UNRATE), 'gdp_growth' (A191RL1Q225SBEA), "
+            "'treasury_10y' (DGS10), 'treasury_2y' (DGS2), 'vix' (VIXCLS)."
+        ),
     )
 
 
@@ -98,7 +102,10 @@ class AlphaVantageOverviewTool(BaseTool):
     """A tool to fetch company fundamentals overview from Alpha Vantage."""
 
     name: str = "Alpha Vantage Overview Tool"
-    description: str = "Get detailed company fundamental metrics (P/E, Return on Equity, Debt to Equity) from Alpha Vantage."
+    description: str = (
+        "Get detailed company fundamental metrics (P/E, Return on Equity, Debt to Equity) "
+        "from Alpha Vantage."
+    )
     args_schema: type[BaseModel] = AlphaVantageOverviewInput
 
     @api_tool(provider="AlphaVantage", endpoint="Overview")
@@ -123,7 +130,7 @@ class AlphaVantageOverviewTool(BaseTool):
         if "Symbol" not in data:
             return err(f"No data returned for ticker {ticker}")
 
-        def _safe_float(val_str: Optional[str]) -> Optional[float]:
+        def _safe_float(val_str: str | None) -> float | None:
             if val_str is None or val_str in ("None", ""):
                 return None
             try:
@@ -131,7 +138,7 @@ class AlphaVantageOverviewTool(BaseTool):
             except (ValueError, TypeError):
                 return None
 
-        def _safe_str(val_str: Optional[str]) -> Optional[str]:
+        def _safe_str(val_str: str | None) -> str | None:
             if val_str is None or val_str in ("None", "-", ""):
                 return None
             return val_str

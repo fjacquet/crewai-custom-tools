@@ -5,11 +5,11 @@ import json
 import os
 
 from crewai_custom_tools.core.results import err, ok
+from crewai_custom_tools.tools.osint.email_delegator import DelegatingEmailSearchTool
 from crewai_custom_tools.tools.web.places import GeoapifyPlacesTool
 from crewai_custom_tools.tools.web.rss_aggregator import RSSFeedTool, UnifiedRssTool
 from crewai_custom_tools.tools.web.tech_stack import TechStackTool
 from crewai_custom_tools.tools.web.wikipedia_processing import WikipediaProcessingTool
-from crewai_custom_tools.tools.osint.email_delegator import DelegatingEmailSearchTool
 
 
 def _env(result):
@@ -106,7 +106,9 @@ def test_wiki_summarize_section_missing(mocker):
         "crewai_custom_tools.tools.web.wikipedia_processing.WikipediaArticleTool._run",
         side_effect=_fake_article(get_article=ok({"title": "Py", "content": "no such heading here"})),
     )
-    payload = _env(WikipediaProcessingTool()._run(title="Py", action="summarize_article_section", section_title="History"))
+    payload = _env(
+        WikipediaProcessingTool()._run(title="Py", action="summarize_article_section", section_title="History")
+    )
     assert payload["success"] is False
     assert "History" in payload["error"]
 

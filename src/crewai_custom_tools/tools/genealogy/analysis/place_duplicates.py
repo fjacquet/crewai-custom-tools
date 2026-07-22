@@ -44,7 +44,8 @@ from collections import defaultdict
 from itertools import combinations
 
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    PlaceFacts, PlaceMergeProposition,
+    PlaceFacts,
+    PlaceMergeProposition,
 )
 
 __all__ = [

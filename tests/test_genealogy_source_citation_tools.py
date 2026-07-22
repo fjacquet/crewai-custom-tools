@@ -6,7 +6,9 @@ import pytest
 from crewai_custom_tools.tools.genealogy.gramps import write_tools
 from crewai_custom_tools.tools.genealogy.gramps.client import GrampsClient, GrampsConfig
 from crewai_custom_tools.tools.genealogy.gramps.write_tools import (
-    GrampsAttachCitationTool, GrampsCreateCitationTool, GrampsEnsureSourceTool,
+    GrampsAttachCitationTool,
+    GrampsCreateCitationTool,
+    GrampsEnsureSourceTool,
 )
 
 CONFIG = GrampsConfig(api_url="http://g.test/api", username="u", password="p")

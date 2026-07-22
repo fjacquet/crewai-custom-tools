@@ -1,9 +1,10 @@
 """Tests du détecteur de doublons R10 (pur)."""
 
-from crewai_custom_tools.tools.genealogy.models.domain import EventFact, PersonFacts
 from crewai_custom_tools.tools.genealogy.analysis.duplicates import (
-    find_duplicates, normalize_name,
+    find_duplicates,
+    normalize_name,
 )
+from crewai_custom_tools.tools.genealogy.models.domain import EventFact, PersonFacts
 
 
 def _p(gid, given, surname, birth_year):

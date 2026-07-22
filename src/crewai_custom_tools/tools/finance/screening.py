@@ -31,17 +31,17 @@ class MarketScreeningInput(BaseModel):
     tickers: list[str] = Field(
         ..., description="Ticker symbols to screen (e.g. ['AAPL', 'MSFT'])."
     )
-    min_market_cap: Optional[float] = Field(
+    min_market_cap: float | None = Field(
         None, description="Minimum market capitalization in USD."
     )
-    max_pe: Optional[float] = Field(None, description="Maximum trailing P/E ratio.")
-    min_dividend_yield: Optional[float] = Field(
+    max_pe: float | None = Field(None, description="Maximum trailing P/E ratio.")
+    min_dividend_yield: float | None = Field(
         None, description="Minimum dividend yield as a fraction (e.g. 0.02 for 2%)."
     )
-    sector: Optional[str] = Field(
+    sector: str | None = Field(
         None, description="Required sector (case-insensitive exact match)."
     )
-    min_volume: Optional[float] = Field(
+    min_volume: float | None = Field(
         None, description="Minimum average daily volume."
     )
     sort_by: str = Field(
@@ -71,11 +71,10 @@ def _passes(m: dict, crit: MarketScreeningInput) -> bool:
         m["sector"] is None or m["sector"].lower() != crit.sector.lower()
     ):
         return False
-    if crit.min_volume is not None and (
-        m["volume"] is None or m["volume"] < crit.min_volume
-    ):
-        return False
-    return True
+    return not (
+        crit.min_volume is not None
+        and (m["volume"] is None or m["volume"] < crit.min_volume)
+    )
 
 
 class MarketScreeningTool(BaseTool):
@@ -93,11 +92,11 @@ class MarketScreeningTool(BaseTool):
     def _run(
         self,
         tickers: list[str],
-        min_market_cap: Optional[float] = None,
-        max_pe: Optional[float] = None,
-        min_dividend_yield: Optional[float] = None,
-        sector: Optional[str] = None,
-        min_volume: Optional[float] = None,
+        min_market_cap: float | None = None,
+        max_pe: float | None = None,
+        min_dividend_yield: float | None = None,
+        sector: str | None = None,
+        min_volume: float | None = None,
         sort_by: str = "market_cap",
     ) -> str:
         criteria = MarketScreeningInput(
@@ -115,7 +114,7 @@ class MarketScreeningTool(BaseTool):
         for ticker in tickers:
             try:
                 info = yf.Ticker(ticker).info or {}
-            except Exception:  # noqa: BLE001 — one bad ticker must not abort the screen
+            except Exception:
                 errored.append(ticker)
                 continue
             metrics = _extract_metrics(info)

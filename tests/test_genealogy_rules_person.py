@@ -1,12 +1,12 @@
 """Tests par table des règles personne R1, R2, R6, R7, R8, R9 (pures, hors-ligne)."""
 
-from crewai_custom_tools.tools.genealogy.models.domain import EventFact, PersonFacts
 from crewai_custom_tools.tools.genealogy.analysis.rules import check_person
+from crewai_custom_tools.tools.genealogy.models.domain import EventFact, PersonFacts
 
 
 def _p(**kw):
-    base = dict(gramps_id="I1", handle="h1", name="X", surname="X", given="x",
-                sex="M", has_any_citation=True)
+    base = {"gramps_id": "I1", "handle": "h1", "name": "X", "surname": "X", "given": "x",
+             "sex": "M", "has_any_citation": True}
     base.update(kw)
     return PersonFacts(**base)
 

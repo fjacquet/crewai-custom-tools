@@ -29,22 +29,22 @@ def _clamp(value: float) -> float:
     return round(max(0.0, min(10.0, value)), 2)
 
 
-def _score_beta(beta: Optional[float]) -> Optional[float]:
+def _score_beta(beta: float | None) -> float | None:
     """beta 0 -> 0, beta 2.0+ -> 10."""
     return None if beta is None else _clamp(beta * 5.0)
 
 
-def _score_debt_to_equity(dte: Optional[float]) -> Optional[float]:
+def _score_debt_to_equity(dte: float | None) -> float | None:
     """yfinance debtToEquity is a percent (150 == 1.5x): 0 -> 0, 300%+ -> 10."""
     return None if dte is None else _clamp(dte / 30.0)
 
 
-def _score_volatility(vol: Optional[float]) -> Optional[float]:
+def _score_volatility(vol: float | None) -> float | None:
     """Annualized stdev of daily returns: 0 -> 0, 60%+ -> 10."""
     return None if vol is None else _clamp(vol / 0.06)
 
 
-def _score_size(market_cap: Optional[float]) -> Optional[float]:
+def _score_size(market_cap: float | None) -> float | None:
     """Smaller cap = higher risk: >=200B -> 0, <=300M -> 10 (log-scaled)."""
     if not market_cap or market_cap <= 0:
         return None
@@ -61,11 +61,11 @@ _SCORERS = {
 }
 
 
-def _annualized_volatility(ticker_obj) -> Optional[float]:
+def _annualized_volatility(ticker_obj) -> float | None:
     """Annualized volatility from 1y of daily closes, or None if unavailable."""
     try:
         hist = ticker_obj.history(period="1y")
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
     if hist is None or hist.empty or "Close" not in hist:
         return None

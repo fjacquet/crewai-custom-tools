@@ -233,7 +233,9 @@ class TestPositionSizingTool:
 
         # Assert
         # Total crypto should not exceed 10%
-        assert result.recommended_size_pct <= (tool.max_crypto_total_pct - sample_portfolio.asset_class_allocations["crypto"])
+        assert result.recommended_size_pct <= (
+            tool.max_crypto_total_pct - sample_portfolio.asset_class_allocations["crypto"]
+        )
 
     def test_should_calculate_risk_contribution(self, tool, high_risk_holding, sample_portfolio):
         """Test that risk contribution is calculated."""
@@ -602,7 +604,7 @@ class TestPriceTargetCalculator:
     def test_should_calculate_buy_targets_for_keep_decision(self, calculator):
         """Test buy target calculation for KEEP recommendation."""
         # Act
-        buy_primary, buy_secondary, rationale = calculator._calculate_buy_targets(
+        buy_primary, _buy_secondary, rationale = calculator._calculate_buy_targets(
             current_price=100.0,
             fair_value=110.0,
             support_levels=[95.0, 90.0],
@@ -620,7 +622,7 @@ class TestPriceTargetCalculator:
         # Act
         (
             sell_primary,
-            sell_secondary,
+            _sell_secondary,
             stop_loss,
             rationale,
         ) = calculator._calculate_sell_targets(

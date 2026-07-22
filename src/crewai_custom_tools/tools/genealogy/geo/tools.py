@@ -13,7 +13,9 @@ from pydantic import BaseModel, Field
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import ok
 from crewai_custom_tools.tools.genealogy.geo.registry import (
-    confiance_of, decide_action, resolve_place,
+    confiance_of,
+    decide_action,
+    resolve_place,
 )
 from crewai_custom_tools.tools.genealogy.standardize.places import parse_pname
 

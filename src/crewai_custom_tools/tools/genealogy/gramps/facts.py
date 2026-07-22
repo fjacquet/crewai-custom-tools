@@ -14,7 +14,9 @@ import httpx
 
 from crewai_custom_tools.tools.genealogy.gramps.client import GrampsClient
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    EventFact, FamilyFacts, PersonFacts,
+    EventFact,
+    FamilyFacts,
+    PersonFacts,
 )
 
 logger = logging.getLogger(__name__)

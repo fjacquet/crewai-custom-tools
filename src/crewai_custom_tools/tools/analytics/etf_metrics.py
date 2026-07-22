@@ -204,7 +204,10 @@ def calculate_expense_impact(returns: pd.Series, expense_ratio: float, years: in
             "avg_annual_return": avg_return,
         }
 
-        logger.debug(f"Expense impact calculated: {annual_drag * 100:.2f}% annual, {cumulative_cost * 100:.1f}% over {years} years")
+        logger.debug(
+            f"Expense impact calculated: {annual_drag * 100:.2f}% annual, "
+            f"{cumulative_cost * 100:.1f}% over {years} years"
+        )
 
         return result
 
@@ -213,7 +216,9 @@ def calculate_expense_impact(returns: pd.Series, expense_ratio: float, years: in
         return {"annual_drag": 0.0, "cumulative_cost": 0.0, "return_reduction_pct": 0.0}
 
 
-def calculate_liquidity_score(avg_daily_volume: float, bid_ask_spread_pct: float, market_cap: float) -> dict[str, float | str]:
+def calculate_liquidity_score(
+    avg_daily_volume: float, bid_ask_spread_pct: float, market_cap: float
+) -> dict[str, float | str]:
     """
     Calculate liquidity score for an ETF based on multiple factors.
 
@@ -235,7 +240,9 @@ def calculate_liquidity_score(avg_daily_volume: float, bid_ask_spread_pct: float
         - 'liquidity_rating': Text rating (Excellent/Good/Fair/Poor)
 
     Example:
-        >>> score = calculate_liquidity_score(avg_daily_volume=5_000_000, bid_ask_spread_pct=0.05, market_cap=10_000_000_000)
+        >>> score = calculate_liquidity_score(
+        ...     avg_daily_volume=5_000_000, bid_ask_spread_pct=0.05, market_cap=10_000_000_000
+        ... )
         >>> print(f"Liquidity Score: {score['liquidity_score']:.0f}/100")
         >>> print(f"Rating: {score['liquidity_rating']}")
 
@@ -417,7 +424,10 @@ def calculate_concentration_risk(holdings: list[dict[str, float]], top_n: int = 
             "total_holdings": len(weights),
         }
 
-        logger.debug(f"Concentration risk calculated: Top {top_n} = {top_n_concentration * 100:.1f}%, Effective N = {effective_n_holdings:.1f}, Rating = {concentration_rating}")
+        logger.debug(
+            f"Concentration risk calculated: Top {top_n} = {top_n_concentration * 100:.1f}%, "
+            f"Effective N = {effective_n_holdings:.1f}, Rating = {concentration_rating}"
+        )
 
         return result
 
@@ -431,7 +441,9 @@ def calculate_concentration_risk(holdings: list[dict[str, float]], top_n: int = 
         }
 
 
-def calculate_etf_efficiency_score(tracking_error: float, expense_ratio: float, liquidity_score: float) -> dict[str, float | str]:
+def calculate_etf_efficiency_score(
+    tracking_error: float, expense_ratio: float, liquidity_score: float
+) -> dict[str, float | str]:
     """
     Calculate overall ETF efficiency score combining multiple factors.
 

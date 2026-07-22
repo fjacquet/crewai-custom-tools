@@ -107,7 +107,10 @@ class PriceTarget:
 
     def __repr__(self) -> str:
         """String representation."""
-        return f"PriceTarget(target=${self.target_price:.2f}, upside={self.upside_pct:.1f}%, confidence={self.confidence:.2f}, method={self.method})"
+        return (
+            f"PriceTarget(target=${self.target_price:.2f}, upside={self.upside_pct:.1f}%, "
+            f"confidence={self.confidence:.2f}, method={self.method})"
+        )
 
 
 def calculate_dcf_target(
@@ -154,11 +157,15 @@ def calculate_dcf_target(
     try:
         if not cash_flows or len(cash_flows) == 0:
             logger.warning("No cash flows provided for DCF calculation")
-            return PriceTarget(target_price=0.0, current_price=current_price, confidence=0.0, method="dcf", assumptions={})
+            return PriceTarget(
+                target_price=0.0, current_price=current_price, confidence=0.0, method="dcf", assumptions={}
+            )
 
         if discount_rate <= terminal_growth:
             logger.warning(f"Discount rate ({discount_rate}) must be > terminal growth ({terminal_growth})")
-            return PriceTarget(target_price=0.0, current_price=current_price, confidence=0.0, method="dcf", assumptions={})
+            return PriceTarget(
+                target_price=0.0, current_price=current_price, confidence=0.0, method="dcf", assumptions={}
+            )
 
         # Calculate present value of projected cash flows
         pv_cash_flows = 0.0
@@ -235,7 +242,9 @@ def calculate_pe_target(
         PriceTarget: P/E-based price target with confidence and assumptions
 
     Example:
-        >>> target = calculate_pe_target(earnings_per_share=5.50, target_pe_ratio=20.0, current_price=95.0, sector_avg_pe=18.5)
+        >>> target = calculate_pe_target(
+        ...     earnings_per_share=5.50, target_pe_ratio=20.0, current_price=95.0, sector_avg_pe=18.5
+        ... )
         >>> print(f"Target: ${target.target_price:.2f}")
 
     Notes:
@@ -248,11 +257,17 @@ def calculate_pe_target(
     try:
         if earnings_per_share <= 0:
             logger.warning(f"Invalid EPS: {earnings_per_share}")
-            return PriceTarget(target_price=0.0, current_price=current_price, confidence=0.0, method="pe_multiple", assumptions={})
+            return PriceTarget(
+                target_price=0.0, current_price=current_price, confidence=0.0,
+                method="pe_multiple", assumptions={}
+            )
 
         if target_pe_ratio <= 0:
             logger.warning(f"Invalid P/E ratio: {target_pe_ratio}")
-            return PriceTarget(target_price=0.0, current_price=current_price, confidence=0.0, method="pe_multiple", assumptions={})
+            return PriceTarget(
+                target_price=0.0, current_price=current_price, confidence=0.0,
+                method="pe_multiple", assumptions={}
+            )
 
         # Calculate target price
         target_price = earnings_per_share * target_pe_ratio
@@ -284,10 +299,15 @@ def calculate_pe_target(
 
     except Exception as e:
         logger.error(f"P/E calculation failed: {e}")
-        return PriceTarget(target_price=0.0, current_price=current_price, confidence=0.0, method="pe_multiple", assumptions={})
+        return PriceTarget(
+            target_price=0.0, current_price=current_price, confidence=0.0,
+            method="pe_multiple", assumptions={}
+        )
 
 
-def calculate_technical_target(prices: pd.Series, method: str = "fibonacci", current_price: float | None = None) -> PriceTarget:
+def calculate_technical_target(
+    prices: pd.Series, method: str = "fibonacci", current_price: float | None = None
+) -> PriceTarget:
     """
     Calculate price target using technical analysis methods.
 
@@ -319,7 +339,10 @@ def calculate_technical_target(prices: pd.Series, method: str = "fibonacci", cur
     try:
         if len(prices) < 10:
             logger.warning(f"Insufficient price data: {len(prices)} points")
-            return PriceTarget(target_price=0.0, current_price=current_price, confidence=0.0, method=f"technical_{method}", assumptions={})
+            return PriceTarget(
+                target_price=0.0, current_price=current_price, confidence=0.0,
+                method=f"technical_{method}", assumptions={}
+            )
 
         if current_price is None:
             current_price = float(prices.iloc[-1])
@@ -406,7 +429,9 @@ def calculate_technical_target(prices: pd.Series, method: str = "fibonacci", cur
         )
 
 
-def calculate_support_resistance_targets(prices: pd.Series, current_price: float | None = None) -> dict[str, PriceTarget]:
+def calculate_support_resistance_targets(
+    prices: pd.Series, current_price: float | None = None
+) -> dict[str, PriceTarget]:
     """
     Calculate price targets based on support and resistance levels.
 
@@ -451,17 +476,19 @@ def calculate_support_resistance_targets(prices: pd.Series, current_price: float
 
         # Identify resistance levels (local maxima above current price)
         resistance_levels = prices[(prices == local_max) & (prices > current_price)]
-        if len(resistance_levels) > 0:
-            resistance_price = float(resistance_levels.min())  # Nearest resistance
-        else:
-            resistance_price = current_price * 1.10  # Default 10% above
+        resistance_price = (
+            float(resistance_levels.min())  # Nearest resistance
+            if len(resistance_levels) > 0
+            else current_price * 1.10  # Default 10% above
+        )
 
         # Identify support levels (local minima below current price)
         support_levels = prices[(prices == local_min) & (prices < current_price)]
-        if len(support_levels) > 0:
-            support_price = float(support_levels.max())  # Nearest support
-        else:
-            support_price = current_price * 0.90  # Default 10% below
+        support_price = (
+            float(support_levels.max())  # Nearest support
+            if len(support_levels) > 0
+            else current_price * 0.90  # Default 10% below
+        )
 
         # Confidence based on how established the levels are
         confidence = 0.55
@@ -543,10 +570,17 @@ def calculate_consensus_target(targets: list[PriceTarget], weights: list[float] 
             weights = [w / total_weight for w in weights]
 
         # Calculate weighted average target
-        consensus_price = sum(t.target_price * w for t, w in zip(valid_targets, weights))
+        # `weights` est toujours reconstruit ci-dessus à la même longueur que
+        # `valid_targets` (confiances, poids uniformes ou poids normalisés) :
+        # strict=True documente et vérifie cet invariant.
+        consensus_price = sum(
+            t.target_price * w for t, w in zip(valid_targets, weights, strict=True)
+        )
 
         # Calculate weighted average confidence
-        consensus_confidence = sum(t.confidence * w for t, w in zip(valid_targets, weights))
+        consensus_confidence = sum(
+            t.confidence * w for t, w in zip(valid_targets, weights, strict=True)
+        )
 
         # Get current price from first target
         current_price = valid_targets[0].current_price

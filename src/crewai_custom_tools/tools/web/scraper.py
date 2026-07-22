@@ -3,7 +3,6 @@
 import json
 import logging
 import os
-from typing import List, Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -63,7 +62,7 @@ class UnifiedScraperInput(BaseModel):
     """Input schema for the Unified Scraper Tool."""
 
     url: str = Field(..., description="The URL of the website to scrape.")
-    provider: Optional[str] = Field(
+    provider: str | None = Field(
         None,
         description="Optional: force a provider: 'standard' (BeautifulSoup), 'scrapeninja', 'firecrawl'.",
     )
@@ -106,7 +105,7 @@ class UnifiedScraperTool(BaseTool):
         return _firecrawl(url, api_key)
 
     @api_tool(provider="UniversalScraper", endpoint="Scrape")
-    def _run(self, url: str, provider: Optional[str] = None) -> str:
+    def _run(self, url: str, provider: str | None = None) -> str:
         """Execute web scraping with fallback orchestration."""
         provider_env = os.getenv("WEB_SCRAPER_PROVIDER", "").strip().lower()
         selected_provider = provider.lower() if provider else provider_env
@@ -126,21 +125,21 @@ class UnifiedScraperTool(BaseTool):
         # Standard with auto-escalation to any provider whose key is present.
         try:
             return ok(self._scrape_standard(url))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Standard scraping failed for {url}: {e}. Escalating...")
 
         ninja_key = os.getenv("RAPIDAPI_KEY")
         if ninja_key:
             try:
                 return ok(self._scrape_scrapeninja(url, ninja_key))
-            except Exception as ninja_err:  # noqa: BLE001
+            except Exception as ninja_err:
                 logger.error(f"Escalation to ScrapeNinja failed: {ninja_err}")
 
         firecrawl_key = os.getenv("FIRECRAWL_API_KEY")
         if firecrawl_key:
             try:
                 return ok(self._scrape_firecrawl(url, firecrawl_key))
-            except Exception as firecrawl_err:  # noqa: BLE001
+            except Exception as firecrawl_err:
                 logger.error(f"Escalation to Firecrawl failed: {firecrawl_err}")
 
         return err(f"Scrape failed across all available providers for {url}")
@@ -194,7 +193,7 @@ class FirecrawlTool(BaseTool):
 class BatchArticleScraperInput(BaseModel):
     """Input schema for the batch article scraper."""
 
-    urls: List[str] = Field(..., description="List of article URLs to scrape.")
+    urls: list[str] = Field(..., description="List of article URLs to scrape.")
 
 
 class BatchArticleScraperTool(BaseTool):
@@ -208,7 +207,7 @@ class BatchArticleScraperTool(BaseTool):
     args_schema: type[BaseModel] = BatchArticleScraperInput
 
     @api_tool(provider="BatchScraper", endpoint="Scrape")
-    def _run(self, urls: List[str]) -> str:
+    def _run(self, urls: list[str]) -> str:
         scraper = UnifiedScraperTool()
         articles = []
         for url in urls:

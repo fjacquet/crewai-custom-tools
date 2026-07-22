@@ -1,7 +1,7 @@
 """Sentiment analysis tools (VADER-based) for finance/news text."""
 
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -29,7 +29,7 @@ def _label(compound: float) -> str:
     return "Neutral"
 
 
-def score_texts(texts: List[str]) -> Dict[str, Any]:
+def score_texts(texts: list[str]) -> dict[str, Any]:
     """Score a list of texts and aggregate — the shared engine for both tools.
 
     Returns per-text compound scores, the mean compound, a 0-100 normalized score
@@ -57,10 +57,10 @@ def score_texts(texts: List[str]) -> Dict[str, Any]:
 class SentimentAnalysisInput(BaseModel):
     """Input schema for StandardizedSentimentAnalysisTool."""
 
-    text: Optional[str] = Field(
+    text: str | None = Field(
         default=None, description="A single text/headline to score."
     )
-    texts: Optional[List[str]] = Field(
+    texts: list[str] | None = Field(
         default=None,
         description="A list of texts/headlines to score and aggregate (use instead of `text`).",
     )
@@ -77,7 +77,7 @@ class StandardizedSentimentAnalysisTool(BaseTool):
     )
     args_schema: type[BaseModel] = SentimentAnalysisInput
 
-    def _run(self, text: Optional[str] = None, texts: Optional[List[str]] = None) -> str:
+    def _run(self, text: str | None = None, texts: list[str] | None = None) -> str:
         """Score one text or a list of texts."""
         items = texts if texts else ([text] if text else [])
         if not any(t and t.strip() for t in items):
@@ -88,7 +88,7 @@ class StandardizedSentimentAnalysisTool(BaseTool):
 class CrossAssetSentimentInput(BaseModel):
     """Input schema for CrossAssetSentimentComparatorTool."""
 
-    assets: Dict[str, List[str]] = Field(
+    assets: dict[str, list[str]] = Field(
         ...,
         description="Mapping of asset/ticker name -> its list of texts/headlines to score.",
     )
@@ -105,7 +105,7 @@ class CrossAssetSentimentComparatorTool(BaseTool):
     )
     args_schema: type[BaseModel] = CrossAssetSentimentInput
 
-    def _run(self, assets: Dict[str, List[str]]) -> str:
+    def _run(self, assets: dict[str, list[str]]) -> str:
         """Score each asset and rank most→least bullish."""
         scored = {
             name: score_texts(texts)

@@ -9,7 +9,7 @@ import logging
 import math
 import os
 import socket
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -183,7 +183,10 @@ class UnifiedRssToolInput(BaseModel):
     )
     output_file_path: str | None = Field(
         None,
-        description="Optional path to write the aggregated RssFeeds JSON. When set, the written file is the primary output.",
+        description=(
+            "Optional path to write the aggregated RssFeeds JSON. When set, the written "
+            "file is the primary output."
+        ),
     )
     invalid_sources_file_path: str | None = Field(
         None,
@@ -234,7 +237,7 @@ class UnifiedRssTool(BaseTool):
         # and _entry_pub_date normalises string dates to UTC too. datetime.now() (naive
         # local) would skew the boundary by the server's UTC offset on non-UTC hosts.
         cutoff_date = (
-            datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
+            datetime.now(UTC).replace(tzinfo=None) - timedelta(days=days)
         ).replace(hour=0, minute=0, second=0, microsecond=0)
 
         all_feeds: list[FeedWithArticles] = []
@@ -276,7 +279,7 @@ class UnifiedRssTool(BaseTool):
                 json.dump(
                     {
                         "invalid_sources": sorted(invalid_sources),
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "total_invalid": len(invalid_sources),
                     },
                     fh,
@@ -340,7 +343,7 @@ class UnifiedRssTool(BaseTool):
                     )
                 )
             return articles
-        except Exception as exc:  # noqa: BLE001 — any feed error marks the source invalid
+        except Exception as exc:
             logger.warning(f"Error fetching feed {feed_url}: {exc}")
             invalid_sources.add(feed_url)
             return []
@@ -367,7 +370,7 @@ class UnifiedRssTool(BaseTool):
                 try:
                     dt = date_parser.parse(value)
                     if dt.tzinfo is not None:
-                        dt = dt.astimezone(timezone.utc)
+                        dt = dt.astimezone(UTC)
                     return dt.replace(tzinfo=None)
                 except (TypeError, ValueError):
                     pass
@@ -392,7 +395,7 @@ class UnifiedRssTool(BaseTool):
             article.parse()
             if article.text and len(article.text.strip()) > 100:
                 return str(article.text)
-        except Exception as exc:  # noqa: BLE001 — ImportError or any scrape error
+        except Exception as exc:
             logger.debug(f"Newspaper3k unavailable/failed for {url}: {exc}")
 
         # 2. Fall back to the package's own resilient scraper.
@@ -402,7 +405,7 @@ class UnifiedRssTool(BaseTool):
                 content = (payload.get("data") or {}).get("content")
                 if content:
                     return str(content)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning(f"UnifiedScraperTool failed for {url}: {exc}")
 
         return None

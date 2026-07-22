@@ -14,7 +14,11 @@ from functools import lru_cache
 from pathlib import Path
 
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    DatedChain, DatedName, ParsedPlace, PlaceLevel, ResolvedPlace,
+    DatedChain,
+    DatedName,
+    ParsedPlace,
+    PlaceLevel,
+    ResolvedPlace,
 )
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "de_communes.csv"

@@ -3,7 +3,7 @@
 import logging
 import urllib.parse
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any
 
 import requests
 import tldextract
@@ -30,7 +30,10 @@ class CrtShTool(BaseTool):
     """Enumerates subdomains observed in Certificate Transparency logs via crt.sh."""
 
     name: str = "crt_sh_subdomain_recon"
-    description: str = "Queries crt.sh's public Certificate Transparency logs to find subdomains that have had TLS certificates."
+    description: str = (
+        "Queries crt.sh's public Certificate Transparency logs to find subdomains that "
+        "have had TLS certificates."
+    )
     args_schema: type[BaseModel] = DomainInput
 
     @api_tool(provider="crtsh", endpoint="Subdomains")
@@ -65,7 +68,10 @@ class RDAPDomainTool(BaseTool):
     """Looks up domain registration, registrar, creation date, and nameservers via RDAP."""
 
     name: str = "rdap_domain_recon"
-    description: str = "Structured machine-readable WHOIS lookup using RDAP to fetch domain registrar, creation date, and nameservers."
+    description: str = (
+        "Structured machine-readable WHOIS lookup using RDAP to fetch domain registrar, "
+        "creation date, and nameservers."
+    )
     args_schema: type[BaseModel] = DomainInput
 
     @api_tool(provider="RDAP", endpoint="DomainLookup")
@@ -87,18 +93,18 @@ class RDAPDomainTool(BaseTool):
         try:
             response = whodap.lookup_domain(sld, tld)
             whois = response.to_whois_dict()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"RDAP lookup failed for {registrable}: {e}")
             return err(f"RDAP lookup failed: {e}")
 
-        def _stringify_date(value: Any) -> Optional[str]:
+        def _stringify_date(value: Any) -> str | None:
             if value is None:
                 return None
             if isinstance(value, datetime):
                 return value.isoformat()
             return str(value)
 
-        def _as_list(value: Any) -> List[str]:
+        def _as_list(value: Any) -> list[str]:
             return list(value) if isinstance(value, list) else []
 
         registrar = whois.get(WHOISKeys.REGISTRAR_NAME)

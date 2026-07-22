@@ -42,8 +42,7 @@ def test_ambiguous_forces_proposition_even_at_score_1():
 
 def test_registry_falls_through_to_ex_commune_when_resolve_fr_none(monkeypatch):
     from crewai_custom_tools.tools.genealogy.geo import registry
-    from crewai_custom_tools.tools.genealogy.models.domain import (
-        DatedChain, ParsedPlace, PlaceLevel, ResolvedPlace)
+    from crewai_custom_tools.tools.genealogy.models.domain import DatedChain, ParsedPlace, PlaceLevel, ResolvedPlace
 
     france = PlaceLevel(name="France", place_type="Country")
     sentinel = ResolvedPlace(
@@ -68,8 +67,7 @@ def test_registry_falls_through_to_ex_commune_when_resolve_fr_none(monkeypatch):
 
 def test_registry_live_commune_never_reaches_ex_commune_path(monkeypatch):
     from crewai_custom_tools.tools.genealogy.geo import registry
-    from crewai_custom_tools.tools.genealogy.models.domain import (
-        DatedChain, ParsedPlace, PlaceLevel, ResolvedPlace)
+    from crewai_custom_tools.tools.genealogy.models.domain import DatedChain, ParsedPlace, PlaceLevel, ResolvedPlace
 
     bourges = ResolvedPlace(
         name="Bourges", place_type="Municipality", code="18033",
@@ -86,8 +84,7 @@ def test_registry_live_commune_never_reaches_ex_commune_path(monkeypatch):
 def test_registry_ambiguous_live_commune_does_not_fall_through(monkeypatch):
     # Un résultat ambigu est truthy : il ne doit PAS déclencher le repli ex-commune.
     from crewai_custom_tools.tools.genealogy.geo import registry
-    from crewai_custom_tools.tools.genealogy.models.domain import (
-        DatedChain, ParsedPlace, PlaceLevel, ResolvedPlace)
+    from crewai_custom_tools.tools.genealogy.models.domain import DatedChain, ParsedPlace, PlaceLevel, ResolvedPlace
 
     ambigu = ResolvedPlace(
         name="Sainte-Marie", place_type="Municipality", code="97418",

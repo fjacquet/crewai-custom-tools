@@ -14,20 +14,20 @@ from crewai_custom_tools.core.results import err, ok
 class GeoapifyPlacesInput(BaseModel):
     """Input schema for Geoapify Places search."""
 
-    categories: Optional[list[str]] = Field(
+    categories: list[str] | None = Field(
         None, description="Category IDs, e.g. ['catering.restaurant', 'commercial.supermarket']."
     )
-    conditions: Optional[list[str]] = Field(
+    conditions: list[str] | None = Field(
         None, description="Conditions to filter by, e.g. ['vegetarian', 'wheelchair']."
     )
-    filter_type: Optional[str] = Field(
+    filter_type: str | None = Field(
         None,
         description="Filter type: 'circle' (lon,lat,radiusM), 'rect' (lon1,lat1,lon2,lat2), 'place', or 'geometry'.",
     )
-    filter_value: Optional[str] = Field(
+    filter_value: str | None = Field(
         None, description="Filter value matching filter_type, e.g. '-0.0707,51.5085,1000' for a circle."
     )
-    bias: Optional[str] = Field(None, description="Proximity bias as 'lon,lat'.")
+    bias: str | None = Field(None, description="Proximity bias as 'lon,lat'.")
     limit: int = Field(20, ge=1, le=100, description="Maximum number of results (1-100).")
     offset: int = Field(0, ge=0, description="Pagination offset.")
     lang: str = Field("en", description="ISO 639-1 language code for results.")
@@ -46,11 +46,11 @@ class GeoapifyPlacesTool(BaseTool):
     @api_tool(provider="Geoapify", endpoint="Places")
     def _run(
         self,
-        categories: Optional[list[str]] = None,
-        conditions: Optional[list[str]] = None,
-        filter_type: Optional[str] = None,
-        filter_value: Optional[str] = None,
-        bias: Optional[str] = None,
+        categories: list[str] | None = None,
+        conditions: list[str] | None = None,
+        filter_type: str | None = None,
+        filter_value: str | None = None,
+        bias: str | None = None,
         limit: int = 20,
         offset: int = 0,
         lang: str = "en",

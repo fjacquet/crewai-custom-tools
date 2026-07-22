@@ -26,7 +26,7 @@ class BraveSearchInput(BaseModel):
 
     query: str = Field(..., description="The search query to execute.")
     count: int = Field(10, description="Maximum number of results to return.")
-    country: Optional[str] = Field(None, description="Optional country code (e.g. 'US', 'FR').")
+    country: str | None = Field(None, description="Optional country code (e.g. 'US', 'FR').")
 
 
 class BraveSearchTool(BaseTool):
@@ -40,7 +40,7 @@ class BraveSearchTool(BaseTool):
     args_schema: type[BaseModel] = BraveSearchInput
 
     @api_tool(provider="Brave", endpoint="Search")
-    def _run(self, query: str, count: int = 10, country: Optional[str] = None) -> str:
+    def _run(self, query: str, count: int = 10, country: str | None = None) -> str:
         api_key = os.getenv("BRAVE_API_KEY")
         if not api_key:
             return err("BRAVE_API_KEY not configured")

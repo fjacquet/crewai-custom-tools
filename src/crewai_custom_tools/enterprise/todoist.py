@@ -41,11 +41,11 @@ class TodoistTool(BaseTool):
     def _run(
         self,
         action: str,
-        project_id: Optional[str] = None,
-        task_id: Optional[str] = None,
-        task_content: Optional[str] = None,
-        due_string: Optional[str] = None,
-        priority: Optional[int] = None,
+        project_id: str | None = None,
+        task_id: str | None = None,
+        task_content: str | None = None,
+        due_string: str | None = None,
+        priority: int | None = None,
         **kwargs: Any,
     ) -> str:
         """Run the Todoist tool with the specified action."""

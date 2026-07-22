@@ -2,10 +2,12 @@
 
 import logging
 import os
+from typing import Any, Optional
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from typing import Any, Optional
+
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import err, ok
 
@@ -16,20 +18,20 @@ class GoogleFactCheckInput(BaseModel):
     """Input model for the GoogleFactCheckTool."""
 
     query: str = Field(..., description="The query to search for fact-checked claims.")
-    review_publisher_site_filter: Optional[str] = Field(
+    review_publisher_site_filter: str | None = Field(
         default=None,
         description="The review publisher site to filter results by, e.g. nytimes.com.",
     )
-    language_code: Optional[str] = Field(
+    language_code: str | None = Field(
         default=None,
         description='The BCP-47 language code, such as "en-US" or "sr-Latn".',
     )
-    max_age_days: Optional[int] = Field(
+    max_age_days: int | None = Field(
         default=None,
         description="The maximum age of the returned search results, in days.",
     )
     page_size: int = Field(default=10, description="The pagination size.")
-    page_token: Optional[str] = Field(default=None, description="The pagination token.")
+    page_token: str | None = Field(default=None, description="The pagination token.")
 
 
 class GoogleFactCheckTool(BaseTool):

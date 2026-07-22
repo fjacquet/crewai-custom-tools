@@ -158,11 +158,15 @@ class APlusScreeningInput(BaseModel):
     """
 
     asset_type: Literal["etf", "stock", "crypto"] = Field(..., description="Type of assets to screen")
-    screening_criteria: dict[str, Any] = Field(default_factory=dict, description="Custom screening criteria (overrides defaults)")
+    screening_criteria: dict[str, Any] = Field(
+        default_factory=dict, description="Custom screening criteria (overrides defaults)"
+    )
     market_region: str = Field(default="global", description="Market region to screen (global, us, eu, etc.)")
     max_candidates: int = Field(default=50, ge=1, le=500, description="Maximum number of candidates to return")
     min_a_plus_score: float = Field(default=0.85, ge=0.0, le=1.0, description="Minimum A+ score threshold")
-    include_detailed_analysis: bool = Field(default=False, description="Whether to include detailed A+ analysis for each candidate")
+    include_detailed_analysis: bool = Field(
+        default=False, description="Whether to include detailed A+ analysis for each candidate"
+    )
 
 
 class MarketScreeningResult(BaseModel):

@@ -28,7 +28,7 @@ class SECAnalysisInput(BaseModel):
     )
 
 
-def _ticker_to_cik(ticker: str) -> Optional[int]:
+def _ticker_to_cik(ticker: str) -> int | None:
     """Resolve a ticker to its zero-padded SEC CIK, or None if unknown."""
     resp = requests.get(
         "https://www.sec.gov/files/company_tickers.json", headers=_HEADERS, timeout=15
@@ -41,7 +41,7 @@ def _ticker_to_cik(ticker: str) -> Optional[int]:
     return None
 
 
-def _latest_annual_fact(companyfacts: dict, concept: str) -> Optional[dict]:
+def _latest_annual_fact(companyfacts: dict, concept: str) -> dict | None:
     """Latest annual (10-K / FY) USD value for a us-gaap concept, or None."""
     node = companyfacts.get("facts", {}).get("us-gaap", {}).get(concept)
     if not node:

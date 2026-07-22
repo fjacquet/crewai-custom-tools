@@ -23,8 +23,8 @@ preserving (unlike ``APlusScoringTool``, which ``ScreeningRanking`` calls
 programmatically).
 """
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Any, Literal, cast
 
 from crewai.tools import BaseTool
@@ -96,10 +96,14 @@ class APlusScreeningTool(BaseTool):
                 )
 
             # Apply screening filters
-            filtered_candidates = self._apply_screening_filters(universe["symbols"], asset_type, screening_criteria, market_region)
+            filtered_candidates = self._apply_screening_filters(
+                universe["symbols"], asset_type, screening_criteria, market_region
+            )
 
             # Score candidates using A+ criteria
-            scored_candidates = self._ranking.score_candidates(filtered_candidates, asset_type, min_a_plus_score, include_detailed_analysis)
+            scored_candidates = self._ranking.score_candidates(
+                filtered_candidates, asset_type, min_a_plus_score, include_detailed_analysis
+            )
 
             # Sort by score and limit results
             scored_candidates.sort(key=lambda x: x.preliminary_score, reverse=True)
@@ -152,7 +156,9 @@ class APlusScreeningTool(BaseTool):
                 data={"asset_type": asset_type, "candidates_found": 0, "a_plus_candidates": 0},
             )
 
-    def _apply_screening_filters(self, symbols: list[str], asset_type: str, criteria: dict[str, Any], market_region: str) -> list[dict[str, Any]]:
+    def _apply_screening_filters(
+        self, symbols: list[str], asset_type: str, criteria: dict[str, Any], market_region: str
+    ) -> list[dict[str, Any]]:
         """Apply screening filters to the symbol universe."""
         try:
             filtered_candidates = []
@@ -169,16 +175,19 @@ class APlusScreeningTool(BaseTool):
                     # Get basic market data for the symbol
                     market_data = self._utils.get_basic_market_data(symbol, asset_type)
 
-                    if market_data and "error" not in market_data:
-                        # Apply asset-specific filters
-                        if self._criteria.passes_screening_filters(market_data, asset_type, final_criteria):
-                            filtered_candidates.append(
-                                {
-                                    "symbol": symbol,
-                                    "market_data": market_data,
-                                    "screening_criteria": final_criteria,
-                                }
-                            )
+                    # Apply asset-specific filters
+                    if (
+                        market_data
+                        and "error" not in market_data
+                        and self._criteria.passes_screening_filters(market_data, asset_type, final_criteria)
+                    ):
+                        filtered_candidates.append(
+                            {
+                                "symbol": symbol,
+                                "market_data": market_data,
+                                "screening_criteria": final_criteria,
+                            }
+                        )
 
                 except (KeyError, TypeError, ValueError, AttributeError) as e:
                     # Skip symbols that fail to process

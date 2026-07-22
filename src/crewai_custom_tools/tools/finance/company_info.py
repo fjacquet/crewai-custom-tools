@@ -6,6 +6,7 @@ from typing import Any
 import yfinance as yf
 from crewai.tools import BaseTool
 from pydantic import BaseModel
+
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import ok
 from crewai_custom_tools.models.finance_models import GetCompanyInfoInput
@@ -39,7 +40,7 @@ class YahooFinanceCompanyInfoTool(BaseTool):
                 if len(revenues) >= 2:
                     latest, previous = revenues.iloc[0], revenues.iloc[1]
                     revenue_growth = (latest - previous) / previous if previous != 0 else "N/A"
-        except Exception as exc:  # noqa: BLE001 — any failure here must fall back, not kill the call
+        except Exception as exc:
             logger.warning(f"Failed to calculate revenue growth for {ticker}: {exc}")
         if revenue_growth == "N/A":
             revenue_growth = info.get("revenueGrowth", "N/A")

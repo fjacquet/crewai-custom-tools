@@ -1,6 +1,7 @@
 """Tests for the fresh finance-analytics tools: screening, risk scoring, SEC EDGAR."""
 
 import json
+from typing import ClassVar
 
 import pandas as pd
 
@@ -66,7 +67,9 @@ def test_screening_bad_ticker_is_skipped(mocker):
             raise ValueError("boom")
 
         class _T:
-            info = {"shortName": "Good", "marketCap": 2e11}
+            # Doublure de test, jamais mutée : vrai partage voulu, pas un défaut
+            # par instance — ClassVar documente l'invariant plutôt que Field().
+            info: ClassVar[dict] = {"shortName": "Good", "marketCap": 2e11}
 
         return _T()
 
@@ -118,7 +121,8 @@ def test_risk_missing_factor_excluded(mocker):
 
 def test_risk_no_factors_errors(mocker):
     class _T:
-        info: dict = {}
+        # Doublure de test, jamais mutée : vrai partage voulu (ClassVar).
+        info: ClassVar[dict] = {}
 
         def history(self, period="1y"):
             return pd.DataFrame()

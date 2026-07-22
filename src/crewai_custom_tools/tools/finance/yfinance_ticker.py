@@ -2,6 +2,7 @@
 Tool for fetching Yahoo Finance Ticker Information.
 """
 
+import contextlib
 from datetime import UTC, datetime
 from typing import Any
 
@@ -94,10 +95,8 @@ class YahooFinanceTickerInfoTool(BaseTool):
 
         result["timestamp"] = datetime.now(UTC).isoformat()
         if "regularMarketTime" in info:
-            try:
+            with contextlib.suppress(ValueError, TypeError, OSError):
                 result["market_time"] = datetime.fromtimestamp(info["regularMarketTime"], tz=UTC).isoformat()
-            except (ValueError, TypeError, OSError):
-                pass
         result["data_source"] = "live_api"
 
         envelope = ok(result)

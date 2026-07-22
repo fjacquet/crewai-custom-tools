@@ -6,7 +6,9 @@ Aucun ne doit atteindre l'étage `auto` : une fusion est irréversible.
 
 from crewai_custom_tools.tools.genealogy.analysis.duplicates import date_complete, etager
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    EventFact, FamilyFacts, PersonFacts,
+    EventFact,
+    FamilyFacts,
+    PersonFacts,
 )
 
 

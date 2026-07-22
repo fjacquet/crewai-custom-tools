@@ -61,7 +61,7 @@ class MetricsCalculatorTool(BaseTool):
                 metadata=kwargs.get("metadata", {}),
             )
             return ok(metric.model_dump())
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return err(f"Failed to calculate metric: {exc}")
 
 
@@ -112,7 +112,7 @@ class KPITrackerTool(BaseTool):
                 metadata=kwargs.get("metadata", {}),
             )
             return ok(kpi.model_dump())
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return err(f"Failed to track KPI: {exc}")
 
 
@@ -157,7 +157,7 @@ class DataVisualizationTool(BaseTool):
                 return ok(table.model_dump())
 
             return err(f"Unknown visualization type: {type!r} (expected 'series' or 'table')")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return err(f"Failed to create data visualization: {exc}")
 
 
@@ -270,9 +270,9 @@ class StructuredReportTool(BaseTool):
                         timestamp=report.timestamp,
                         metadata=report.metadata,
                     )
-                except Exception:  # noqa: BLE001
+                except Exception:
                     report.html = None
 
             return ok(report.model_dump())
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return err(f"Failed to generate structured report: {exc}")

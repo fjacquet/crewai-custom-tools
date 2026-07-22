@@ -83,9 +83,13 @@ class _TokenBucket:
                     return
                 wait = (1.0 - self._tokens) / self._refill_per_sec
             if deadline is not None and time.monotonic() + wait > deadline:
-                raise RateLimitExceeded(f"{provider}: rate-limit wait would exceed {max_wait:.1f}s (waited {waited:.1f}s)")
+                raise RateLimitExceeded(
+                    f"{provider}: rate-limit wait would exceed {max_wait:.1f}s (waited {waited:.1f}s)"
+                )
             if not warned and waited + wait > _WARN_WAIT_SECONDS:
-                logger.warning(f"{provider}: rate-limited, waiting {wait:.1f}s for a token (total wait so far {waited:.1f}s)")
+                logger.warning(
+                    f"{provider}: rate-limited, waiting {wait:.1f}s for a token (total wait so far {waited:.1f}s)"
+                )
                 warned = True
             time.sleep(wait)
             waited += wait

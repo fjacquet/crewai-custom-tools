@@ -125,7 +125,7 @@ class EnhancedETFAnalysisInput(BaseModel):
     max_holdings: int = Field(10, description="Maximum number of top holdings to return.")
 
 
-def _concentration_level(top_weight_pct: Optional[float]) -> Optional[str]:
+def _concentration_level(top_weight_pct: float | None) -> str | None:
     """Classify how concentrated an ETF's top holdings are (percent of assets)."""
     if top_weight_pct is None:
         return None
@@ -164,7 +164,7 @@ class EnhancedETFAnalysisTool(BaseTool):
             weights = funds.sector_weightings
             if isinstance(weights, dict):
                 sector_weightings = {k: float(v) for k, v in weights.items()}
-        except Exception:  # noqa: BLE001 — non-fund tickers have no funds_data
+        except Exception:
             pass
 
         if not holdings and not info:
@@ -342,7 +342,7 @@ class DeFiMetricsInput(BaseModel):
     symbol: str = Field(..., description="DeFi protocol token symbol (e.g. UNI, AAVE, CRV).")
 
 
-def _tvl_tier(tvl: Optional[float]) -> Optional[str]:
+def _tvl_tier(tvl: float | None) -> str | None:
     """Bucket a protocol by real TVL size."""
     if not tvl:
         return None
@@ -355,7 +355,7 @@ def _tvl_tier(tvl: Optional[float]) -> Optional[str]:
     return "small (<$100M)"
 
 
-def _defi_risk_factors(category: Optional[str], tvl: Optional[float]) -> list[str]:
+def _defi_risk_factors(category: str | None, tvl: float | None) -> list[str]:
     """Transparent, category/TVL-based risk factors (no fabricated numbers)."""
     factors = ["Smart-contract vulnerability / exploit risk", "DeFi regulatory uncertainty"]
     cat = (category or "").lower()

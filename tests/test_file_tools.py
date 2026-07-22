@@ -123,7 +123,7 @@ def test_directory_read_strips_trailing_slash(tmp_path):
 
 
 def test_directory_read_missing_directory_raises():
-    with pytest.raises(ValueError, match="Directory must be provided."):
+    with pytest.raises(ValueError, match=r"Directory must be provided\."):
         DirectoryReadTool()._run()
 
 

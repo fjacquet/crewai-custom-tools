@@ -49,6 +49,7 @@ def test_piste_champs_et_defauts():
 def test_piste_concordance_hors_vocabulaire_refusee():
     import pytest
     from pydantic import ValidationError
+
     from crewai_custom_tools.tools.genealogy.models.domain import Piste
 
     # `concordances` est Literal, pas str libre : le contrat (vocabulaire fermé des

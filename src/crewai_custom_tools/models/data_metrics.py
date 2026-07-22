@@ -12,15 +12,15 @@ from typing import Any
 from pydantic import BaseModel, Field, model_validator
 
 __all__ = [
-    "MetricValue",
-    "Metric",
     "KPI",
     "DataPoint",
     "DataSeries",
     "DataTable",
+    "Metric",
     "MetricType",
-    "TrendDirection",
+    "MetricValue",
     "StructuredDataReport",
+    "TrendDirection",
 ]
 
 

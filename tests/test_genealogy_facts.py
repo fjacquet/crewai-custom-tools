@@ -1,7 +1,7 @@
 import httpx
 
-from crewai_custom_tools.tools.genealogy.gramps.facts import FactsFetcher, person_from_json, family_from_json
 from crewai_custom_tools.tools.genealogy.gramps.client import GrampsClient, GrampsConfig
+from crewai_custom_tools.tools.genealogy.gramps.facts import FactsFetcher, family_from_json, person_from_json
 
 CONFIG = GrampsConfig(api_url="http://g.test/api", username="u", password="p")
 

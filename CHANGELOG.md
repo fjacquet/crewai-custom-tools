@@ -4,6 +4,37 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.27.0] - 2026-07-22
+
+### Changed
+
+- **Configuration de ruff** — le dépôt tournait sur le jeu de règles **par défaut** (`E4`, `E7`,
+  `E9`, `F`) : ni tri d'imports, ni longueur de ligne, ni fermeture sur variable de boucle, ni
+  `zip` qui tronque en silence. Le linter passait au vert sur 730 signalements qu'il ne regardait
+  pas. `select = ["E", "W", "I", "UP", "B", "C4", "SIM", "RUF"]`, `line-length = 120`.
+  `RUF001`/`RUF002`/`RUF003` sont désactivées : projet francophone, l'apostrophe typographique et
+  l'espace insécable sont voulues.
+- 387 signalements corrigés, dont 246 automatiquement. `ruff check` rend désormais zéro.
+
+### Fixed
+
+- **`zip()` sans `strict=`** (3 occurrences, dont `genealogy/militaires.py`). Un `zip` sur deux
+  séquences de longueurs différentes **tronque en silence**. Les trois invariants de longueur ont
+  été vérifiés comme tenant par construction, puis explicités par `strict=True` — ce qui les fait
+  respecter au lieu de les supposer.
+- Attributs de classe mutables partagés entre instances (`RUF012`), variables dépaquetées ignorées
+  par erreur (`RUF059`), imports `typing` dépréciés (`UP035`), `try/except/pass` remplacés par
+  `contextlib.suppress` (`SIM105`).
+
+### Notes
+
+- `gramps_generated.py` est exempté d'`E501` par `per-file-ignores` plutôt que retouché : c'est un
+  fichier généré, en-tête « NE PAS ÉDITER » (ADR 0004).
+- `__all__` est exempté de `RUF022` : le tri alphabétique détruirait le regroupement volontaire par
+  catégorie.
+
+---
+
 ## [0.26.0] - 2026-07-22
 
 ### Added

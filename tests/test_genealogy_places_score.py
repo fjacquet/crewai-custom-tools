@@ -1,5 +1,7 @@
 from crewai_custom_tools.tools.genealogy.geo.score import (
-    fuzzy_score, is_ambiguous, similarity,
+    fuzzy_score,
+    is_ambiguous,
+    similarity,
 )
 
 

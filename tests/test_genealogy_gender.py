@@ -5,7 +5,10 @@ import csv
 import pytest
 
 from crewai_custom_tools.tools.genealogy.analysis.gender import (
-    GenderInference, infer_sex, load_prenoms_table, normkey,
+    GenderInference,
+    infer_sex,
+    load_prenoms_table,
+    normkey,
 )
 from crewai_custom_tools.tools.genealogy.models.domain import Proposition
 

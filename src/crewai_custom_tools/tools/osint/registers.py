@@ -1,9 +1,11 @@
 """French Corporate Registries reconnaissance tools."""
 
 import logging
+
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
+
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import err, ok
 
@@ -23,7 +25,10 @@ class FrenchRegistryTool(BaseTool):
     """A tool to search the official, keyless public French corporate register (recherche-entreprises)."""
 
     name: str = "french_corporate_registry_search"
-    description: str = "Searches the official French corporate register for company metadata, SIREN, address, status, and corporate officers."
+    description: str = (
+        "Searches the official French corporate register for company metadata, SIREN, "
+        "address, status, and corporate officers."
+    )
     args_schema: type[BaseModel] = RegistrySearchInput
 
     @api_tool(provider="RechercheEntreprises", endpoint="Search")

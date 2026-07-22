@@ -28,13 +28,13 @@ class WikipediaProcessingToolInput(BaseModel):
 
     title: str = Field(..., description="The title of the Wikipedia article.")
     action: ProcessingAction = Field(..., description="The processing action to perform.")
-    query: Optional[str] = Field(None, description="Query to tailor the summary for (query action).")
-    section_title: Optional[str] = Field(None, description="Section to summarize (section action).")
+    query: str | None = Field(None, description="Query to tailor the summary for (query action).")
+    section_title: str | None = Field(None, description="Section to summarize (section action).")
     max_length: int = Field(150, description="Maximum length of the returned summary.")
     count: int = Field(5, description="Number of key-fact sentences to extract.")
 
 
-def _fetch(title: str, action: ArticleAction) -> tuple[Optional[dict], Optional[str]]:
+def _fetch(title: str, action: ArticleAction) -> tuple[dict | None, str | None]:
     """Fetch article data via WikipediaArticleTool; return (data, error_message)."""
     payload: dict[str, Any] = json.loads(WikipediaArticleTool()._run(title=title, action=action))
     if not payload["success"]:
@@ -61,8 +61,8 @@ class WikipediaProcessingTool(BaseTool):
         self,
         title: str,
         action: str,
-        query: Optional[str] = None,
-        section_title: Optional[str] = None,
+        query: str | None = None,
+        section_title: str | None = None,
         max_length: int = 150,
         count: int = 5,
     ) -> str:

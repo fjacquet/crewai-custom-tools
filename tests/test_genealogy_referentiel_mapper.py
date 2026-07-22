@@ -49,7 +49,7 @@ def ligne(qid, label, iso, parent=None, coord=None, art=None, nom_local=None, an
 def test_la_france_ne_se_reduit_pas_a_loutre_mer():
     """Régression : les régions métropolitaines pendent sous Q212429 France métropolitaine,
     qui n'a pas de code ISO. Sans l'ancre pays, 12 entités survivaient sur 125."""
-    subs, collisions, ecartees = map_subdivisions(charge("FR"), PAYS_REFERENTIEL["FR"])
+    subs, _, _ = map_subdivisions(charge("FR"), PAYS_REFERENTIEL["FR"])
     assert len(subs) > 110
     niveaux = {n: sum(1 for s in subs if s.niveau == n) for n in (1, 2)}
     assert niveaux[1] > 20 and niveaux[2] > 90

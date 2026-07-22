@@ -1,8 +1,12 @@
 from crewai_custom_tools.tools.genealogy.geo.transitions import (
-    Transition, apply_transition,
+    Transition,
+    apply_transition,
 )
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    DatedChain, ParsedPlace, PlaceLevel, ResolvedPlace,
+    DatedChain,
+    ParsedPlace,
+    PlaceLevel,
+    ResolvedPlace,
 )
 
 

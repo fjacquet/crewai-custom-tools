@@ -5,12 +5,13 @@ import sqlite3
 import pytest
 
 from crewai_custom_tools.tools.genealogy.analysis.identity import (
-    birth_concordance, score_identity,
+    birth_concordance,
+    score_identity,
 )
 from crewai_custom_tools.tools.genealogy.militaires import (
-    match_militaires, query_militaires,
+    match_militaires,
+    query_militaires,
 )
-
 
 # --- scoring partagé ---
 

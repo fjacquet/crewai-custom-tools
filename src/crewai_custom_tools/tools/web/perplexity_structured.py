@@ -3,7 +3,7 @@
 import json
 import logging
 import os
-from typing import Optional, TypeVar
+from typing import Optional
 
 import httpx
 import requests
@@ -26,13 +26,13 @@ class PerplexityStructuredInput(BaseModel):
     """Input schema for PerplexityStructuredTool."""
 
     prompt: str = Field(..., description="The research prompt / question.")
-    json_schema: Optional[dict] = Field(
+    json_schema: dict | None = Field(
         None,
         description="Optional JSON Schema; when provided, the model is asked to return "
         "JSON matching it (response_format=json_schema) and the parsed object is returned.",
     )
     model: str = Field("sonar-pro", description="Perplexity model id.")
-    recency: Optional[str] = Field(
+    recency: str | None = Field(
         "month", description="search_recency_filter: hour|day|week|month|year or null."
     )
 
@@ -52,9 +52,9 @@ class PerplexityStructuredTool(BaseTool):
     def _run(
         self,
         prompt: str,
-        json_schema: Optional[dict] = None,
+        json_schema: dict | None = None,
         model: str = "sonar-pro",
-        recency: Optional[str] = "month",
+        recency: str | None = "month",
     ) -> str:
         """Call Perplexity Sonar and return content (structured when a schema is given)."""
         api_key = os.getenv("PERPLEXITY_API_KEY") or os.getenv("PPLX_API_KEY")
@@ -104,14 +104,12 @@ class PerplexityStructuredTool(BaseTool):
         return ok({"content": content, "citations": citations})
 
 
-T = TypeVar("T", bound=BaseModel)
-
 _DEFAULT_STRUCTURED_SYSTEM = (
     "You are a research assistant. Provide concise, evidence-grounded answers with citations."
 )
 
 
-async def perplexity_structured(
+async def perplexity_structured[T: BaseModel](
     *,
     prompt: str,
     schema: type[T],

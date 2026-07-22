@@ -2,9 +2,10 @@
 
 import concurrent.futures
 import logging
+from collections.abc import Callable
 from functools import wraps
 from time import sleep
-from typing import Any, Callable
+from typing import Any
 
 import requests
 
@@ -63,12 +64,12 @@ def api_tool(
                     try:
                         get_rate_limiter().acquire(provider)
                         return _run_with_timeout(func, args, kwargs, timeout)
-                    except Exception as retry_err:  # noqa: BLE001
+                    except Exception as retry_err:
                         logger.error(f"{provider} {endpoint} retry failed: {retry_err}")
                         return err(f"{provider} {endpoint}: {retry_err}")
                 logger.error(f"{provider} {endpoint} HTTP error: {e}")
                 return err(f"{provider} {endpoint}: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"{provider} {endpoint} failed: {e}")
                 return err(f"{provider} {endpoint}: {e}")
 

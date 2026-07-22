@@ -204,8 +204,12 @@ def test_should_cache_market_regime_when_assessed_recently():
     tool = APlusScoringTool()
     context = create_market_context(vix=20.0)
 
-    result1 = _env(tool._run(symbol="TEST1", asset_type="stock", fundamental_data=create_stock_data(), market_context=context))
-    result2 = _env(tool._run(symbol="TEST2", asset_type="stock", fundamental_data=create_stock_data(), market_context=context))
+    result1 = _env(
+        tool._run(symbol="TEST1", asset_type="stock", fundamental_data=create_stock_data(), market_context=context)
+    )
+    result2 = _env(
+        tool._run(symbol="TEST2", asset_type="stock", fundamental_data=create_stock_data(), market_context=context)
+    )
 
     assert result1["data"]["symbol"] == "TEST1"
     assert result2["data"]["symbol"] == "TEST2"
@@ -302,7 +306,9 @@ def test_should_normalize_symbol_input_when_lowercase_provided():
 
 
 def test_should_validate_input_schema_when_creating_input_object():
-    valid_input = APlusScoringInput(symbol="AAPL", asset_type="stock", fundamental_data={"roe": 0.25}, market_context={"vix": 20})
+    valid_input = APlusScoringInput(
+        symbol="AAPL", asset_type="stock", fundamental_data={"roe": 0.25}, market_context={"vix": 20}
+    )
     assert valid_input.symbol == "AAPL"
     assert valid_input.asset_type == "stock"
     assert valid_input.fundamental_data["roe"] == 0.25
@@ -343,9 +349,24 @@ def test_should_calculate_risk_score_appropriately_when_high_volatility():
 
 def test_should_score_different_asset_types_with_appropriate_weights():
     tool = APlusScoringTool()
-    etf_payload = _env(tool._run(symbol="ETF", asset_type="etf", fundamental_data=create_etf_data(), market_context=create_market_context()))
-    stock_payload = _env(tool._run(symbol="STOCK", asset_type="stock", fundamental_data=create_stock_data(), market_context=create_market_context()))
-    crypto_payload = _env(tool._run(symbol="CRYPTO", asset_type="crypto", fundamental_data=create_crypto_data(), market_context=create_market_context()))
+    etf_payload = _env(
+        tool._run(
+            symbol="ETF", asset_type="etf", fundamental_data=create_etf_data(),
+            market_context=create_market_context(),
+        )
+    )
+    stock_payload = _env(
+        tool._run(
+            symbol="STOCK", asset_type="stock", fundamental_data=create_stock_data(),
+            market_context=create_market_context(),
+        )
+    )
+    crypto_payload = _env(
+        tool._run(
+            symbol="CRYPTO", asset_type="crypto", fundamental_data=create_crypto_data(),
+            market_context=create_market_context(),
+        )
+    )
 
     assert etf_payload["data"]["symbol"] == "ETF"
     assert stock_payload["data"]["symbol"] == "STOCK"

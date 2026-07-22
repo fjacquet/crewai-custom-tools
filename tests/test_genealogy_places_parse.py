@@ -1,6 +1,7 @@
 # crewai_custom_tools/tests/test_genealogy_places_parse.py
 from crewai_custom_tools.tools.genealogy.standardize.places import (
-    normalize_country, parse_pname,
+    normalize_country,
+    parse_pname,
 )
 
 

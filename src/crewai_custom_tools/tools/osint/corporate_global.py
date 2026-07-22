@@ -2,10 +2,12 @@
 
 import logging
 import os
-import requests
 from typing import Optional
+
+import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel
+
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import err, ok
 from crewai_custom_tools.models import OpenCorporatesSearchInput
@@ -24,7 +26,7 @@ class OpenCorporatesSearchTool(BaseTool):
     args_schema: type[BaseModel] = OpenCorporatesSearchInput
 
     @api_tool(provider="OpenCorporates", endpoint="CompanySearch")
-    def _run(self, query: str, jurisdiction_code: Optional[str] = None) -> str:
+    def _run(self, query: str, jurisdiction_code: str | None = None) -> str:
         """Run global company registry search."""
         api_url = "https://api.opencorporates.com/v1/companies/search"
         params = {"q": query}

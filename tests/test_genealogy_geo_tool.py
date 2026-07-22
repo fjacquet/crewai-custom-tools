@@ -3,7 +3,9 @@ import json
 from crewai_custom_tools.tools.genealogy.geo import tools as geo_tools
 from crewai_custom_tools.tools.genealogy.geo.tools import GenealogyResolvePlaceTool
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    DatedChain, PlaceLevel, ResolvedPlace,
+    DatedChain,
+    PlaceLevel,
+    ResolvedPlace,
 )
 
 _RESOLVED = ResolvedPlace(

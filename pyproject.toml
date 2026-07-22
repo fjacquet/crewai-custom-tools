@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crewai-custom-tools"
-version = "0.26.0"
+version = "0.27.0"
 description = "Centralized, resilient tools for CrewAI multi-agent systems"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -62,6 +62,23 @@ crewai-custom-tools-mcp = "crewai_custom_tools.mcp_server:run"
 asyncio_mode = "auto"
 pythonpath = ["scripts"]
 
+[tool.ruff]
+# Mesuré sur le code réel : p99 = 103 caractères, 73 lignes seulement dépassent 120.
+# Le défaut de ruff (88) en signalerait 861 — une norme qui ne correspond pas à ce projet.
+line-length = 120
+
+[tool.ruff.lint]
+# Le jeu par défaut (E4, E7, E9, F) ne voit ni les imports désordonnés, ni la longueur
+# des lignes, ni les pièges de fermeture sur variable de boucle, ni un `zip` qui tronque
+# en silence. Ces deux derniers sont des risques de perte de données, pas du style.
+select = ["E", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    # Projet francophone : l'apostrophe typographique (’) et l'espace insécable sont
+    # voulues dans les libellés, les docstrings et les commentaires. Ces trois règles
+    # traquent les homoglyphes cyrilliques et signaleraient toute la typographie française.
+    "RUF001", "RUF002", "RUF003",
+]
+
 [tool.ruff.lint.per-file-ignores]
 # These __init__.py files are pure re-export aggregators: they only widen the
 # namespace and reference none of the names themselves, which is exactly the
@@ -69,3 +86,17 @@ pythonpath = ["scripts"]
 # would risk silently dropping one from the public surface.
 "src/crewai_custom_tools/models/__init__.py" = ["F403"]
 "src/crewai_custom_tools/models/reports/__init__.py" = ["F403"]
+
+# __all__ y est volontairement groupé par catégorie (Web, Finance, OSINT,
+# Genealogy, Reporting, Enterprise, File, Analytics, Core) — chaque groupe
+# reflète un sous-répertoire de tools/. Un tri alphabétique sur ~150 noms
+# disperserait ces groupes et effacerait cette structure documentaire sans
+# le moindre gain fonctionnel (l'ordre de __all__ n'affecte que `from x import *`).
+"src/crewai_custom_tools/__init__.py" = ["RUF022"]
+
+# Fichier généré depuis genecrew/docs/swagger/openapi.json (ADR 0004, en-tête
+# « NE PAS ÉDITER ») : les lignes trop longues viennent des descriptions de
+# schéma copiées telles quelles depuis l'OpenAPI. Les couper à la main serait
+# perdu à la prochaine régénération, et modifier le générateur pour ça n'a
+# aucune valeur — le contenu n'est jamais lu comme du code réécrit.
+"src/crewai_custom_tools/tools/genealogy/models/gramps_generated.py" = ["E501"]

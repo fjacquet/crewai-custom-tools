@@ -57,7 +57,10 @@ class SerperEmailSearchTool(BaseTool):
     """A tool to scrape public emails mentioned on Google using Serper API."""
 
     name: str = "serper_email_search"
-    description: str = "Search Google organic listings for publicly mentioned email addresses related to a company name."
+    description: str = (
+        "Search Google organic listings for publicly mentioned email addresses related "
+        "to a company name."
+    )
     args_schema: type[BaseModel] = SerperEmailSearchInput
 
     @api_tool(provider="Serper", endpoint="EmailSearch")
@@ -159,7 +162,7 @@ class HoleheEmailScannerTool(BaseTool):
 
         try:
             raw_results = trio.run(run_scan)
-        except Exception as e:  # noqa: BLE001 — import/exec failure is NOT "no accounts"
+        except Exception as e:
             logger.error(f"Holehe scan failed: {e}")
             return err(f"Holehe scan failed: {e}")
 

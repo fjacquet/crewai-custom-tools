@@ -22,7 +22,7 @@ def _exported_tool_count() -> int:
 def test_mcp_registers_every_exported_tool():
     """Every exported BaseTool is on the MCP surface (full parity, nothing skipped)."""
     assert SKIPPED == []
-    assert REGISTERED == _exported_tool_count()
+    assert _exported_tool_count() == REGISTERED
 
 
 def test_mcp_list_tools_matches_registered():

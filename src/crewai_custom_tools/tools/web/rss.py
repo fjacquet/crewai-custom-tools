@@ -1,13 +1,14 @@
 """RSS feed parsing and OPML subscription utilities."""
 
 import logging
-from datetime import datetime, timedelta, timezone
-
-# defusedxml guards against XXE / billion-laughs attacks in untrusted OPML files.
-from defusedxml.ElementTree import ParseError, parse as parse_xml
+from datetime import UTC, datetime, timedelta, timezone
 
 import feedparser
 from crewai.tools import BaseTool
+
+# defusedxml guards against XXE / billion-laughs attacks in untrusted OPML files.
+from defusedxml.ElementTree import ParseError
+from defusedxml.ElementTree import parse as parse_xml
 from pydantic import BaseModel, Field
 
 from crewai_custom_tools.core.decorators import api_tool
@@ -55,7 +56,7 @@ class RssFeedParserTool(BaseTool):
             return err(f"Failed to fetch RSS feed, status code {feed.status}")
 
         # feedparser normalizes published_parsed to UTC — compare in UTC too.
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
 
         recent_entries = []
         for entry in feed.entries:
@@ -64,7 +65,7 @@ class RssFeedParserTool(BaseTool):
                 recent_entries.append(_entry_dict(entry, "Unknown"))
                 continue
             try:
-                published_time = datetime(*parsed[:6], tzinfo=timezone.utc)
+                published_time = datetime(*parsed[:6], tzinfo=UTC)
             except (ValueError, TypeError):
                 logger.warning(f"Could not parse date for an entry in {feed_url}.")
                 continue

@@ -328,10 +328,9 @@ class PositionSizingTool:
         avg_portfolio_risk = 2.5
         total_portfolio_risk = avg_portfolio_risk * (portfolio.total_allocated_pct / 100.0)
 
-        if total_portfolio_risk > 0:
-            risk_contribution_pct = (risk_contribution / total_portfolio_risk) * 100.0
-        else:
-            risk_contribution_pct = 0.0
+        risk_contribution_pct = (
+            (risk_contribution / total_portfolio_risk) * 100.0 if total_portfolio_risk > 0 else 0.0
+        )
 
         return round(min(risk_contribution_pct, 100.0), 2)
 
@@ -360,7 +359,10 @@ class PositionSizingTool:
         risk_level = self._get_risk_level_french(holding.risk_score)
 
         if sizing_action == "hold":
-            return f"Position actuelle de {holding.current_allocation_pct:.1f}% appropriée. Risque {risk_level} (score {holding.risk_score:.1f}). Maintenir l'allocation actuelle."
+            return (
+                f"Position actuelle de {holding.current_allocation_pct:.1f}% appropriée. "
+                f"Risque {risk_level} (score {holding.risk_score:.1f}). Maintenir l'allocation actuelle."
+            )
         elif sizing_action == "add":
             diff = recommended_size - holding.current_allocation_pct
             return (

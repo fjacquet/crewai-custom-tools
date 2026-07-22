@@ -159,7 +159,10 @@ def test_etf_tool_happy_path_full_analysis():
     data = payload["data"]
     assert data["ticker"] == "SPY"
     metrics = data["metrics"]
-    assert {"tracking_error", "tracking_error_pct", "correlation", "expense_impact", "expense_ratio_pct", "liquidity", "concentration", "efficiency"} <= set(metrics)
+    assert {
+        "tracking_error", "tracking_error_pct", "correlation", "expense_impact",
+        "expense_ratio_pct", "liquidity", "concentration", "efficiency",
+    } <= set(metrics)
     assert metrics["liquidity"]["liquidity_score"] == pytest.approx(100.0)
     # tracking_error ~1.83% annualized -> Poor; efficiency = 40*0.4 + 100*0.3 + 100*0.3 = 76
     assert data["ratings"]["tracking_error"] == "Poor"

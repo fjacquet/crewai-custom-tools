@@ -50,7 +50,9 @@ def query_militaires(surname: str, *, db: Path | None = None,
             "WHERE nom_normalise = ? LIMIT ?", (_norm(surname), limit)).fetchall()
     finally:
         con.close()
-    return [dict(zip(_COLS, r)) for r in rows]
+    # `r` a exactement len(_COLS) éléments : c'est le SELECT ci-dessus qui liste
+    # ces colonnes dans cet ordre. strict=True documente et vérifie l'invariant.
+    return [dict(zip(_COLS, r, strict=True)) for r in rows]
 
 
 def score_militaire(surname: str, given: str, birth_iso: str, row: dict) -> float:

@@ -5,12 +5,13 @@ This module provides a simple file-based and memory caching system for API calls
 to avoid repeated requests and respect rate limits using SHA-256.
 """
 
-from functools import wraps
+import contextlib
 import hashlib
 import json
 import logging
 import os
 import time
+from functools import wraps
 from pathlib import Path
 from typing import Any, Optional
 
@@ -44,7 +45,7 @@ class CacheManager:
         """Get the cache file path as a Path object for a given key."""
         return Path(self._get_filename(key))
 
-    def get(self, key: str, ttl: Optional[int] = None) -> Optional[Any]:
+    def get(self, key: str, ttl: int | None = None) -> Any | None:
         """
         Get a value from cache if it exists and hasn't expired.
 
@@ -70,10 +71,8 @@ class CacheManager:
                     if ttl is not None:
                         if time.time() - timestamp >= ttl:
                             del self.memory_cache[key]
-                            try:
+                            with contextlib.suppress(OSError):
                                 filepath.unlink()
-                            except OSError:
-                                pass
                             return None
                         return val
 
@@ -82,10 +81,8 @@ class CacheManager:
                         return val
                     else:
                         del self.memory_cache[key]
-                        try:
+                        with contextlib.suppress(OSError):
                             filepath.unlink()
-                        except OSError:
-                            pass
                         return None
             except OSError:
                 # File deleted or cannot be stat'ed, invalidate memory cache
@@ -98,7 +95,7 @@ class CacheManager:
 
         try:
             mtime = filepath.stat().st_mtime
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
             val = data.get("value")
             timestamp = data.get("timestamp")
@@ -110,10 +107,8 @@ class CacheManager:
 
             if ttl is not None:
                 if time.time() - timestamp >= ttl:
-                    try:
+                    with contextlib.suppress(OSError):
                         filepath.unlink()
-                    except OSError:
-                        pass
                     return None
                 self.memory_cache[key] = (val, timestamp, expiry, mtime)
                 return val
@@ -122,19 +117,15 @@ class CacheManager:
                 self.memory_cache[key] = (val, timestamp, expiry, mtime)
                 return val
             else:
-                try:
+                with contextlib.suppress(OSError):
                     filepath.unlink()
-                except OSError:
-                    pass
         except (json.JSONDecodeError, OSError, KeyError, ValueError) as e:
             logger.warning(f"Purging corrupted cache file {filepath} due to error: {e}")
-            try:
+            with contextlib.suppress(OSError):
                 filepath.unlink()
-            except OSError:
-                pass
         return None
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """Store a value in cache with optional TTL."""
         effective_ttl = ttl if ttl is not None else self.default_ttl
         timestamp = time.time()
@@ -153,12 +144,10 @@ class CacheManager:
         """Clear all cached data."""
         self.memory_cache.clear()
         for filepath in self.cache_dir.glob("*.json"):
-            try:
+            with contextlib.suppress(OSError):
                 filepath.unlink()
-            except OSError:
-                pass
 
-    def clear_expired(self, ttl: Optional[int] = None) -> int:
+    def clear_expired(self, ttl: int | None = None) -> int:
         """Clear expired cache entries from memory and disk."""
         removed_count = 0
 
@@ -178,7 +167,7 @@ class CacheManager:
         # Clear expired files from disk
         for filepath in list(self.cache_dir.glob("*.json")):
             try:
-                with open(filepath, "r", encoding="utf-8") as f:
+                with open(filepath, encoding="utf-8") as f:
                     data = json.load(f)
                 timestamp = data.get("timestamp")
                 expiry = data.get("expiry")
@@ -201,17 +190,13 @@ class CacheManager:
                         is_expired = True
 
                 if is_expired:
-                    try:
+                    with contextlib.suppress(OSError):
                         filepath.unlink()
-                    except OSError:
-                        pass
                     removed_count += 1
             except (json.JSONDecodeError, OSError, KeyError, ValueError):
                 # Invalid or corrupt cache file, remove it
-                try:
+                with contextlib.suppress(OSError):
                     filepath.unlink()
-                except OSError:
-                    pass
                 removed_count += 1
         return removed_count
 
@@ -251,7 +236,7 @@ def cache_api_call(key: str, ttl: int = 3600):
                 and not isinstance(args[0], (str, int, float, dict, list, set, tuple))
             ):
                 # If first arg is a custom object instance, replace it with its class name for deterministic keys
-                args_to_serialize = (args[0].__class__.__name__,) + args[1:]
+                args_to_serialize = (args[0].__class__.__name__, *args[1:])
 
             serialized = f"{args_to_serialize}_{sorted(kwargs.items())}"
             args_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()

@@ -1,10 +1,14 @@
 """Grappes union-find, choix du phoenix, patch du genre."""
 
 from crewai_custom_tools.tools.genealogy.analysis.merge_plan import (
-    choisir_phoenix, plan_fusions, score_completude,
+    choisir_phoenix,
+    plan_fusions,
+    score_completude,
 )
 from crewai_custom_tools.tools.genealogy.models.domain import (
-    EventFact, MergePair, PersonFacts,
+    EventFact,
+    MergePair,
+    PersonFacts,
 )
 
 
