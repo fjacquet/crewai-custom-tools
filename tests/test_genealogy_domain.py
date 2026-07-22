@@ -6,6 +6,7 @@ from crewai_custom_tools.tools.genealogy.models.domain import (
     EventFact,
     FamilyFacts,
     PersonFacts,
+    PropositionAudit,
 )
 
 
@@ -92,3 +93,25 @@ def test_piste_force_ne_peut_pas_etre_imposee_au_constructeur():
     p = Piste(gramps_id="I1", handle="h", source="s", identite="i", requete="q",
               concordances=["nom"], divergences=[], force="forte")
     assert p.force == "faible"  # un seul facteur : la valeur imposée n'a pas pris
+
+
+def test_proposition_audit_champs_structures_par_defaut_vides():
+    """Un YAML antérieur à ces champs reste chargeable : défauts vides, pas d'erreur."""
+    p = PropositionAudit(
+        type="date", gramps_id="I0174", handle="H174", personne="Alain Rolland",
+        cible="décès de I0174 (absent de l'arbre)",
+        action="Renseigner le décès : 2021-12-23 à Saint-Palais.",
+        priorite="moyenne", confiance=2)
+    assert p.date_iso == ""
+    assert p.lieu_nom == ""
+
+
+def test_proposition_audit_porte_la_donnee_machine():
+    """La date et la commune voyagent en champs typés, pas seulement dans la phrase."""
+    p = PropositionAudit(
+        type="date", gramps_id="I0174", handle="H174", personne="Alain Rolland",
+        cible="décès de I0174 (absent de l'arbre)",
+        action="Renseigner le décès : 2021-12-23 à Saint-Palais.",
+        priorite="moyenne", confiance=2,
+        date_iso="2021-12-23", lieu_nom="Saint-Palais")
+    assert (p.date_iso, p.lieu_nom) == ("2021-12-23", "Saint-Palais")

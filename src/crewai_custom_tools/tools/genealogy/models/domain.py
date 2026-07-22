@@ -228,6 +228,17 @@ class PropositionAudit(BaseModel):
     preuve_detail: str = Field(default="", description="Ce que la preuve établit.")
     priorite: str = Field(description="haute | moyenne | basse")
     confiance: int = Field(ge=1, le=2, description="1 plausible, 2 preuve concordante.")
+    # La donnée machine, à côté de la phrase française. `action` reste ce qu'un humain
+    # relit ; ces champs sont ce qu'une commande `apply` applique. Sans eux il faudrait
+    # re-parser la prose, et une reformulation de la phrase casserait une écriture.
+    # Optionnels : les règles D pures et le crew LLM émettent le même modèle sans avoir
+    # rien à y mettre.
+    date_iso: str = Field(
+        default="",
+        description="Date ISO (AAAA-MM-JJ) du fait proposé, quand la source la donne.")
+    lieu_nom: str = Field(
+        default="",
+        description="Commune du fait proposé, telle que la source l'écrit.")
 
 
 class PropositionsLot(BaseModel):
