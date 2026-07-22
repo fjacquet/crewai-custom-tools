@@ -12,7 +12,7 @@ returns the tool's JSON ``{"success", "data", "error"}`` envelope. Launch via th
 import inspect
 import logging
 import re
-from typing import Any, List, Tuple
+from typing import Any
 
 from crewai.tools import BaseTool
 from mcp.server.fastmcp import FastMCP

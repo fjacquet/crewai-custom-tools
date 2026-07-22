@@ -2,8 +2,6 @@
 
 import logging
 import os
-from typing import List, Optional
-
 import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel

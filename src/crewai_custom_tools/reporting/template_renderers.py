@@ -1,7 +1,7 @@
 """Specialized HTML Layout Template Renderers."""
 
 import logging
-from typing import Any, List
+from typing import Any
 
 from crewai_custom_tools.reporting.html_generator import RenderReportTool
 

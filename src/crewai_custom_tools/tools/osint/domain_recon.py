@@ -3,7 +3,7 @@
 import logging
 import urllib.parse
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any
 
 import requests
 import tldextract

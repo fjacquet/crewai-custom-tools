@@ -3,7 +3,7 @@
 import datetime as _dt
 import logging
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 from bs4 import BeautifulSoup
 from crewai.tools import BaseTool

@@ -3,8 +3,6 @@
 import json
 import logging
 import os
-from typing import List, Optional
-
 import requests
 from bs4 import BeautifulSoup
 from crewai.tools import BaseTool

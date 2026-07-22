@@ -6,8 +6,6 @@ typed content blocks — no template needed. All caller-supplied text is escaped
 untrusted content cannot inject markup.
 """
 
-from typing import List
-
 from crewai.tools import BaseTool
 from markupsafe import escape
 from pydantic import BaseModel, Field

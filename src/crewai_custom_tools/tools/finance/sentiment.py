@@ -1,7 +1,7 @@
 """Sentiment analysis tools (VADER-based) for finance/news text."""
 
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
