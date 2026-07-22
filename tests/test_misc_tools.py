@@ -106,7 +106,9 @@ def test_wiki_summarize_section_missing(mocker):
         "crewai_custom_tools.tools.web.wikipedia_processing.WikipediaArticleTool._run",
         side_effect=_fake_article(get_article=ok({"title": "Py", "content": "no such heading here"})),
     )
-    payload = _env(WikipediaProcessingTool()._run(title="Py", action="summarize_article_section", section_title="History"))
+    payload = _env(
+        WikipediaProcessingTool()._run(title="Py", action="summarize_article_section", section_title="History")
+    )
     assert payload["success"] is False
     assert "History" in payload["error"]
 

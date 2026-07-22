@@ -32,7 +32,10 @@ def _env(result):
 def test_dcf_zero_growth_exact_value():
     # With g=0: PV(CFs) = 100/1.1 + 100/1.21; TV = 100/0.10 = 1000; PV(TV) = 1000/1.21
     # Enterprise value works out to exactly 1000.0
-    target = calculate_dcf_target(cash_flows=[100.0, 100.0], discount_rate=0.10, terminal_growth=0.0, shares_outstanding=100.0, current_price=8.0)
+    target = calculate_dcf_target(
+        cash_flows=[100.0, 100.0], discount_rate=0.10, terminal_growth=0.0,
+        shares_outstanding=100.0, current_price=8.0,
+    )
     assert target.method == "dcf"
     assert target.target_price == pytest.approx(10.0)
     assert target.upside_pct == pytest.approx(25.0)
@@ -173,7 +176,9 @@ def test_valuation_tool_happy_path_all_methods():
 
 
 def test_valuation_tool_partial_inputs_no_consensus():
-    payload = _env(ValuationTool()._run(ticker="MSFT", current_price=400.0, earnings_per_share=11.0, target_pe_ratio=30.0))
+    payload = _env(
+        ValuationTool()._run(ticker="MSFT", current_price=400.0, earnings_per_share=11.0, target_pe_ratio=30.0)
+    )
     data = payload["data"]
     assert set(data["valuations"]) == {"pe_multiple"}
     assert data["summary"]["has_consensus"] is False

@@ -65,7 +65,9 @@ def test_should_validate_input_schema_correctly():
 # End-to-end screening per asset type
 # --------------------------------------------------------------------------- #
 def test_should_screen_etf_universe_successfully():
-    payload = _env(APlusScreeningTool()._run(asset_type="etf", market_region="us", max_candidates=10, min_a_plus_score=0.8))
+    payload = _env(
+        APlusScreeningTool()._run(asset_type="etf", market_region="us", max_candidates=10, min_a_plus_score=0.8)
+    )
     data = payload["data"]
     assert "screening_result" in data
     assert "summary" in data
@@ -77,14 +79,20 @@ def test_should_screen_etf_universe_successfully():
 
 
 def test_should_screen_stock_universe_successfully():
-    payload = _env(APlusScreeningTool()._run(asset_type="stock", market_region="us", max_candidates=15, min_a_plus_score=0.85))
+    payload = _env(
+        APlusScreeningTool()._run(asset_type="stock", market_region="us", max_candidates=15, min_a_plus_score=0.85)
+    )
     data = payload["data"]
     assert data["summary"]["asset_type"] == "stock"
     assert data["summary"]["total_screened"] > 0
 
 
 def test_should_screen_crypto_universe_successfully():
-    payload = _env(APlusScreeningTool()._run(asset_type="crypto", market_region="global", max_candidates=20, min_a_plus_score=0.75))
+    payload = _env(
+        APlusScreeningTool()._run(
+            asset_type="crypto", market_region="global", max_candidates=20, min_a_plus_score=0.75
+        )
+    )
     data = payload["data"]
     assert data["summary"]["asset_type"] == "crypto"
     assert data["summary"]["total_screened"] > 0
@@ -175,10 +183,16 @@ def test_should_calculate_preliminary_scores_correctly():
     good_etf_data = {"expense_ratio": 0.03, "aum": 300e9, "tracking_error": 0.0008, "history_years": 15}
     assert tool._ranking._score_etf_preliminary(good_etf_data) > 0.8
 
-    good_stock_data = {"roe": 0.30, "revenue_growth": 0.20, "debt_to_equity": 0.15, "market_cap": 200e9, "fcf_positive": True, "fcf_growing": True}
+    good_stock_data = {
+        "roe": 0.30, "revenue_growth": 0.20, "debt_to_equity": 0.15,
+        "market_cap": 200e9, "fcf_positive": True, "fcf_growing": True,
+    }
     assert tool._ranking._score_stock_preliminary(good_stock_data) > 0.8
 
-    good_crypto_data = {"market_cap": 500e9, "daily_volume": 10e9, "age_months": 100, "institutional_adoption": True, "real_utility": True}
+    good_crypto_data = {
+        "market_cap": 500e9, "daily_volume": 10e9, "age_months": 100,
+        "institutional_adoption": True, "real_utility": True,
+    }
     assert tool._ranking._score_crypto_preliminary(good_crypto_data) > 0.8
 
 
@@ -195,7 +209,11 @@ def test_should_generate_screening_rationale_correctly():
 # --------------------------------------------------------------------------- #
 def test_should_handle_custom_screening_criteria():
     custom_criteria = {"max_expense_ratio": 0.10, "min_aum": 5e9}
-    payload = _env(APlusScreeningTool()._run(asset_type="etf", screening_criteria=custom_criteria, market_region="us", max_candidates=5))
+    payload = _env(
+        APlusScreeningTool()._run(
+            asset_type="etf", screening_criteria=custom_criteria, market_region="us", max_candidates=5
+        )
+    )
     assert payload["data"]["summary"]["candidates_found"] >= 0
 
 
@@ -245,7 +263,11 @@ def test_should_use_caching_efficiently():
 
 
 def test_should_handle_empty_screening_results():
-    payload = _env(APlusScreeningTool()._run(asset_type="etf", screening_criteria={"max_expense_ratio": 0.001}, min_a_plus_score=0.99))
+    payload = _env(
+        APlusScreeningTool()._run(
+            asset_type="etf", screening_criteria={"max_expense_ratio": 0.001}, min_a_plus_score=0.99
+        )
+    )
     data = payload["data"]
     assert data["summary"]["candidates_found"] >= 0
     assert data["summary"]["a_plus_candidates"] >= 0

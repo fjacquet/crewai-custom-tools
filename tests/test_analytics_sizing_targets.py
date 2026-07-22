@@ -233,7 +233,9 @@ class TestPositionSizingTool:
 
         # Assert
         # Total crypto should not exceed 10%
-        assert result.recommended_size_pct <= (tool.max_crypto_total_pct - sample_portfolio.asset_class_allocations["crypto"])
+        assert result.recommended_size_pct <= (
+            tool.max_crypto_total_pct - sample_portfolio.asset_class_allocations["crypto"]
+        )
 
     def test_should_calculate_risk_contribution(self, tool, high_risk_holding, sample_portfolio):
         """Test that risk contribution is calculated."""

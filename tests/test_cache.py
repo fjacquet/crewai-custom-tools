@@ -221,7 +221,10 @@ def test_file_not_found_race_conditions(tmp_path):
 
 
 def test_cache_decorator_with_class_instance(tmp_path):
-    """Test that cache decorator generates deterministic keys even for instance methods where 'self' has dynamic memory address."""
+    """Cache decorator generates deterministic keys even for instance methods.
+
+    ('self' has a dynamic memory address across instances.)
+    """
     import crewai_custom_tools.config.cache as cache_module
 
     original_manager = cache_module._cache_manager
