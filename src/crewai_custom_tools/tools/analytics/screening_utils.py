@@ -555,7 +555,9 @@ class ScreeningUtils:
         else:
             return {}
 
-    def generate_screening_rationale(self, market_data: dict[str, Any], asset_type: str, score: float, meets_a_plus: bool) -> str:
+    def generate_screening_rationale(
+        self, market_data: dict[str, Any], asset_type: str, score: float, meets_a_plus: bool
+    ) -> str:
         """Generate rationale for screening result."""
         symbol = market_data.get("symbol", "Unknown")
         name = market_data.get("name", symbol)
@@ -563,7 +565,10 @@ class ScreeningUtils:
         if meets_a_plus:
             rationale = f"{name} ({symbol}) qualifies as A+ candidate with score {score:.2f}. "
         else:
-            rationale = f"{name} ({symbol}) shows potential with score {score:.2f} but needs improvement for A+ status. "
+            rationale = (
+                f"{name} ({symbol}) shows potential with score {score:.2f} but needs improvement "
+                "for A+ status. "
+            )
 
         # Add asset-specific rationale
         if asset_type == "etf":

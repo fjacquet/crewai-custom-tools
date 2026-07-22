@@ -104,12 +104,20 @@ class ValuationTool(BaseTool):
 
             logger.info(f"Calculating valuation for {input_data.ticker}")
 
-            results: dict[str, Any] = {"ticker": input_data.ticker, "current_price": input_data.current_price, "valuations": {}}
+            results: dict[str, Any] = {
+                "ticker": input_data.ticker,
+                "current_price": input_data.current_price,
+                "valuations": {},
+            }
 
             targets: list[PriceTarget] = []
 
             # DCF valuation
-            if input_data.cash_flows and input_data.discount_rate is not None and input_data.terminal_growth is not None:
+            if (
+                input_data.cash_flows
+                and input_data.discount_rate is not None
+                and input_data.terminal_growth is not None
+            ):
                 dcf_target = calculate_dcf_target(
                     cash_flows=input_data.cash_flows,
                     discount_rate=input_data.discount_rate,
@@ -138,7 +146,9 @@ class ValuationTool(BaseTool):
                 prices = pd.Series(input_data.price_history)
 
                 # Fibonacci target
-                fib_target = calculate_technical_target(prices, method="fibonacci", current_price=input_data.current_price)
+                fib_target = calculate_technical_target(
+                    prices, method="fibonacci", current_price=input_data.current_price
+                )
                 results["valuations"]["technical_fibonacci"] = fib_target.to_dict()
                 targets.append(fib_target)
 

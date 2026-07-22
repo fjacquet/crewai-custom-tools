@@ -74,7 +74,9 @@ class ScreeningRanking:
         self._a_plus_scorer = APlusScoringTool()
         self._utils = ScreeningUtils()
 
-    def score_candidates(self, candidates: list[dict[str, Any]], asset_type: str, min_score: float, detailed_analysis: bool) -> list[ScreeningCandidate]:
+    def score_candidates(
+        self, candidates: list[dict[str, Any]], asset_type: str, min_score: float, detailed_analysis: bool
+    ) -> list[ScreeningCandidate]:
         """Score filtered candidates using A+ scoring."""
         scored_candidates = []
 
@@ -106,7 +108,9 @@ class ScreeningRanking:
                 meets_a_plus = preliminary_score >= min_score
 
                 # Generate screening rationale
-                rationale = self._utils.generate_screening_rationale(market_data, asset_type, preliminary_score, meets_a_plus)
+                rationale = self._utils.generate_screening_rationale(
+                    market_data, asset_type, preliminary_score, meets_a_plus
+                )
 
                 # Extract key metrics
                 key_metrics = self._utils.extract_key_metrics(market_data, asset_type)

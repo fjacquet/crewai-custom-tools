@@ -123,7 +123,9 @@ def get_dynamic_criteria(market_regime: MarketRegime, custom_criteria: dict[str,
     return criteria
 
 
-def analyze_strengths_weaknesses(symbol: str, asset_type: str, data: dict[str, Any], scores: dict[str, float]) -> tuple[list[str], list[str]]:
+def analyze_strengths_weaknesses(
+    symbol: str, asset_type: str, data: dict[str, Any], scores: dict[str, float]
+) -> tuple[list[str], list[str]]:
     """Analyze investment strengths and weaknesses."""
     strengths = []
     weaknesses = []
