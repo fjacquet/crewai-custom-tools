@@ -71,11 +71,10 @@ def _passes(m: dict, crit: MarketScreeningInput) -> bool:
         m["sector"] is None or m["sector"].lower() != crit.sector.lower()
     ):
         return False
-    if crit.min_volume is not None and (
-        m["volume"] is None or m["volume"] < crit.min_volume
-    ):
-        return False
-    return True
+    return not (
+        crit.min_volume is not None
+        and (m["volume"] is None or m["volume"] < crit.min_volume)
+    )
 
 
 class MarketScreeningTool(BaseTool):

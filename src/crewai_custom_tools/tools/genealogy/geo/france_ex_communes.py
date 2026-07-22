@@ -212,12 +212,12 @@ def resolve_fr_ex_commune(parsed: ParsedPlace) -> ResolvedPlace | None:
     if concordant:
         chains = [
             DatedChain(levels=parents, date_qualifier=f"avant {facts.merged_on}"),
-            DatedChain(levels=parents + [chef_level],
+            DatedChain(levels=[*parents, chef_level],
                        date_qualifier=f"après {facts.merged_on}"),
         ]
         source = "geo.api.gouv.fr/communes_associees_deleguees + Wikidata"
     else:
-        chains = [DatedChain(levels=parents + [chef_level])]
+        chains = [DatedChain(levels=[*parents, chef_level])]
         source = "geo.api.gouv.fr/communes_associees_deleguees"
 
     # GPS : Wikidata (centre du bourg) de préférence au `centre` de l'API, qui est le

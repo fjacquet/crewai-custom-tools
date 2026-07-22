@@ -10,7 +10,7 @@ stdlib ``logging`` module.
 """
 
 import logging
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 logger = logging.getLogger(__name__)
 
@@ -18,36 +18,40 @@ logger = logging.getLogger(__name__)
 class ScreeningCriteria:
     """Screening criteria definitions and filtering logic."""
 
+    # Table statique consultée en lecture seule (jamais mutée par les appelants,
+    # qui la recopient toujours via `{**default, **overrides}` ou `dict(...)`) —
+    # ClassVar documente le partage voulu entre instances.
+    _DEFAULTS: ClassVar[dict[str, dict[str, Any]]] = {
+        "etf": {
+            "max_expense_ratio": 0.25,  # 0.25% for specialized, 0.15% for broad market
+            "min_aum": 1e9,  # $1B minimum AUM
+            "max_tracking_error": 0.002,  # 0.20% tracking error
+            "min_history_years": 3,  # 3 years minimum history
+            "require_ucits": False,  # UCITS compliance for EU investors
+        },
+        "stock": {
+            "min_roe": 0.20,  # 20% ROE minimum
+            "min_revenue_growth": 0.15,  # 15% annual revenue growth
+            "max_debt_to_equity": 0.3,  # 30% max debt-to-equity
+            "min_market_cap": 1e9,  # $1B minimum market cap
+            "require_positive_fcf": True,  # Positive free cash flow
+            "require_growing_fcf": True,  # Growing free cash flow
+        },
+        "crypto": {
+            "min_market_cap": 10e9,  # $10B minimum market cap
+            "min_daily_volume": 500e6,  # $500M minimum daily volume
+            "min_age_months": 36,  # 36 months minimum age
+            "require_institutional_adoption": False,  # Institutional adoption
+            "require_real_utility": False,  # Real utility/use case
+        },
+    }
+
     @staticmethod
     def get_default_criteria(asset_type: Literal["etf", "stock", "crypto"]) -> dict[str, Any]:
         """Get default A+ screening criteria for asset type."""
-        if asset_type == "etf":
-            return {
-                "max_expense_ratio": 0.25,  # 0.25% for specialized, 0.15% for broad market
-                "min_aum": 1e9,  # $1B minimum AUM
-                "max_tracking_error": 0.002,  # 0.20% tracking error
-                "min_history_years": 3,  # 3 years minimum history
-                "require_ucits": False,  # UCITS compliance for EU investors
-            }
-        elif asset_type == "stock":
-            return {
-                "min_roe": 0.20,  # 20% ROE minimum
-                "min_revenue_growth": 0.15,  # 15% annual revenue growth
-                "max_debt_to_equity": 0.3,  # 30% max debt-to-equity
-                "min_market_cap": 1e9,  # $1B minimum market cap
-                "require_positive_fcf": True,  # Positive free cash flow
-                "require_growing_fcf": True,  # Growing free cash flow
-            }
-        elif asset_type == "crypto":
-            return {
-                "min_market_cap": 10e9,  # $10B minimum market cap
-                "min_daily_volume": 500e6,  # $500M minimum daily volume
-                "min_age_months": 36,  # 36 months minimum age
-                "require_institutional_adoption": False,  # Institutional adoption
-                "require_real_utility": False,  # Real utility/use case
-            }
-        else:
-            return {}
+        # Copie fraîche à chaque appel : la table _DEFAULTS reste inchangée même
+        # si un appelant venait à modifier le dict retourné.
+        return dict(ScreeningCriteria._DEFAULTS.get(asset_type, {}))
 
     @staticmethod
     def passes_screening_filters(market_data: dict[str, Any], asset_type: str, criteria: dict[str, Any]) -> bool:
@@ -83,10 +87,9 @@ class ScreeningCriteria:
                 return False
 
             # History check
-            if data.get("history_years", 0) < criteria.get("min_history_years", 3):
-                return False
-
-            return True
+            return not (
+                data.get("history_years", 0) < criteria.get("min_history_years", 3)
+            )
 
         except (KeyError, TypeError, ValueError) as e:
             logger.warning(f"Failed to apply ETF filters: {e}")
@@ -116,10 +119,9 @@ class ScreeningCriteria:
             if criteria.get("require_positive_fcf", True) and not data.get("fcf_positive", False):
                 return False
 
-            if criteria.get("require_growing_fcf", True) and not data.get("fcf_growing", False):
-                return False
-
-            return True
+            return not (
+                criteria.get("require_growing_fcf", True) and not data.get("fcf_growing", False)
+            )
 
         except (KeyError, TypeError, ValueError) as e:
             logger.warning(f"Failed to apply stock filters: {e}")
@@ -146,10 +148,9 @@ class ScreeningCriteria:
                 return False
 
             # Real utility check (if required)
-            if criteria.get("require_real_utility", False) and not data.get("real_utility", False):
-                return False
-
-            return True
+            return not (
+                criteria.get("require_real_utility", False) and not data.get("real_utility", False)
+            )
 
         except (KeyError, TypeError, ValueError) as e:
             logger.warning(f"Failed to apply crypto filters: {e}")

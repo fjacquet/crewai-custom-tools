@@ -62,6 +62,6 @@ def apply_transition(resolved: ResolvedPlace | None, parsed: ParsedPlace,
         hist_levels.append(PlaceLevel(name=parsed.departement, place_type="Department"))
     historical = DatedChain(levels=hist_levels, date_qualifier=f"avant {t.date}")
     return resolved.model_copy(update={
-        "chains": modern + [historical],
+        "chains": [*modern, historical],
         "alt_names": [DatedName(value=parsed.raw, date_qualifier=f"avant {t.date}")],
     })
