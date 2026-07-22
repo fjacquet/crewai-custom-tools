@@ -93,3 +93,10 @@ ignore = [
 # disperserait ces groupes et effacerait cette structure documentaire sans
 # le moindre gain fonctionnel (l'ordre de __all__ n'affecte que `from x import *`).
 "src/crewai_custom_tools/__init__.py" = ["RUF022"]
+
+# Fichier généré depuis genecrew/docs/swagger/openapi.json (ADR 0004, en-tête
+# « NE PAS ÉDITER ») : les lignes trop longues viennent des descriptions de
+# schéma copiées telles quelles depuis l'OpenAPI. Les couper à la main serait
+# perdu à la prochaine régénération, et modifier le générateur pour ça n'a
+# aucune valeur — le contenu n'est jamais lu comme du code réécrit.
+"src/crewai_custom_tools/tools/genealogy/models/gramps_generated.py" = ["E501"]

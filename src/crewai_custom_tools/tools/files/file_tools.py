@@ -43,7 +43,12 @@ class FileReadTool(BaseTool):
     """
 
     name: str = "Read a file's content"
-    description: str = "A tool that reads the content of a file. To use this tool, provide a 'file_path' parameter with the path to the file you want to read. Optionally, provide 'start_line' to start reading from a specific line and 'line_count' to limit the number of lines read."
+    description: str = (
+        "A tool that reads the content of a file. To use this tool, provide a 'file_path' "
+        "parameter with the path to the file you want to read. Optionally, provide "
+        "'start_line' to start reading from a specific line and 'line_count' to limit the "
+        "number of lines read."
+    )
     args_schema: type[BaseModel] = FileReadToolSchema
     file_path: str | None = None
 
@@ -62,13 +67,19 @@ class FileReadTool(BaseTool):
         file_path = file_path or self.file_path
         start_line = start_line or 1
         if file_path is None:
-            return "Error: No file path provided. Please provide a file path either in the constructor or as an argument."
+            return (
+                "Error: No file path provided. Please provide a file path either in the "
+                "constructor or as an argument."
+            )
         try:
             with open(file_path, encoding="utf-8") as file:
                 if start_line == 1 and line_count is None:
                     return file.read()
                 start_idx = max(start_line - 1, 0)
-                selected = [line for i, line in enumerate(file) if i >= start_idx and (line_count is None or i < start_idx + line_count)]
+                selected = [
+                    line for i, line in enumerate(file)
+                    if i >= start_idx and (line_count is None or i < start_idx + line_count)
+                ]
                 if not selected and start_idx > 0:
                     return f"Error: Start line {start_line} exceeds the number of lines in the file."
                 return "".join(selected)
@@ -116,6 +127,10 @@ class DirectoryReadTool(BaseTool):
             raise ValueError("Directory must be provided.")
         if directory[-1] == "/":
             directory = directory[:-1]
-        files_list = [f"{directory}/{os.path.join(root, filename).replace(directory, '').lstrip(os.path.sep)}" for root, _dirs, files in os.walk(directory) for filename in files]
+        files_list = [
+            f"{directory}/{os.path.join(root, filename).replace(directory, '').lstrip(os.path.sep)}"
+            for root, _dirs, files in os.walk(directory)
+            for filename in files
+        ]
         files = "\n- ".join(files_list)
         return f"File paths: \n-{files}"

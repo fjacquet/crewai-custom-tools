@@ -57,7 +57,10 @@ class SerperEmailSearchTool(BaseTool):
     """A tool to scrape public emails mentioned on Google using Serper API."""
 
     name: str = "serper_email_search"
-    description: str = "Search Google organic listings for publicly mentioned email addresses related to a company name."
+    description: str = (
+        "Search Google organic listings for publicly mentioned email addresses related "
+        "to a company name."
+    )
     args_schema: type[BaseModel] = SerperEmailSearchInput
 
     @api_tool(provider="Serper", endpoint="EmailSearch")

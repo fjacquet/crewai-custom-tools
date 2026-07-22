@@ -183,7 +183,10 @@ class UnifiedRssToolInput(BaseModel):
     )
     output_file_path: str | None = Field(
         None,
-        description="Optional path to write the aggregated RssFeeds JSON. When set, the written file is the primary output.",
+        description=(
+            "Optional path to write the aggregated RssFeeds JSON. When set, the written "
+            "file is the primary output."
+        ),
     )
     invalid_sources_file_path: str | None = Field(
         None,

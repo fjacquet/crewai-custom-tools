@@ -25,7 +25,10 @@ class FrenchRegistryTool(BaseTool):
     """A tool to search the official, keyless public French corporate register (recherche-entreprises)."""
 
     name: str = "french_corporate_registry_search"
-    description: str = "Searches the official French corporate register for company metadata, SIREN, address, status, and corporate officers."
+    description: str = (
+        "Searches the official French corporate register for company metadata, SIREN, "
+        "address, status, and corporate officers."
+    )
     args_schema: type[BaseModel] = RegistrySearchInput
 
     @api_tool(provider="RechercheEntreprises", endpoint="Search")

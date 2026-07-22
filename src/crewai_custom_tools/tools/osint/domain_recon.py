@@ -30,7 +30,10 @@ class CrtShTool(BaseTool):
     """Enumerates subdomains observed in Certificate Transparency logs via crt.sh."""
 
     name: str = "crt_sh_subdomain_recon"
-    description: str = "Queries crt.sh's public Certificate Transparency logs to find subdomains that have had TLS certificates."
+    description: str = (
+        "Queries crt.sh's public Certificate Transparency logs to find subdomains that "
+        "have had TLS certificates."
+    )
     args_schema: type[BaseModel] = DomainInput
 
     @api_tool(provider="crtsh", endpoint="Subdomains")
@@ -65,7 +68,10 @@ class RDAPDomainTool(BaseTool):
     """Looks up domain registration, registrar, creation date, and nameservers via RDAP."""
 
     name: str = "rdap_domain_recon"
-    description: str = "Structured machine-readable WHOIS lookup using RDAP to fetch domain registrar, creation date, and nameservers."
+    description: str = (
+        "Structured machine-readable WHOIS lookup using RDAP to fetch domain registrar, "
+        "creation date, and nameservers."
+    )
     args_schema: type[BaseModel] = DomainInput
 
     @api_tool(provider="RDAP", endpoint="DomainLookup")
