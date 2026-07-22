@@ -26,7 +26,7 @@ python scripts/generate_sbom.py        # Regenerate sbom.json
 uv run python scripts/extract_changelog.py vX.Y.Z   # Corps de la release d'un tag (--titre pour le titre)
 ```
 
-CI (`.github/workflows/ci.yml`) runs `python -m pytest -v` against Python 3.11, 3.12, and 3.13 on every push/PR to `main`. Docs deploy to GitHub Pages on push to `main`.
+CI (`.github/workflows/ci.yml`) runs `python -m pytest -v` on every push/PR to `main` **and on every `v*` tag push** — the tag trigger exists so a tagged commit is actually verified; `release.yml` publishes in parallel and does not wait for it. The matrix is Python **3.12 and 3.13 only**, while `requires-python` claims `>=3.11`: 3.11 is supported on paper and untested in CI. Docs deploy to GitHub Pages on push to `main`.
 
 Ruff runs in CI as its own `lint` job (`ruff check src tests scripts`, must be clean) and ships in `[dev]`, so `uv run ruff check src tests scripts` locally uses the same version. `models/__init__.py` and `models/reports/__init__.py` ignore `F403` via `[tool.ruff.lint.per-file-ignores]` — they are pure re-export aggregators.
 
