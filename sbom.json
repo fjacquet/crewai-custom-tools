@@ -1,15 +1,15 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:8b64a140-d310-4e08-8bba-cef4265e02d5",
+  "serialNumber": "urn:uuid:004a8674-feff-4a86-8981-78243ffb3fff",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-07-08T11:14:47.648289+00:00",
+    "timestamp": "2026-07-22T09:24:31.539071+00:00",
     "component": {
       "name": "crewai-custom-tools",
-      "version": "0.2.0",
+      "version": "0.28.0",
       "type": "library",
-      "bom-ref": "pkg:pypi/crewai-custom-tools@0.2.0",
+      "bom-ref": "pkg:pypi/crewai-custom-tools@0.28.0",
       "description": "Centralized, resilient tools for CrewAI multi-agent systems",
       "licenses": [
         {
@@ -23,10 +23,10 @@
   "components": [
     {
       "name": "crewai",
-      "version": "1.15.1",
+      "version": "1.15.4",
       "type": "library",
-      "purl": "pkg:pypi/crewai@1.15.1",
-      "bom-ref": "pkg:pypi/crewai@1.15.1"
+      "purl": "pkg:pypi/crewai@1.15.4",
+      "bom-ref": "pkg:pypi/crewai@1.15.4"
     },
     {
       "name": "pydantic",
@@ -139,6 +139,13 @@
       "type": "library",
       "purl": "pkg:pypi/vadersentiment@3.3.2",
       "bom-ref": "pkg:pypi/vadersentiment@3.3.2"
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "type": "library",
+      "purl": "pkg:pypi/python-dateutil@2.9.0.post0",
+      "bom-ref": "pkg:pypi/python-dateutil@2.9.0.post0"
     }
   ]
 }

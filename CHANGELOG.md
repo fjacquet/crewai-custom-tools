@@ -4,6 +4,59 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.28.0] - 2026-07-22 — Publication automatique des Releases
+
+### Added
+
+- **Publication automatique des GitHub Releases** — le push d'un tag `v*` crée et publie la
+  Release, corps extrait de la section correspondante du `CHANGELOG.md`. L'étape était manuelle et
+  sans garde-fou : **treize tags sur trente-neuf n'ont jamais donné lieu à une release**, dont les
+  trois derniers, si bien que la page affichait `v0.24.0` en « Latest » pendant que le code, le
+  CHANGELOG et `pyproject.toml` annonçaient tous 0.27.0 — parfaitement cohérents entre eux.
+  - `scripts/extract_changelog.py` — extracteur **pur** : ni réseau, ni appel à `gh`, stdlib seule,
+    ce qui permet au workflow de n'installer aucune dépendance et rend la fonction testable hors
+    ligne comme le reste de la suite. Rend le titre de release (`--titre`) ou le corps de la
+    section. Le descriptif du heading est **optionnel** — les 35 entrées antérieures n'en ont pas
+    et restent lisibles — et le séparateur `---` de fin n'est retiré que s'il est présent : il
+    manque devant quatre des trente-sept frontières du fichier. Une section **absente ou vide**
+    sort en code non nul : un heading ajouté avant d'être rempli ne publie pas de page blanche.
+  - `.github/workflows/release.yml` — vérifie d'abord que le tag concorde avec la `version`
+    déclarée dans `pyproject.toml`. Cette garde attrape le seul mode de panne que
+    `tests/test_scaffold.py` ne couvre pas : ce test compare `__version__` et `pyproject.toml`
+    entre eux, mais rien ne vérifiait que le tag était posé sur le bon commit. Le corps passe par
+    `--notes-file` et jamais par le shell — un CHANGELOG contenant une substitution de commande est
+    inerte. Pas de `--clobber` ni de `|| true` : une release déjà existante fait rougir le
+    workflow plutôt que d'écraser en silence un corps rédigé à la main.
+- Les trois releases en retard (`v0.25.0`, `v0.26.0`, `v0.27.0`) ont été publiées avec ce script.
+
+### Changed
+
+- Le heading du CHANGELOG porte désormais le **descriptif de la version**
+  (`## [0.28.0] - 2026-07-22 — Publication automatique des Releases`) : c'est de là que vient le
+  titre de la Release. Format rétrocompatible, le script lit les deux formes.
+- Le rituel de release dans `CLAUDE.md` se termine par `git push origin main --follow-tags` et non
+  `git push --tags`. Ce dernier pousse le tag **seul**, sans la branche, et le workflow publierait
+  alors une release pour un commit qui n'est sur aucune branche. La procédure de reprise après
+  échec y est documentée.
+- Le job `lint` de la CI couvre `scripts` en plus de `src` et `tests` — le répertoire échappait au
+  linter, alors qu'il abrite désormais un fichier critique pour la publication.
+
+### Fixed
+
+- `docs/index.md` était une **copie manuelle du README**, et la plus périmée des deux : version
+  `v0.1.1`, « over 30+ tools », cinq catégories, « 87 tests en 4,90 s », et un titre annonçant les
+  domaines « Excluded ». Il devient `--8<-- "README.md"` — `pymdownx.snippets` était déjà activée.
+- Le README perd ses chiffres tenus à la main, qui divergeaient entre eux (111 outils ligne 24
+  contre 93 ligne 97) et de la réalité (423 tests, version v0.11.0). Ils sont **retirés plutôt que
+  corrigés** : le badge de release donne la version, et une phrase décrivant la propriété reste
+  vraie sans entretien.
+- Le Quickstart du README proposait `uv add --editable /Users/fjacquet/Projects/...` — un chemin
+  absolu de la machine de l'auteur, en première commande d'un dépôt public.
+- Le domaine **généalogie**, consommé par `genecrew`, n'était mentionné dans aucun des deux
+  fichiers : les six catégories annoncées en décrivaient cinq et demie.
+
+---
+
 ## [0.27.0] - 2026-07-22 — Configuration de ruff et mise en conformité
 
 ### Changed
