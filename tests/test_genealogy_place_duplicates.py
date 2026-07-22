@@ -237,6 +237,72 @@ def test_coordonnees_blanches_ne_prouvent_rien():
     assert evaluer_preuve(b, a) == ""
 
 
+def test_deux_contenants_connus_et_differents_interdisent_la_preuve_par_coordonnees():
+    """C2 — deux entités distinctes sans code fusionnaient automatiquement.
+
+    Deux « Saint-Michel », toutes deux `Municipality`, sans code officiel, aux
+    coordonnées identiques — un géocodage approximatif ou un copier-coller de
+    coordonnées suffit à produire ce cas — mais rattachées à DEUX DÉPARTEMENTS
+    différents. Le discriminant existe dans l'arbre ; le modèle de faits l'avait
+    réduit à un booléen « a un parent ou non », si bien que la voie des
+    coordonnées concluait et que la fusion partait en automatique irréversible.
+
+    Deux contenants connus et différents opposent donc un refus, exactement
+    comme deux codes officiels différents.
+    """
+    a = _lieu("P1", place_type="Municipality", lat="47.1", long="2.3",
+              parent_id="HD18")
+    b = _lieu("P2", place_type="Municipality", lat="47.1", long="2.3",
+              parent_id="HD37")
+    assert evaluer_preuve(a, b) == ""
+    assert evaluer_preuve(b, a) == ""
+
+
+def test_le_meme_contenant_laisse_prouver_par_coordonnees():
+    """La garde ne se déclenche que sur une DIFFÉRENCE : même département, même lieu."""
+    a = _lieu("P1", place_type="Municipality", lat="47.1", long="2.3",
+              parent_id="HD18")
+    b = _lieu("P2", place_type="Municipality", lat="47.1", long="2.3",
+              parent_id="HD18")
+    assert evaluer_preuve(a, b) == PREUVE_COORDONNEES
+
+
+@pytest.mark.parametrize(
+    ("parent_a", "parent_b"),
+    [("", ""), ("HD18", ""), ("", "HD18"), (" ", "HD18")],
+    ids=["deux-inconnus", "connu-contre-inconnu", "inconnu-contre-connu",
+         "blanc-contre-connu"],
+)
+def test_un_contenant_inconnu_n_interdit_pas_la_preuve_par_coordonnees(parent_a, parent_b):
+    """L'ignorance n'est pas une différence : elle ne peut pas opposer de refus.
+
+    Symétrique du traitement des codes — un code absent n'oppose aucun veto — et
+    de celui des types, où l'inconnu ne PROUVE rien. Ici la garde est un refus,
+    pas une preuve : la déclencher sur une non-mesure écarterait de vrais
+    doublons, et le rattachement est absent d'une grande part de l'arbre.
+    """
+    a = _lieu("P1", place_type="Municipality", lat="47.1", long="2.3",
+              parent_id=parent_a)
+    b = _lieu("P2", place_type="Municipality", lat="47.1", long="2.3",
+              parent_id=parent_b)
+    assert evaluer_preuve(a, b) == PREUVE_COORDONNEES
+    assert evaluer_preuve(b, a) == PREUVE_COORDONNEES
+
+
+def test_deux_contenants_differents_n_empechent_pas_la_preuve_par_le_code():
+    """La garde s'arrête à la voie des coordonnées : le code reste canonique.
+
+    Une même commune peut être rattachée au département dans un enregistrement
+    et à l'arrondissement dans l'autre — c'est un doublon de saisie, pas deux
+    entités. Le code officiel prouve seul, et rien dans le rattachement ne le
+    fragilise.
+    """
+    a = _lieu("P1", place_type="Municipality", code="18033", parent_id="HD18")
+    b = _lieu("P2", place_type="Municipality", code="18033", parent_id="HARR")
+    assert evaluer_preuve(a, b) == PREUVE_CODE
+    assert evaluer_preuve(b, a) == PREUVE_CODE
+
+
 _PAIRES_SYMETRIE = [
     # (a, b) couvrant chaque branche du verdict, dans les deux sens.
     (_lieu("P1", code="18044", place_type="Municipality"),
@@ -390,6 +456,65 @@ def test_perte_evitee_signale_le_type_manquant():
     absorbe = _lieu("P2", lat="47.1", long="2.3", code="18044",
                     place_type="Municipality")
     assert perte_evitee(survivant, absorbe) == "type"
+
+
+def test_perte_evitee_signale_des_coordonnees_concurrentes():
+    """C1 — deux coordonnées RENSEIGNÉES et différentes : la fusion en écrase une.
+
+    La garde ne testait que présence contre absence. Or `lat`/`long` sont des
+    champs simples : la fusion Gramps ne garde que ceux du survivant. Deux
+    « Bourges » du même code, l'un géocodé grossièrement, l'autre au dix
+    millième, ne se distinguent pas par une absence — et pourtant la position
+    précise disparaît. Le sens est symétrique : quel que soit celui qu'on garde,
+    l'autre valeur est détruite.
+    """
+    grossier = _lieu("P1", lat="47.1", long="2.4", code="18033")
+    precis = _lieu("P2", lat="47.0810", long="2.3988", code="18033")
+    assert perte_evitee(grossier, precis) == "coordonnées"
+    assert perte_evitee(precis, grossier) == "coordonnées"
+
+
+def test_perte_evitee_signale_un_type_concurrent():
+    """C1 — deux types CONNUS et différents : le module refuse d'inférer entre eux…
+
+    …mais acceptait d'en détruire un sur la voie du code. `evaluer_preuve` tient
+    « Municipality » et « City » pour assez différents pour interdire toute
+    preuve par coordonnées ; la fusion prouvée par le code, elle, écrasait
+    silencieusement le second. Deux valeurs concurrentes sur un champ simple :
+    c'est à un humain de trancher.
+    """
+    a = _lieu("P1", place_type="Municipality", code="18044")
+    b = _lieu("P2", place_type="City", code="18044")
+    assert perte_evitee(a, b) == "type"
+    assert perte_evitee(b, a) == "type"
+
+
+def test_perte_evitee_ne_double_pas_le_veto_sur_deux_codes_concurrents():
+    """Décision délibérée : deux codes concurrents sont l'affaire du VETO, pas de la perte.
+
+    Une paire dont les codes officiels s'opposent ne produit aucune proposition
+    (D3) : elle n'atteint jamais le calcul de perte. Y ajouter une branche
+    « code » pour valeurs différentes serait du code mort qui donnerait
+    l'illusion d'une garde. La branche « code » reste donc présence contre
+    absence, à la différence des coordonnées et du type.
+    """
+    a = _lieu("P1", code="18205", place_type="Municipality")
+    b = _lieu("P2", code="17398", place_type="Municipality")
+    assert perte_evitee(a, b) == ""
+    assert perte_evitee(b, a) == ""
+
+
+def test_la_richesse_ne_compte_pas_le_rattachement():
+    """C1 — l'attribut qui ne risque rien ne doit pas désigner le survivant.
+
+    `perte_evitee` explique elle-même que le rattachement est une LISTE de
+    références, unionnée par la fusion Gramps, donc jamais détruite. Le compter
+    dans la richesse faisait trancher le choix du survivant par le seul attribut
+    qui ne se perd jamais, au détriment de ceux qui se perdent vraiment.
+    """
+    assert richesse(_lieu("P1", a_parent=True)) == 0
+    assert richesse(_lieu("P1", lat="47.1", long="2.3", code="18044",
+                          a_parent=True)) == 2
 
 
 def test_perte_evitee_ignore_le_rattachement_que_la_fusion_conserve():
@@ -757,6 +882,90 @@ def test_une_grappe_saine_fusionne_toujours_automatiquement():
     assert len(props) == 2
     assert all(p.verdict == "auto" for p in props)
     assert all(p.reason == "homonymes — code officiel identique" for p in props)
+
+
+def test_une_fusion_auto_ne_detruit_jamais_des_coordonnees_concurrentes():
+    """C1, scénario 1 — deux « Bourges » du même code, deux géocodages.
+
+    P0001 porte des coordonnées grossières et 90 rétroliens, P0002 des
+    coordonnées précises et 3. Richesse égale, les rétroliens désignent P0001, et
+    la preuve par code officiel conclut : fusion automatique, irréversible, que
+    personne ne relit — et les coordonnées précises sont DÉTRUITES, la perte
+    rapportée restant vide. La garde ne comparait que présence contre absence.
+    """
+    props = etager_lieux([
+        _commune("P0001", "Bourges", code="18033", lat="47.1", long="2.4",
+                 retroliens=90),
+        _commune("P0002", "Bourges", code="18033", lat="47.0810", long="2.3988",
+                 retroliens=3),
+    ])
+    assert len(props) == 1
+    p = props[0]
+    assert (p.gramps_id_keep, p.gramps_id_merge) == ("P0001", "P0002")
+    assert p.verdict == "arbitrage"
+    assert "coordonnées" in p.reason
+    assert "relecture humaine" in p.reason
+
+
+def test_une_fusion_auto_ne_detruit_jamais_un_type_concurrent():
+    """C1, scénario 2 — deux « Cerbois » du même code, deux types CONNUS.
+
+    Le module refuse d'INFÉRER entre `Municipality` et `City` — c'est la garde
+    qui protège Paris — mais acceptait d'en DÉTRUIRE un sur la voie du code :
+    P0070, seul porteur du type `City`, disparaissait sans que sa valeur
+    concurrente soit seulement nommée.
+    """
+    props = etager_lieux([
+        _commune("P0064", "Cerbois", code="18044", lat="47.1", long="2.3",
+                 place_type="Municipality", retroliens=90),
+        _commune("P0070", "Cerbois", code="18044", lat="47.1", long="2.3",
+                 place_type="City", retroliens=3),
+    ])
+    assert len(props) == 1
+    p = props[0]
+    assert (p.gramps_id_keep, p.gramps_id_merge) == ("P0064", "P0070")
+    assert p.verdict == "arbitrage"
+    assert "type" in p.reason
+    assert "relecture humaine" in p.reason
+
+
+def test_le_rattachement_ne_designe_plus_le_survivant():
+    """C1, scénario 3 — l'attribut qui ne risque rien tranchait le choix du survivant.
+
+    P0001 est rattaché, géocodé grossièrement, et porte 2 rétroliens ; P0002
+    n'est pas rattaché, porte des coordonnées précises et 500 rétroliens. En
+    comptant le rattachement, la richesse donnait 2 contre 1 et P0001 survivait :
+    500 rétroliens contre 2, et c'est le rattachement — unionné par la fusion,
+    donc jamais détruit — qui tranchait.
+    """
+    props = etager_lieux([
+        _commune("P0001", "Vierzon", code="18279", lat="47.2", long="2.1",
+                 a_parent=True, retroliens=2),
+        _commune("P0002", "Vierzon", code="18279", lat="47.2231", long="2.0686",
+                 retroliens=500),
+    ])
+    assert len(props) == 1
+    assert props[0].gramps_id_keep == "P0002"
+
+
+def test_deux_entites_sans_code_sous_deux_contenants_partent_en_arbitrage():
+    """C2, bout en bout — deux « Saint-Michel » de deux départements.
+
+    Mêmes type et coordonnées, aucun code officiel pour opposer un veto : la voie
+    des coordonnées concluait à la fusion automatique. Les contenants, eux,
+    diffèrent — et c'est le discriminant que le modèle de faits avait effacé.
+    """
+    props = etager_lieux([
+        _commune("P0100", "Saint-Michel", lat="47.1", long="2.3",
+                 parent_id="HD18", retroliens=20),
+        _commune("P0200", "Saint-Michel", lat="47.1", long="2.3",
+                 parent_id="HD37", retroliens=4),
+    ])
+    assert len(props) == 1
+    p = props[0]
+    assert p.verdict == "arbitrage"
+    assert "aucune preuve" in p.reason
+    assert "relecture humaine" in p.reason
 
 
 def test_etage_lieux_ordonne_les_groupes_par_nom_normalise():
