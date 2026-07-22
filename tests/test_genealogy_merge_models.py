@@ -39,7 +39,7 @@ def test_place_facts_defauts_vides():
     assert p.place_type == ""
     assert p.code == ""
     assert p.lat == "" and p.long == ""
-    assert p.a_parent is False
+    assert p.parent_id == ""
     assert p.retroliens == 0
 
 
@@ -48,8 +48,8 @@ def test_place_facts_complet():
 
     p = PlaceFacts(gramps_id="P0000", handle="H0", nom="Bourges",
                    place_type="Municipality", code="18033",
-                   lat="47.0810", long="2.3988", a_parent=True, retroliens=53)
-    assert (p.code, p.retroliens, p.a_parent) == ("18033", 53, True)
+                   lat="47.0810", long="2.3988", parent_id="H18", retroliens=53)
+    assert (p.code, p.retroliens, p.parent_id) == ("18033", 53, "H18")
 
 
 def test_place_merge_proposition_champs_de_rapport_optionnels():

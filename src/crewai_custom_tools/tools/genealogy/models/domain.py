@@ -157,8 +157,23 @@ class PlaceFacts(BaseModel):
     """Faits normalisés d'un lieu, pour la détection de doublons. Pur.
 
     Volontairement plat : la détection ne raisonne que sur ce qui distingue deux
-    lieux homonymes — leur type, leur code officiel, leurs coordonnées, et le
-    poids qu'ils portent dans l'arbre. Tout le reste appartient à l'orchestration.
+    lieux homonymes — leur type, leur code officiel, leurs coordonnées, leur
+    contenant, et le poids qu'ils portent dans l'arbre. Tout le reste appartient
+    à l'orchestration.
+
+    `parent_id` porte l'IDENTIFIANT du contenant, pas un booléen. Un booléen
+    « a un parent ou non » perdait le seul discriminant de deux homonymes sans
+    code officiel : deux « Saint-Michel » aux mêmes coordonnées mais rattachées
+    à deux départements différents sont deux communes, et l'arbre le sait. La
+    détection ne s'en sert que pour REFUSER une preuve, jamais pour en fabriquer
+    une — d'où la règle sur l'ignorance ci-dessous.
+
+    Contrat pour l'orchestration qui remplit ce champ : `""` dès que le
+    contenant n'est pas UNIQUE et CONNU. Un lieu peut porter plusieurs
+    `placeref_list` datées (communes fusionnées : département avant la fusion,
+    commune absorbante après) ; en choisir un arbitrairement fabriquerait une
+    différence là où il n'y en a pas, et un refus de fusion sur un artefact de
+    lecture. `""` vaut « on ne sait pas », qui n'oppose jamais rien.
     """
 
     gramps_id: str
@@ -168,7 +183,9 @@ class PlaceFacts(BaseModel):
     code: str = Field(default="", description="Code officiel (INSEE ou équivalent national).")
     lat: str = ""
     long: str = ""
-    a_parent: bool = Field(default=False, description="Le lieu est rattaché à un contenant.")
+    parent_id: str = Field(
+        default="",
+        description="Identifiant du contenant unique ; \"\" si inconnu ou multiple.")
     retroliens: int = Field(default=0, description="Nombre d'objets qui référencent ce lieu.")
 
 

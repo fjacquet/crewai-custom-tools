@@ -330,6 +330,15 @@ _PAIRES_SYMETRIE = [
     # trancherait sur son propre code pendant que l'autre conclurait par la position.
     (_lieu("P1", code=" ", place_type="Municipality", lat="47.08", long="2.39"),
      _lieu("P2", code="18033", place_type="Municipality", lat="47.08", long="2.39")),
+    # Le refus par contenant : tout est égal par ailleurs, seul le rattachement
+    # distingue les deux — c'est donc lui, et lui seul, qui doit refuser dans les
+    # deux sens.
+    (_lieu("P1", place_type="Municipality", lat="47.1", long="2.3", parent_id="HD18"),
+     _lieu("P2", place_type="Municipality", lat="47.1", long="2.3", parent_id="HD37")),
+    # Un contenant connu d'un seul côté : l'ignorance ne refuse rien, dans un
+    # sens comme dans l'autre.
+    (_lieu("P1", place_type="Municipality", lat="47.1", long="2.3", parent_id="HD18"),
+     _lieu("P2", place_type="Municipality", lat="47.1", long="2.3")),
 ]
 
 
@@ -338,6 +347,7 @@ _IDS_SYMETRIE = [
     "coordonnees-egales", "types-differents",
     "un-seul-code", "coordonnees-partielles", "longitudes-differentes",
     "types-inconnus", "code-blanc-contre-code",
+    "contenants-differents", "contenant-connu-contre-inconnu",
 ]
 
 
@@ -357,9 +367,12 @@ def test_les_constantes_de_verdict_sont_les_valeurs_rendues():
 
 
 def test_richesse_compte_les_attributs_renseignes():
+    """Deux attributs comptent, pas trois : le rattachement n'en est plus un —
+    voir `test_la_richesse_ne_compte_pas_le_rattachement`."""
     assert richesse(_lieu("P1")) == 0
     assert richesse(_lieu("P1", lat="47.1", long="2.3")) == 1
-    assert richesse(_lieu("P1", lat="47.1", long="2.3", code="18044", a_parent=True)) == 3
+    assert richesse(_lieu("P1", lat="47.1", long="2.3", code="18044",
+                          parent_id="HD18")) == 2
 
 
 def test_le_plus_riche_gagne_meme_avec_moins_de_retroliens():
@@ -512,9 +525,9 @@ def test_la_richesse_ne_compte_pas_le_rattachement():
     dans la richesse faisait trancher le choix du survivant par le seul attribut
     qui ne se perd jamais, au détriment de ceux qui se perdent vraiment.
     """
-    assert richesse(_lieu("P1", a_parent=True)) == 0
+    assert richesse(_lieu("P1", parent_id="HD18")) == 0
     assert richesse(_lieu("P1", lat="47.1", long="2.3", code="18044",
-                          a_parent=True)) == 2
+                          parent_id="HD18")) == 2
 
 
 def test_perte_evitee_ignore_le_rattachement_que_la_fusion_conserve():
@@ -522,8 +535,8 @@ def test_perte_evitee_ignore_le_rattachement_que_la_fusion_conserve():
     survit à la fusion. L'annoncer comme perdu ferait partir en relecture des
     fusions qui ne détruisent rien — et l'état « rattaché » est massivement
     répandu dans l'arbre réel."""
-    survivant = _lieu("P1", lat="47.1", long="2.3", code="18044", a_parent=False)
-    absorbe = _lieu("P2", lat="47.1", long="2.3", code="18044", a_parent=True)
+    survivant = _lieu("P1", lat="47.1", long="2.3", code="18044", parent_id="")
+    absorbe = _lieu("P2", lat="47.1", long="2.3", code="18044", parent_id="HD18")
     assert perte_evitee(survivant, absorbe) == ""
 
 
@@ -685,39 +698,40 @@ def test_etage_lieux_verdicts_mixtes_dans_une_meme_grappe():
     assert verdicts == {"B": "auto", "C": "arbitrage"}
 
 
-def test_une_fusion_auto_ne_detruit_jamais_un_attribut_du_lieu_absorbe():
-    """C1 — le survivant peut être choisi SANS code face à un absorbé qui en porte un.
+def test_le_code_canonique_n_est_plus_menace_car_il_designe_le_survivant():
+    """C1 — le même montage, résolu une étape plus tôt : par le choix du survivant.
 
-    Deux « Cerbois » de richesse égale (2 chacun) : P1 porte coordonnées +
-    rattachement, P2 coordonnées + le code officiel 18044. La richesse ne
-    départage pas, les rétroliens si — 99 contre 1 — et P1 survit. Les types
-    sont égaux et les coordonnées identiques, donc la voie des coordonnées
-    conclut : verdict automatique, irréversible, que personne ne relit. Le
-    18044 — « l'identifiant canonique » de la docstring du module, ce qui fonde
-    toute la force de la preuve — serait écrasé, et le rapport annoncerait la
-    perte ÉVITÉE (« rattachement ») sans jamais nommer la perte SUBIE.
+    Deux « Cerbois » : P1 porte coordonnées + rattachement et 99 rétroliens, P2
+    coordonnées + le code officiel 18044 et 1 seul. Tant que la richesse comptait
+    le rattachement, les deux étaient à égalité (2 chacun), les rétroliens
+    départageaient, P1 survivait — et le 18044, « l'identifiant canonique » sur
+    lequel repose toute la force de la preuve, était écrasé par une fusion
+    automatique et irréversible. Le test d'alors
+    (`test_une_fusion_auto_ne_detruit_jamais_un_attribut_du_lieu_absorbe`) exigeait
+    que la garde de perte dégrade cette fusion en arbitrage.
 
-    Une fusion automatique ne doit rien détruire : dès que l'absorbé porte un
-    attribut absent du survivant, c'est à un humain de trancher, et le motif
-    doit nommer ce qui disparaîtrait.
+    La richesse ne compte plus que les champs réellement écrasés : P2 vaut 2,
+    P1 vaut 1, et c'est le PORTEUR DU CODE qui survit. Il n'y a plus rien à
+    détruire, donc plus rien à faire relire — la fusion automatique est
+    légitime, et le rapport nomme ce que ce choix a évité de perdre.
+
+    Le scénario a basculé de « arbitrage » à « auto » à dessein : le défaut est
+    supprimé, pas contourné. La garde de perte, elle, reste exercée sur les deux
+    branches qui peuvent encore mordre — coordonnées et type concurrents —, et
+    sa branche « code » est désormais inatteignable quand une preuve existe :
+    une preuve par code exige les deux codes, une preuve par coordonnées exige
+    les deux positions, et le porteur du code y est toujours le plus riche.
     """
     props = etager_lieux([
-        _commune("P1", "Cerbois", lat="47.1", long="2.3", a_parent=True, retroliens=99),
+        _commune("P1", "Cerbois", lat="47.1", long="2.3", parent_id="HD18",
+                 retroliens=99),
         _commune("P2", "Cerbois", lat="47.1", long="2.3", code="18044", retroliens=1),
     ])
     assert len(props) == 1
     p = props[0]
-    assert (p.gramps_id_keep, p.gramps_id_merge) == ("P1", "P2")
-    # Le champ `perte_evitee` était « rattachement » tant que la garde surveillait
-    # cet attribut. Il ne le surveille plus (la fusion Gramps unionne les listes,
-    # le rattachement survit) et P1 ne porte, parmi les champs réellement écrasés,
-    # rien que P2 n'ait : le rapport n'a donc aucune perte évitée à annoncer. Le
-    # cœur du test — un survivant SANS code face à un absorbé qui en porte un, et
-    # la fusion automatique refusée pour cela — est inchangé.
-    assert p.perte_evitee == ""
-    assert p.verdict == "arbitrage"
-    assert "perte" in p.reason and "code" in p.reason
-    assert "relecture humaine" in p.reason
+    assert (p.gramps_id_keep, p.gramps_id_merge) == ("P2", "P1")
+    assert p.perte_evitee == "code"                # ce que garder P1 aurait détruit
+    assert p.verdict == "auto"
 
 
 def test_une_fusion_auto_ne_detruit_jamais_le_type_du_lieu_absorbe():
@@ -737,9 +751,9 @@ def test_une_fusion_auto_ne_detruit_jamais_le_type_du_lieu_absorbe():
     """
     props = etager_lieux([
         _commune("P1", "Vierzon", place_type="", code="18279", lat="47.22",
-                 long="2.07", a_parent=True, retroliens=80),
+                 long="2.07", parent_id="HD18", retroliens=80),
         _commune("P2", "Vierzon", place_type="Municipality", code="18279",
-                 lat="47.22", long="2.07", a_parent=True, retroliens=3),
+                 lat="47.22", long="2.07", parent_id="HD18", retroliens=3),
     ])
     assert len(props) == 1
     p = props[0]
@@ -845,15 +859,21 @@ def test_un_veto_qui_n_implique_pas_le_survivant_bloque_quand_meme_la_grappe():
     rattachement identiques à ceux du survivant, donc sans perte à signaler —
     est le membre qui passerait en fusion automatique irréversible.
 
-    Les quatre lieux ont une richesse de 2, si bien que ce sont les rétroliens
+    Les quatre lieux ont une richesse de 1, si bien que ce sont les rétroliens
     qui désignent P0001 : le survivant est délibérément le seul à ne rien porter
-    qui puisse déclencher la garde C1.
+    qui puisse déclencher la garde C1. Les deux membres codés sont ici PRIVÉS de
+    coordonnées : depuis que la richesse ne compte plus le rattachement (C1), un
+    lieu sans code qui en porterait ne pourrait plus survivre face à un lieu
+    codé ET géocodé — et le veto reviendrait toucher le survivant, ce que ce
+    test-ci a précisément pour rôle d'écarter.
     """
     props = etager_lieux([
-        _commune("P0001", "Bourges", lat="47.08", long="2.39", a_parent=True, retroliens=50),
-        _commune("P0010", "Bourges", code="18033", lat="47.08", long="2.39", retroliens=10),
-        _commune("P0011", "Bourges", code="18034", lat="47.08", long="2.39", retroliens=9),
-        _commune("P0012", "Bourges", lat="47.08", long="2.39", a_parent=True, retroliens=5),
+        _commune("P0001", "Bourges", lat="47.08", long="2.39", parent_id="HD18",
+                 retroliens=50),
+        _commune("P0010", "Bourges", code="18033", retroliens=10),
+        _commune("P0011", "Bourges", code="18034", retroliens=9),
+        _commune("P0012", "Bourges", lat="47.08", long="2.39", parent_id="HD18",
+                 retroliens=5),
     ])
     assert len(props) == 3
     assert {p.gramps_id_keep for p in props} == {"P0001"}
@@ -873,11 +893,11 @@ def test_une_grappe_saine_fusionne_toujours_automatiquement():
     """
     props = etager_lieux([
         _commune("P0178", "Verrens-Arvey", code="73312", lat="45.6", long="6.4",
-                 a_parent=True, retroliens=4),
+                 parent_id="HD73", retroliens=4),
         _commune("P0192", "Verrens-Arvey", code="73312", lat="45.6", long="6.4",
-                 a_parent=True, retroliens=19),
+                 parent_id="HD73", retroliens=19),
         _commune("P0198", "Verrens-Arvey", code="73312", lat="45.6", long="6.4",
-                 a_parent=True, retroliens=5),
+                 parent_id="HD73", retroliens=5),
     ])
     assert len(props) == 2
     assert all(p.verdict == "auto" for p in props)
@@ -940,7 +960,7 @@ def test_le_rattachement_ne_designe_plus_le_survivant():
     """
     props = etager_lieux([
         _commune("P0001", "Vierzon", code="18279", lat="47.2", long="2.1",
-                 a_parent=True, retroliens=2),
+                 parent_id="HD18", retroliens=2),
         _commune("P0002", "Vierzon", code="18279", lat="47.2231", long="2.0686",
                  retroliens=500),
     ])

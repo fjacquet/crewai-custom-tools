@@ -5,6 +5,35 @@ différence décisive : une commune possède un **identifiant canonique** — so
 officiel — que les personnes n'ont pas. La preuve y est donc plus forte et plus
 simple à énoncer. La doctrine, elle, ne change pas : la ressemblance ne prouve
 jamais l'identité (ADR 0013).
+
+**Écart assumé sur les codes NUS.** Le moteur d'import de relevés du dépôt
+applicatif voisin (`genecrew/src/genecrew/releves.py`, `_identifiant_resolu` et
+`_comparer_lieux`) pose la garde inverse : une valeur sans préfixe pays y est
+IGNORÉE, « un code INSEE français `18209` et un numéro OFS suisse `18209` sont
+deux chaînes ÉGALES sans être la même commune ». Ce module-ci, lui, tient
+l'égalité de deux codes NUS pour une preuve canonique, suffisante à une fusion
+automatique et exemptée du veto de grappe. C'est un écart délibéré, pas un
+oubli :
+
+  - les entrées ne sont pas les mêmes. Le moteur de relevés joint l'arbre à un
+    référentiel EXTERNE, résolu pays par pays, où la même chaîne peut venir de
+    deux référentiels nationaux. Ici, les deux codes sortent du MÊME arbre, du
+    même champ `code`, saisi par la même personne — et ils y sont nus : imposer
+    le contrat de préfixe ne rendrait pas le module plus strict, il le
+    désarmerait entièrement (plus aucune preuve, donc plus aucune fusion) ;
+  - une précondition que le moteur de relevés n'a pas filtre déjà : deux lieux
+    ne sont comparés que s'ils partagent le NOM normalisé (`etager_lieux` groupe
+    sur l'égalité). Il faudrait donc une commune française et une commune suisse
+    à la fois homonymes ET de même code nu dans le même arbre.
+
+Ce qui rendrait l'écart dangereux, et qu'il faut surveiller : (1) un groupement
+par ressemblance de noms au lieu de l'égalité — la précondition ci-dessus
+tomberait ; (2) le chantier référentiel écrivant dans `code` les codes de
+plusieurs pays (les résolveurs `geo/` sont routés par pays) — deux codes égaux
+par accident ne se contenteraient pas de ne pas opposer de veto, ils
+PROUVERAIENT une fusion automatique. Le correctif, ce jour-là, est de préfixer
+le code par le pays à la collecte (`"FR:18033"`) : la comparaison n'existe qu'à
+un seul endroit, `_oppose_un_veto`, dont `evaluer_preuve` dépend.
 """
 
 from __future__ import annotations
@@ -75,38 +104,77 @@ def _type_connu(place: PlaceFacts) -> str:
     return "" if brut.casefold() in _TYPES_INCONNUS else brut
 
 
+def _oppose_un_veto(a: PlaceFacts, b: PlaceFacts) -> bool:
+    """Deux codes officiels renseignés et différents : la preuve de deux entités. Pur.
+
+    Source unique du veto : `evaluer_preuve` appelle ce prédicat plutôt que de
+    recopier sa condition. Les deux lectures ont d'abord coexisté, à deux lignes
+    identiques près ; elles divergeraient le jour où les codes seraient
+    normalisés (préfixe pays, voir la note en tête de module), et l'effet serait
+    pire qu'un désaccord — une paire dont les codes ne s'écriraient plus pareil
+    déclencherait le veto et disparaîtrait entièrement du lot, rendant un vrai
+    doublon invisible jusqu'en relecture.
+
+    `evaluer_preuve` connaît donc ce veto mais ne le distingue pas dans ce
+    qu'elle rend : la chaîne vide y confond « rien ne prouve » et « quelque
+    chose interdit ». Or les deux ne se propagent pas pareil — une absence de
+    preuve ne concerne que la paire, un veto disqualifie tout le groupe.
+    """
+    code_a, code_b = _renseigne(a.code), _renseigne(b.code)
+    return bool(code_a and code_b and code_a != code_b)
+
+
 def evaluer_preuve(a: PlaceFacts, b: PlaceFacts) -> str:
     """La preuve qui autorise une fusion automatique, ou la chaîne vide. Pur.
 
-    Un VETO passe avant tout : deux codes RENSEIGNÉS et différents interdisent la
-    fusion, quels que soient les types et les coordonnées. C'est lui qui protège
-    Paris — le département 75 et la commune 75056 sont deux entités réelles.
-    « Renseigné » s'entend après nettoyage des blancs : un code ne contenant que
-    des espaces vaut un code absent, n'oppose donc aucun veto, et laisse le
-    verdict aux voies ci-dessous.
+    Un VETO passe avant tout — `_oppose_un_veto`, source unique de la règle :
+    deux codes RENSEIGNÉS et différents interdisent la fusion, quels que soient
+    les types et les coordonnées. C'est lui qui protège Paris — le département 75
+    et la commune 75056 sont deux entités réelles. « Renseigné » s'entend après
+    nettoyage des blancs : un code ne contenant que des espaces vaut un code
+    absent, n'oppose donc aucun veto, et laisse le verdict aux voies ci-dessous.
 
     Hors veto, deux voies :
       - codes identiques et non vides : un code officiel est canonique, il prouve
-        quel que soit le type des deux lieux ;
-      - deux types CONNUS et égaux ET coordonnées complètes identiques : la voie
-        des lieux sans code. Les coordonnées ne prouvent JAMAIS rien entre types
-        différents — un département géocodé reçoit le point de sa préfecture,
-        c'est-à-dire celui de sa commune-chef-lieu — ni dès qu'un seul des deux
-        types est inconnu : un inconnu n'est jamais égal à un autre inconnu.
-        C'est la doctrine du module jumeau `duplicates.py`, qui exige un nom
-        « identique et non vide » et refuse dès qu'un parent est inconnu. Sans
-        elle, un arrondissement « Bourges » encore `Unknown` mais géocodé au
-        point de son chef-lieu fusionnerait tout seul avec la commune du même
-        nom — l'état sans type étant l'état majoritaire de l'arbre réel.
+        quel que soit le type des deux lieux et quels que soient leurs
+        contenants — une même commune peut être rattachée au département dans un
+        enregistrement et à l'arrondissement dans l'autre ;
+      - deux types CONNUS et égaux, contenants non contradictoires, ET
+        coordonnées complètes identiques : la voie des lieux sans code. Les
+        coordonnées ne prouvent JAMAIS rien entre types différents — un
+        département géocodé reçoit le point de sa préfecture, c'est-à-dire celui
+        de sa commune-chef-lieu — ni dès qu'un seul des deux types est inconnu :
+        un inconnu n'est jamais égal à un autre inconnu. C'est la doctrine du
+        module jumeau `duplicates.py`, qui exige un nom « identique et non vide »
+        et refuse dès qu'un parent est inconnu. Sans elle, un arrondissement
+        « Bourges » encore `Unknown` mais géocodé au point de son chef-lieu
+        fusionnerait tout seul avec la commune du même nom — l'état sans type
+        étant l'état majoritaire de l'arbre réel.
+
+    Le refus par CONTENANT est à la voie des coordonnées ce que le veto des codes
+    est à tout le verdict : deux contenants connus et différents désignent deux
+    entités, pas deux saisies d'une même. C'est le seul discriminant des
+    homonymes sans code officiel — deux « Saint-Michel » aux coordonnées
+    identiques (un géocodage approximatif ou un copier-coller suffit à le
+    produire) mais rattachées à deux départements. Un contenant inconnu ne
+    refuse rien : l'ignorance n'est pas une différence, et un refus sur une
+    non-mesure écarterait de vrais doublons d'un arbre où le rattachement manque
+    souvent. Ce refus reste LOCAL à la paire, il ne se propage pas à la grappe
+    comme le veto des codes : le rattachement est une donnée de saisie révisable,
+    pas un identifiant canonique.
 
     Fonction symétrique : `evaluer_preuve(a, b) == evaluer_preuve(b, a)`. Une
     écriture irréversible ne doit pas dépendre de l'ordre de parcours.
     """
-    code_a, code_b = _renseigne(a.code), _renseigne(b.code)
-    if code_a and code_b:
-        return PREUVE_CODE if code_a == code_b else ""
+    if _oppose_un_veto(a, b):
+        return ""
+    if _renseigne(a.code) and _renseigne(b.code):
+        return PREUVE_CODE                       # égaux : le veto a écarté l'autre cas
     type_a, type_b = _type_connu(a), _type_connu(b)
     if not type_a or not type_b or type_a != type_b:
+        return ""
+    parent_a, parent_b = _renseigne(a.parent_id), _renseigne(b.parent_id)
+    if parent_a and parent_b and parent_a != parent_b:
         return ""
     coord_a = (_renseigne(a.lat), _renseigne(a.long))
     if all(coord_a) and coord_a == (_renseigne(b.lat), _renseigne(b.long)):
@@ -115,16 +183,25 @@ def evaluer_preuve(a: PlaceFacts, b: PlaceFacts) -> str:
 
 
 def richesse(p: PlaceFacts) -> int:
-    """Nombre d'attributs renseignés parmi coordonnées, code, parent (0 à 3). Pur.
+    """Nombre d'attributs renseignés parmi coordonnées et code (0 à 2). Pur.
 
-    Passe par `_renseigne` comme `evaluer_preuve` : un champ qui ne contient que
-    des blancs ne compte pas comme renseigné, sans quoi un lieu « vidé » en tapant
-    une espace afficherait une richesse qu'il n'a pas.
+    La liste est calquée sur celle de `perte_evitee` : ce qui départage deux
+    candidats au rôle de survivant, ce sont les champs que la fusion ÉCRASE. Le
+    rattachement n'en fait pas partie — c'est une liste de références, unionnée
+    par la fusion, donc jamais détruite. Le compter faisait trancher le choix par
+    le seul attribut qui ne risque rien, contre ceux qui risquent tout : un lieu
+    rattaché aux coordonnées grossières et à 2 rétroliens l'emportait sur un lieu
+    non rattaché, précis, à 500 rétroliens.
+
+    Le TYPE est écrasé lui aussi mais reste hors de ce compte : `perte_evitee`
+    le surveille et dégrade la fusion en arbitrage dès qu'il diverge, ce qui le
+    protège sans déplacer de survivant. L'ajouter ici modifierait le survivant
+    de grappes que rien n'oblige à changer, alors que le compte sert seulement à
+    ne pas garder la coquille la plus vide.
     """
     return sum((
         bool(_renseigne(p.lat) and _renseigne(p.long)),
         bool(_renseigne(p.code)),
-        bool(p.a_parent),
     ))
 
 
@@ -142,17 +219,21 @@ def choisir_survivant(lieux: list[PlaceFacts]) -> PlaceFacts:
     return min(lieux, key=lambda p: (-richesse(p), -p.retroliens, p.gramps_id))
 
 
-def perte_evitee(survivant: PlaceFacts, absorbe: PlaceFacts) -> str:
-    """Ce que l'ordre inverse aurait effacé, en clair ; vide s'il n'y a rien. Pur.
+def perte_evitee(conserve: PlaceFacts, ecarte: PlaceFacts) -> str:
+    """Les champs simples que la fusion effacerait en gardant `conserve`. Pur.
 
-    Sert le rapport : une règle de sélection qu'on ne peut pas vérifier après coup
-    est une règle qu'on croit sur parole. Sert aussi de garde dans `etager_lieux`,
-    appelée dans l'autre sens — d'où l'exigence que la liste surveillée soit
-    calquée sur le comportement réel de Gramps, pas sur une intuition.
+    Les deux paramètres sont NEUTRES à dessein : la fonction est appelée dans les
+    deux sens, et c'est le sens de l'appel qui décide de ce que la valeur rendue
+    signifie. `perte_evitee(survivant, absorbe)` rend la perte SUBIE — ce que la
+    fusion va réellement détruire, la garde d'`etager_lieux` ; l'appel miroir
+    `perte_evitee(absorbe, survivant)` rend la perte ÉVITÉE — ce qu'on aurait
+    détruit en gardant l'autre, le champ du même nom dans le rapport. Nommer les
+    paramètres d'après le second appel obligeait chaque site à justifier son
+    ordre en plusieurs lignes de commentaire ; l'inversion a égaré deux revues.
 
-    **Les attributs surveillés sont les CHAMPS SIMPLES** — code, coordonnées,
+    **Les attributs surveillés sont les CHAMPS SIMPLES** — coordonnées, code,
     type — parce que ce sont les seuls que la fusion Gramps écrase : elle unionne
-    les listes et ne conserve, pour le reste, que les valeurs du survivant.
+    les listes et ne conserve, pour le reste, que les valeurs du lieu gardé.
 
     Le **rattachement** à un contenant n'y figure donc pas : c'est une liste de
     références (`placeref_list`), unionnée comme les autres, qui SURVIT à la
@@ -165,39 +246,36 @@ def perte_evitee(survivant: PlaceFacts, absorbe: PlaceFacts) -> str:
     dépendre sa voie des coordonnées de deux types CONNUS : chaque type effacé
     dégrade la capacité du module à prouver au tour suivant.
 
-    « Perdu » s'entend au même sens pour les trois : l'absorbé le renseigne et le
-    survivant non. Deux valeurs renseignées mais différentes ne se rapportent pas
-    ici — le module n'arbitre pas entre deux valeurs concurrentes.
+    « Perdu » couvre DEUX états, et pas seulement l'absence : le champ n'est pas
+    renseigné chez `conserve`, ou il l'est des deux côtés avec des valeurs
+    DIFFÉRENTES. Ne compter que le premier faisait détruire en silence les
+    coordonnées précises de deux « Bourges » du même code au profit des
+    grossières, et le seul enregistrement `City` d'une grappe où le gardé était
+    `Municipality` — deux types que `evaluer_preuve` juge pourtant assez
+    différents pour interdire toute inférence entre eux.
+
+    Le **code** reste, lui, présence contre absence : deux codes officiels
+    concurrents relèvent du VETO, qui retire la paire du lot avant tout calcul de
+    perte (`etager_lieux`). Une branche « codes différents » ici serait du code
+    mort donnant l'illusion d'une garde.
     """
-    manquants = []
-    if (_renseigne(absorbe.lat) and _renseigne(absorbe.long)) and not (
-        _renseigne(survivant.lat) and _renseigne(survivant.long)
-    ):
-        manquants.append("coordonnées")
-    if _renseigne(absorbe.code) and not _renseigne(survivant.code):
-        manquants.append("code")
-    if _type_connu(absorbe) and not _type_connu(survivant):
-        manquants.append("type")
-    return ", ".join(manquants)
+    perdus = []
+    coord_conserve = (_renseigne(conserve.lat), _renseigne(conserve.long))
+    coord_ecarte = (_renseigne(ecarte.lat), _renseigne(ecarte.long))
+    if all(coord_ecarte) and coord_ecarte != coord_conserve:
+        perdus.append("coordonnées")
+    if _renseigne(ecarte.code) and not _renseigne(conserve.code):
+        perdus.append("code")
+    type_conserve, type_ecarte = _type_connu(conserve), _type_connu(ecarte)
+    if type_ecarte and type_ecarte != type_conserve:
+        perdus.append("type")
+    return ", ".join(perdus)
 
 
 _MOTIFS = {
     PREUVE_CODE: "code officiel identique",
     PREUVE_COORDONNEES: "coordonnées identiques, même type, aucun code",
 }
-
-
-def _oppose_un_veto(a: PlaceFacts, b: PlaceFacts) -> bool:
-    """Deux codes officiels renseignés et différents : la preuve de deux entités. Pur.
-
-    `evaluer_preuve` connaît ce veto mais ne le distingue pas dans ce qu'elle
-    rend : la chaîne vide y confond « rien ne prouve » et « quelque chose
-    interdit ». Or les deux ne se propagent pas pareil — une absence de preuve
-    ne concerne que la paire, un veto disqualifie tout le groupe. D'où ce
-    prédicat séparé, qui laisse `evaluer_preuve` intacte.
-    """
-    code_a, code_b = _renseigne(a.code), _renseigne(b.code)
-    return bool(code_a and code_b and code_a != code_b)
 
 
 def _grappe_vetoee(membres: list[PlaceFacts]) -> bool:
@@ -276,9 +354,6 @@ def etager_lieux(lieux: list[PlaceFacts]) -> list[PlaceMergeProposition]:
             if _oppose_un_veto(survivant, absorbe):
                 continue                        # non-fusion établie, pas un doublon
             preuve = evaluer_preuve(survivant, absorbe)
-            # Ordre (survivant, absorbe) : le miroir exact de l'appel du champ
-            # `perte_evitee` plus bas. Ce que l'absorbé porte et que le survivant
-            # n'a pas, c'est ce que la fusion détruira réellement.
             perte_subie = perte_evitee(survivant, absorbe)
             # Le veto de grappe ne mord que sur les preuves non canoniques : un
             # code officiel identique prouve à lui seul, indépendamment de ce que
@@ -297,13 +372,5 @@ def etager_lieux(lieux: list[PlaceFacts]) -> list[PlaceMergeProposition]:
                 reason=("homonymes — " + " ; ".join(motifs)
                         + ("" if auto else " : relecture humaine")),
                 verdict="auto" if auto else "arbitrage",
-                # Ordre (absorbe, survivant) à dessein, PAS (survivant, absorbe) :
-                # perte_evitee(a, b) rapporte les champs présents chez « b » et
-                # absents chez « a ». Le rapport doit nommer ce que le survivant
-                # apportait de plus que l'absorbé — la perte qu'on a évitée en le
-                # choisissant lui plutôt que l'autre — donc absorbe en premier
-                # (« a »), survivant en second (« b »). Inverser rapporterait
-                # l'inverse de ce qui va réellement être détruit ; voir
-                # test_la_perte_evitee_est_rapportee (Apremont-la-Forêt).
                 perte_evitee=perte_evitee(absorbe, survivant)))
     return propositions
