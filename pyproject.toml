@@ -63,8 +63,8 @@ asyncio_mode = "auto"
 pythonpath = ["scripts"]
 
 [tool.ruff]
-# Mesuré sur le code réel : p99 = 103 caractères, 73 lignes seulement dépassent 120.
-# Le défaut de ruff (88) en signalerait 861 — une norme qui ne correspond pas à ce projet.
+# Mesuré sur le code réel (src tests scripts) : p99 = 99 caractères, 7 lignes dépassent 120.
+# Le défaut de ruff (88) en signalerait 1279 — une norme qui ne correspond pas à ce projet.
 line-length = 120
 
 [tool.ruff.lint]
