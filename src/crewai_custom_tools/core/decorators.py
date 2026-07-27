@@ -23,19 +23,25 @@ _PAUSE_429_MAX = 120.0
 
 
 def _pause_429(exc: Exception, defaut: float) -> float:
-    """Pause avant de retenter : `Retry-After` s'il est lisible, sinon `defaut`.
+    """Pause avant de retenter : le PLUS LONG de `Retry-After` et de la pause prévue.
 
-    L'en-tête admet aussi une date HTTP. On ne la parse pas : un format inattendu doit
-    retomber sur la pause prévue, jamais immobiliser l'appel sur une valeur devinée.
-    Bornée par `_PAUSE_429_MAX` — un serveur qui réclame une journée ne doit pas figer
-    l'outil pour une journée.
+    `Retry-After` est un plancher, pas un remplacement. Mesuré sur
+    `upload.wikimedia.org` : il annonce `Retry-After: 10` puis refuse encore après trois
+    reprises de 10 s. Le suivre à la lettre faisait donc attendre MOINS que l'échelle
+    (5, 20, 60) — la consigne du serveur dit quand il ne servira sûrement pas, pas quand
+    il servira.
+
+    L'en-tête admet aussi une date HTTP. On ne la parse pas : un format inattendu
+    retombe sur la pause prévue, jamais sur une valeur devinée. Le tout borné par
+    `_PAUSE_429_MAX`, pour qu'un serveur réclamant une journée ne fige pas l'outil
+    pour une journée.
     """
     entetes = getattr(getattr(exc, "response", None), "headers", None) or {}
     try:
         demande = float(entetes.get("Retry-After", ""))
     except (TypeError, ValueError):
         return defaut
-    return min(demande, _PAUSE_429_MAX) if demande > 0 else defaut
+    return min(max(demande, defaut), _PAUSE_429_MAX) if demande > 0 else defaut
 
 
 def _run_with_timeout(
