@@ -4,6 +4,31 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.29.0] - 2026-07-27 — L'article d'une ville se cherche par son titre
+
+### Added
+
+- **`frwiki_page_info` rend les coordonnées et suit les redirections** (`tools/web/wikipedia.py`).
+  `redirects=1` résout l'exonyme porté par l'arbre vers l'article français — `München` → `Munich`,
+  `Lenzburg` → `Lenzbourg` — une identité assertée par Wikipédia qu'aucune similarité de chaînes
+  ne retrouvait : `similarity("München", "Munich")` passe sous le seuil de 0.85, ces lieux étaient
+  donc perdus par construction. `coordinates` fournit de quoi vérifier le titre trouvé.
+- **`frwiki_search_geo(nom)`** — recherche plein texte rendant les seuls articles géolocalisés.
+  Rattrape les pages d'homonymie sans coordonnées : `Valence` → `Valence (Drôme)`. Les pages sans
+  position sont écartées dans le helper, pour qu'aucun appelant ne puisse valider sur le nom seul.
+- **`geo/score.distance_m(lat1, lon1, lat2, lon2)`** — distance orthodromique WGS84 (haversine),
+  la vérification qui distingue Paris de Paris (Texas).
+
+### Changed
+
+- **`frwiki_geosearch` documenté comme inadapté à la recherche d'une ville.** Le helper reste, il
+  répond correctement à « qu'y a-t-il près de ce point » ; mais son tri est la distance, et les dix
+  articles les plus proches du centre de Lyon sont ses rues et ses monuments — l'article `Lyon`
+  n'y figure pas. Le piège a coûté une abstention silencieuse sur la plupart des grandes villes
+  d'un arbre réel ; la mise en garde est désormais dans la docstring.
+
+---
+
 ## [0.28.0] - 2026-07-22 — Publication automatique des Releases
 
 ### Added

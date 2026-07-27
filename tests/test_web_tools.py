@@ -219,3 +219,79 @@ def test_google_fact_check_success(mocker):
     data = _data(GoogleFactCheckTool()._run(query="moon green cheese"))
     assert data["claims"][0]["text"] == "The moon is made of green cheese"
     assert data["claims"][0]["claimReview"][0]["publisher"]["name"] == "FactCheck.org"
+
+
+# 6. Enrichissement de lieux (Wikipédia FR) -----------------------------------
+
+
+def _frwiki_response(mocker, payload):
+    """Mock `requests.get` and give back the call recorder."""
+    response = mocker.MagicMock()
+    response.json.return_value = payload
+    response.raise_for_status.return_value = None
+    return mocker.patch("requests.get", return_value=response)
+
+
+def test_frwiki_page_info_suit_les_redirections_et_rend_les_coordonnees(mocker):
+    """L'exonyme du nom Gramps mène à l'article français par redirection.
+
+    'München' -> 'Munich', 'Lenzburg' -> 'Lenzbourg' : une identité assertée par
+    Wikipédia, qu'aucune similarité de chaînes ne retrouverait. Sans `redirects=1`
+    ces lieux sont perdus quel que soit le reste de la chaîne.
+    """
+    from crewai_custom_tools.tools.web.wikipedia import frwiki_page_info
+
+    get = _frwiki_response(mocker, {"query": {"pages": {"1": {
+        "title": "Munich", "fullurl": "https://fr.wikipedia.org/wiki/Munich",
+        "extract": "…", "coordinates": [{"lat": 48.1372, "lon": 11.5755}]}}}})
+
+    info = frwiki_page_info("München")
+
+    params = get.call_args.kwargs["params"]
+    assert params["redirects"] == 1
+    assert "coordinates" in params["prop"]
+    assert info["title"] == "Munich"
+    assert (info["lat"], info["lon"]) == (48.1372, 11.5755)
+
+
+def test_frwiki_page_info_sans_coordonnees_rend_none(mocker):
+    """Page d'homonymie ('Valence') : un titre, mais aucune position à vérifier."""
+    from crewai_custom_tools.tools.web.wikipedia import frwiki_page_info
+
+    _frwiki_response(mocker, {"query": {"pages": {"1": {
+        "title": "Valence", "fullurl": "https://fr.wikipedia.org/wiki/Valence"}}}})
+
+    info = frwiki_page_info("Valence")
+    assert info["lat"] is None and info["lon"] is None
+
+
+def test_frwiki_page_info_page_absente_ne_rend_pas_d_url(mocker):
+    from crewai_custom_tools.tools.web.wikipedia import frwiki_page_info
+
+    _frwiki_response(mocker, {"query": {"pages": {"-1": {
+        "title": "Site du Samaritain", "missing": ""}}}})
+
+    info = frwiki_page_info("Site du Samaritain")
+    assert info["url"] == "" and info["lat"] is None
+
+
+def test_frwiki_search_geo_ecarte_les_pages_sans_position(mocker):
+    """Sans coordonnées, un résultat de recherche n'est pas vérifiable — il est écarté."""
+    from crewai_custom_tools.tools.web.wikipedia import frwiki_search_geo
+
+    _frwiki_response(mocker, {"query": {"pages": {
+        "1": {"title": "Valence (Drôme)", "fullurl": "https://fr.wikipedia.org/wiki/Valence_(Dr%C3%B4me)",
+              "coordinates": [{"lat": 44.9333, "lon": 4.8917}]},
+        "2": {"title": "Valence", "fullurl": "https://fr.wikipedia.org/wiki/Valence"}}}})
+
+    hits = frwiki_search_geo("Valence")
+    assert [h["title"] for h in hits] == ["Valence (Drôme)"]
+    assert hits[0]["lat"] == 44.9333 and hits[0]["lon"] == 4.8917
+
+
+def test_frwiki_search_geo_sans_resultat_rend_une_liste_vide(mocker):
+    """L'API omet `query` quand la recherche ne rend rien — ne pas planter dessus."""
+    from crewai_custom_tools.tools.web.wikipedia import frwiki_search_geo
+
+    _frwiki_response(mocker, {"batchcomplete": ""})
+    assert frwiki_search_geo("Gambetta (commune coloniale)") == []

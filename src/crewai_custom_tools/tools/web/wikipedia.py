@@ -129,7 +129,11 @@ def frwiki_geosearch(lat: str, lon: str, radius_m: int = 10000,
                      limit: int = 10) -> list[dict]:
     """Articles français géolocalisés autour d'un point (nom + distance en mètres).
 
-    Le couple nom+position est ce qui permet de VÉRIFIER un lien (jamais le nom seul).
+    NE PAS l'employer pour retrouver l'article d'une ville : le tri est la distance,
+    et les dix articles les plus proches du centre de Lyon sont ses rues et ses
+    monuments — l'article 'Lyon' n'y figure pas. La question « où est l'article
+    nommé X » se pose par le titre (`frwiki_page_info`) puis se vérifie par la
+    position ; celle-ci ne répond qu'à « qu'y a-t-il près de ce point ».
     """
     response = requests.get(FRWIKI_API, params={
         "action": "query", "list": "geosearch", "gscoord": f"{lat}|{lon}",
@@ -142,9 +146,20 @@ def frwiki_geosearch(lat: str, lon: str, radius_m: int = 10000,
 
 
 def frwiki_page_info(title: str, thumb_px: int = 1200) -> dict:
-    """URL canonique de l'article + miniature (largeur bornée) + extrait court."""
+    """Article cherché PAR SON TITRE : URL canonique, miniature, extrait, coordonnées.
+
+    `redirects=1` fait le gros du travail : le nom porté par l'arbre est souvent
+    l'exonyme ('München', 'Lenzburg') et la redirection le résout vers l'article
+    français ('Munich', 'Lenzbourg'). C'est une identité assertée par Wikipédia,
+    qu'aucune similarité de chaînes ne retrouverait.
+
+    `coordinates` est ce qui permet ensuite de VÉRIFIER le titre trouvé : sans
+    position, rien ne distingue Paris de Paris (Texas). Une page d'homonymie n'en
+    porte pas — d'où `lat`/`lon` à None, qui vaut refus côté appelant.
+    """
     response = requests.get(FRWIKI_API, params={
-        "action": "query", "titles": title, "prop": "info|pageimages|extracts",
+        "action": "query", "titles": title, "redirects": 1,
+        "prop": "info|pageimages|extracts|coordinates",
         "inprop": "url", "piprop": "thumbnail|name", "pithumbsize": thumb_px,
         "exintro": 1, "explaintext": 1, "exchars": 300, "format": "json"},
         headers={"User-Agent": _UA_PLACES}, timeout=15)
@@ -152,8 +167,36 @@ def frwiki_page_info(title: str, thumb_px: int = 1200) -> dict:
     pages = response.json().get("query", {}).get("pages", {})
     page = next(iter(pages.values()), {})
     thumb = page.get("thumbnail") or {}
+    coord = next(iter(page.get("coordinates") or []), {})
     return {"title": page.get("title", title),
             "url": page.get("fullurl", ""),
             "extract": page.get("extract", ""),
             "image_url": thumb.get("source", ""),
-            "image_name": page.get("pageimage", "")}
+            "image_name": page.get("pageimage", ""),
+            "lat": coord.get("lat"),
+            "lon": coord.get("lon")}
+
+
+def frwiki_search_geo(name: str, limit: int = 10) -> list[dict]:
+    """Articles GÉOLOCALISÉS répondant à une recherche plein texte sur un nom.
+
+    Rattrape ce que `frwiki_page_info` ne peut pas trancher : titre inexistant, ou
+    page d'homonymie sans coordonnées ('Valence' -> 'Valence (Drôme)'). Les pages
+    sans coordonnées sont écartées ici même — sans position, aucun lien n'est
+    vérifiable, et les laisser passer reviendrait à valider sur le nom seul.
+    """
+    response = requests.get(FRWIKI_API, params={
+        "action": "query", "generator": "search", "gsrsearch": name,
+        "gsrlimit": limit, "prop": "info|coordinates", "inprop": "url",
+        "format": "json"},
+        headers={"User-Agent": _UA_PLACES}, timeout=15)
+    response.raise_for_status()
+    pages = (response.json().get("query") or {}).get("pages") or {}
+    hits = []
+    for page in pages.values():
+        coord = next(iter(page.get("coordinates") or []), {})
+        if coord.get("lat") is None:
+            continue
+        hits.append({"title": page.get("title", ""), "lat": coord["lat"],
+                     "lon": coord["lon"], "url": page.get("fullurl", "")})
+    return hits
