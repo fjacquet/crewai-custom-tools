@@ -42,3 +42,32 @@ def test_best_similarity_no_substring_inflation():
     from crewai_custom_tools.tools.genealogy.geo.score import best_similarity
     # a shorter query must not reach 1.0 against a longer token
     assert best_similarity("Ann", "Annaba") < 1.0
+
+
+def test_distance_m_est_nulle_sur_le_meme_point():
+    from crewai_custom_tools.tools.genealogy.geo.score import distance_m
+
+    assert distance_m(46.5617, 4.9122, 46.5617, 4.9122) == 0.0
+
+
+def test_distance_m_mesure_une_distance_connue():
+    """Paris-Lyon ~392 km à vol d'oiseau (référence indépendante, tolérance 1 %)."""
+    from crewai_custom_tools.tools.genealogy.geo.score import distance_m
+
+    d = distance_m(48.8566, 2.3522, 45.7640, 4.8357)
+    assert 388_000 < d < 396_000, d
+
+
+def test_distance_m_ne_confond_pas_latitude_et_longitude():
+    """Un degré de longitude vaut moins qu'un degré de latitude dès qu'on quitte l'équateur.
+
+    Le piège n'est pas théorique : GeoJSON, WKT Wikidata et la grille suisse ordonnent
+    leurs couples différemment, et une inversion silencieuse passerait tous les tests
+    symétriques.
+    """
+    from crewai_custom_tools.tools.genealogy.geo.score import distance_m
+
+    nord_sud = distance_m(46.0, 6.0, 47.0, 6.0)
+    est_ouest = distance_m(46.0, 6.0, 46.0, 7.0)
+    assert nord_sud > est_ouest
+    assert 110_000 < nord_sud < 112_000, nord_sud
