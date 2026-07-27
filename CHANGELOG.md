@@ -4,6 +4,28 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.30.0] - 2026-07-27 — Une reprise sur 429 qui survit à l'étranglement
+
+### Fixed
+
+- **`api_tool` retentait un 429 une seule fois, après 2 secondes** (`core/decorators.py`). Contre un
+  étranglement réel, cette reprise repart pendant que le quota est encore épuisé : elle ne pouvait pas
+  réussir. Mesuré en production sur `upload.wikimedia.org` — avertissement à 18:26:14, échec à
+  18:26:16 — où **toutes** les images d'un run `enrich wiki` échouaient, run après run, tandis que les
+  liens passaient. Les pauses croissent désormais (5 s, 20 s, 60 s) et `Retry-After` est respecté
+  quand le serveur l'envoie, borné à 120 s pour qu'une consigne d'une journée n'immobilise pas
+  l'outil. Une date HTTP dans l'en-tête, forme que la RFC autorise, retombe sur la pause prévue plutôt
+  que sur une valeur devinée. Un code autre que 429 échoue toujours d'emblée : insister sur un 404 ne
+  ferait que dormir.
+
+  Le correctif porte sur le décorateur partagé : **tous** les fournisseurs en bénéficient, pas
+  seulement Wikimedia.
+
+  Une piste écartée en chemin, faute de preuve : le 429 de Wikimedia cite sa politique robots, ce qui
+  faisait soupçonner le User-Agent — dépourvu de contact. Vérification faite, la même image revient en
+  `200` avec et sans contact dans l'en-tête. Le déclencheur est le volume, pas l'identité ; le
+  User-Agent n'a donc pas été touché ici.
+
 ## [0.29.0] - 2026-07-27 — L'article d'une ville se cherche par son titre
 
 ### Added
