@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import err, ok
+from crewai_custom_tools.core.user_agent import user_agent
 from crewai_custom_tools.tools.genealogy.gramps.client import get_client
 from crewai_custom_tools.tools.genealogy.standardize.names import (
     is_case_only_change,
@@ -662,7 +663,7 @@ class GrampsUploadMediaTool(BaseTool):
         import requests as _requests
 
         resp = _requests.get(file_url, timeout=60, headers={
-            "User-Agent": "crewai-custom-tools/genealogy (media import)"})
+            "User-Agent": user_agent("media import")})
         resp.raise_for_status()
         content_type = resp.headers.get("Content-Type", "application/octet-stream")
         client = get_client()

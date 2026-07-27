@@ -4,6 +4,27 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.31.0] - 2026-07-27 — `Retry-After` est un plancher, pas un remplacement
+
+### Fixed
+
+- **`Retry-After` écourtait l'échelle de reprise au lieu de l'allonger** (`core/decorators.py`).
+  0.30.0 respectait la consigne du serveur à la lettre. Mesuré aussitôt en production sur
+  `upload.wikimedia.org` : il annonce `Retry-After: 10` puis refuse encore après trois reprises de
+  10 s — les pauses valaient donc 10, 10, 10 là où l'échelle prévoyait 5, 20, 60. La consigne dit
+  quand le serveur ne servira sûrement pas, pas quand il servira. Elle est désormais un **minimum** :
+  `min(max(Retry-After, pause prévue), 120 s)`.
+
+### Changed
+
+- **User-Agent conforme à la politique Wikimedia** (`core/user_agent.py`, point de définition
+  unique). L'ancien en-tête — `crewai-custom-tools/genealogy (media import)` — ne portait aucun
+  moyen de contact, que la politique demande. C'est une **mise en conformité, pas un correctif
+  d'étranglement** : la mesure montre qu'une requête isolée revient en `200` avec ou sans contact,
+  et que le 429 se déclenche sur le volume. Ce que le contact change pour un client soutenu n'a pas
+  été mesuré et n'est pas promis ici. La chaîne est définie une seule fois — dupliquée, elle
+  dériverait, et la moitié des appels finirait anonyme sans que rien ne le signale.
+
 ## [0.30.0] - 2026-07-27 — Une reprise sur 429 qui survit à l'étranglement
 
 ### Fixed

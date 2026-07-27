@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from crewai_custom_tools.core.decorators import api_tool
 from crewai_custom_tools.core.results import err, ok
+from crewai_custom_tools.core.user_agent import user_agent
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ class WikipediaArticleTool(BaseTool):
 # --- Place enrichment helpers (French Wikipedia) -----------------------------
 
 FRWIKI_API = "https://fr.wikipedia.org/w/api.php"
-_UA_PLACES = "crewai-custom-tools/genealogy (place enrichment)"
+_UA_PLACES = user_agent("place enrichment")
 
 
 def frwiki_geosearch(lat: str, lon: str, radius_m: int = 10000,

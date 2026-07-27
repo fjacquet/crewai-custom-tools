@@ -189,17 +189,39 @@ def test_backoff_429_reprend_plusieurs_fois(mocker):
     assert max(pauses) >= 20, f"la plus longue pause reste trop courte : {pauses}"
 
 
-def test_backoff_429_honore_retry_after(mocker):
-    """Quand le serveur dit combien attendre, on l'écoute au lieu de deviner."""
+def test_retry_after_est_un_plancher_pas_un_remplacement(mocker):
+    """Le serveur peut réclamer PLUS que l'échelle, jamais moins.
+
+    Mesuré sur `upload.wikimedia.org` : il annonce `Retry-After: 10` et refuse encore
+    après trois reprises de 10 s. Le respecter à la lettre faisait donc attendre moins
+    que l'échelle prévue (5, 20, 60) — la consigne du serveur est un minimum, pas une
+    permission d'écourter.
+    """
+    from crewai_custom_tools.core.decorators import _PAUSES_429
+
     pauses = []
     mocker.patch("crewai_custom_tools.core.decorators.sleep", side_effect=pauses.append)
 
     @api_tool(provider="TestProvider", endpoint="TestEndpoint")
-    def _429_avec_consigne():
-        raise _reponse_429(retry_after=7)
+    def _429_consigne_courte():
+        raise _reponse_429(retry_after=10)
 
-    _envelope(_429_avec_consigne())
-    assert pauses and all(p == 7 for p in pauses), pauses
+    _envelope(_429_consigne_courte())
+    assert pauses == [max(10, defaut) for defaut in _PAUSES_429], pauses
+    assert max(pauses) >= max(_PAUSES_429), "l'échelle a été écourtée par la consigne"
+
+
+def test_retry_after_plus_long_que_l_echelle_l_emporte(mocker):
+    """À l'inverse, un serveur qui réclame davantage doit être suivi."""
+    pauses = []
+    mocker.patch("crewai_custom_tools.core.decorators.sleep", side_effect=pauses.append)
+
+    @api_tool(provider="TestProvider", endpoint="TestEndpoint")
+    def _429_consigne_longue():
+        raise _reponse_429(retry_after=90)
+
+    _envelope(_429_consigne_longue())
+    assert pauses and all(p == 90 for p in pauses), pauses
 
 
 def test_backoff_429_borne_un_retry_after_delirant(mocker):
@@ -260,3 +282,29 @@ def test_une_erreur_http_qui_n_est_pas_429_ne_dort_pas(mocker):
 
     _envelope(_404())
     assert appels["n"] == 1 and pauses == []
+
+
+# --- conformité de l'en-tête ---
+
+
+def test_user_agent_porte_un_contact_et_une_version():
+    """La politique Wikimedia demande un moyen de contact ; l'ancien en-tête n'en avait aucun.
+
+    Mise en conformité, pas correctif : une requête isolée passe avec ou sans contact —
+    mesuré. Ce test verrouille la forme, pas une promesse de déblocage.
+    """
+    from crewai_custom_tools.core.user_agent import CONTACT, user_agent
+
+    entete = user_agent("media import")
+    assert entete.startswith("crewai-custom-tools/")
+    assert CONTACT in entete
+    assert "media import" in entete
+    assert "://" in CONTACT, "un contact doit être joignable"
+
+
+def test_les_appels_wikimedia_partagent_le_meme_en_tete():
+    """Une chaîne de conformité dupliquée dérive : les deux appels doivent la partager."""
+    from crewai_custom_tools.core.user_agent import CONTACT
+    from crewai_custom_tools.tools.web.wikipedia import _UA_PLACES
+
+    assert CONTACT in _UA_PLACES
