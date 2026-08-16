@@ -156,3 +156,22 @@ def test_un_nom_a_virgule_finale_tronquee_ne_declenche_pas_la_regle_cantonale():
 
     parsed = parse_pname("Springfield (BE),")
     assert parsed.country != "Suisse"
+
+
+def test_parenthese_finale_avec_virgule_est_une_annotation_retiree_avant_le_split():
+    """'(Ville, Pays)' en fin de nom est un rappel de rattachement, pas un niveau de
+    hiérarchie de plus. Sans garde, `raw.split(",")` coupe DANS la parenthèse :
+    'Lagoa e Gávea (Rio de Janeiro, Brésil)' rendait pays='Brésil)' (parenthèse fermante
+    collée) et commune='Lagoa e Gávea (Rio de Janeiro' (parenthèse ouvrante orpheline)."""
+    p = parse_pname("Lagoa e Gávea (Rio de Janeiro, Brésil)")
+    assert p.commune == "Lagoa e Gávea"
+    assert p.country == "Brésil"
+
+
+def test_parenthese_finale_sans_virgule_reste_intacte_pour_la_regle_cantonale():
+    """Garde-fou inverse : une parenthèse courte SANS virgule ('(VD)', '(NY)') n'est pas une
+    annotation hiérarchique — elle doit rester dans le segment pour que
+    `split_canton_suffix` continue de la lire."""
+    p = parse_pname("Montreux (VD)")
+    assert p.commune == "Montreux"
+    assert p.country == "Suisse"
