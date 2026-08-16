@@ -14,6 +14,14 @@ import unicodedata
 from crewai_custom_tools.tools.genealogy.geo.suisse import split_canton_suffix
 from crewai_custom_tools.tools.genealogy.models.domain import ParsedPlace
 
+# Parenthèse finale contenant une virgule ('(Rio de Janeiro, Brésil)') : hiérarchie
+# emboîtée dans une annotation, pas un segment de plus. Sans dépliage avant split, la
+# virgule interne casse le découpage (pays reçoit la parenthèse fermante, commune la
+# parenthèse ouvrante orpheline). On la déplie en segments normaux plutôt que de la jeter :
+# le pays qu'elle porte reste exploitable. Une parenthèse SANS virgule ('(VD)', '(NY)')
+# est un suffixe court — laissée intacte pour `split_canton_suffix`.
+_PAREN_HIERARCHY_RE = re.compile(r"\s*\(([^()]*,[^()]*)\)\s*$")
+
 CORSICA_RE = re.compile(r"^2[AB]\d{3}$")             # 2A004 : unambiguously INSEE
 FIVE_DIGIT_RE = re.compile(r"^\d{5}$")               # 18033 or 18000 : INSEE or postal, ambiguous alone
 POSTAL_RE = re.compile(r"^\d{4,5}$")
@@ -48,6 +56,9 @@ def normalize_country(raw: str) -> str:
 
 def parse_pname(raw: str) -> ParsedPlace:
     """Parse one flat place string into ParsedPlace (positional + code detection)."""
+    match = _PAREN_HIERARCHY_RE.search(raw)
+    if match:
+        raw = f"{raw[: match.start()]}, {match.group(1)}"
     segments = [s.strip() for s in raw.split(",")]
     nonempty_idx = [i for i, s in enumerate(segments) if s]
     country_idx = nonempty_idx[-1] if nonempty_idx else None
