@@ -1,13 +1,51 @@
 # OSV-Scanner Security Exception Configuration
+#
+# ---------------------------------------------------------------------------
+# chromadb: one family, one review date.
+#
+# Every entry below is the SAME finding class. All of them require a running
+# ChromaDB *server* with an authenticated caller (each targets the /api/v2 HTTP
+# surface). crewai-custom-tools uses chromadb strictly as an embedded,
+# in-process local instance: no HttpClient, no `chroma run`, nothing binds a
+# network listener. If that ever changes, every entry here must be
+# re-evaluated.
+#
+# chromadb is a forced transitive pin from crewai, a MANDATORY dependency with
+# no `extra` marker — it cannot be dropped by configuration, and switching
+# RagTool to another vectordb provider would not remove it from the lock or the
+# SBOM.
+#
+# There is genuinely nothing to upgrade to (checked 2026-09-02):
+#   * every record is `introduced` -> `last_affected: 1.5.9`, no `fixed` event;
+#   * 1.5.9 IS the newest release on PyPI, no prerelease since;
+#   * the upstream fix is still unmerged — chroma-core/chroma PR #7602 and
+#     issue #7588 are both OPEN.
+#
+# Deliberately NOT using [[PackageOverrides]] to silence chromadb wholesale. A
+# package-level ignore would also hide (a) a future advisory that DOES reach the
+# embedded client, and (b) the arrival of a fixed version. Per-id entries keep
+# CI red until a human looks — that is the point.
+#
+# Re-check: https://github.com/chroma-core/chroma/pull/7602
+# ---------------------------------------------------------------------------
 
 [[IgnoredVulns]]
-id = "PYSEC-2026-311"
+id = "GHSA-f4j7-r4q5-qw2c"  # CVE-2026-45829 — chromadb pre-auth RCE ("ChromaToast", CVSS 9.3)
+ignoreUntil = 2026-12-01
 reason = "crewai-custom-tools only utilizes chromadb as an embedded, in-process local instance. We do not start, run, or expose the ChromaDB HTTP server or its /api/v2 endpoints to the network, neutralizing the remote code execution risk."
 
-[[IgnoredVulns]]
-id = "CVE-2026-45829"
-reason = "crewai-custom-tools only utilizes chromadb as an embedded, in-process local instance. We do not start, run, or expose the ChromaDB HTTP server or its /api/v2 endpoints to the network, neutralizing the remote code execution risk."
 
 [[IgnoredVulns]]
-id = "GHSA-f4j7-r4q5-qw2c"
-reason = "crewai-custom-tools only utilizes chromadb as an embedded, in-process local instance. We do not start, run, or expose the ChromaDB HTTP server or its /api/v2 endpoints to the network, neutralizing the remote code execution risk."
+id = "GHSA-36p7-vc44-83pf"  # CVE-2026-45833 — code injection via trust_remote_code (CVSS 9.4)
+ignoreUntil = 2026-12-01
+reason = "The same trust_remote_code code-injection sink as GHSA-f4j7-r4q5-qw2c, reachable only through the ChromaDB server API. No patched version exists. crewai-custom-tools exposes no such endpoint — embedded use only."
+
+[[IgnoredVulns]]
+id = "GHSA-2wm9-hf6c-p5cr"  # CVE-2026-45830 — cross-tenant data access (CVSS 8.8)
+ignoreUntil = 2026-12-01
+reason = "Missing authorization validation lets any authenticated user read, write, update or delete data in another tenant's collection over the server's /api/v2 surface. crewai-custom-tools runs chromadb embedded with no network listener and no remote callers, so there is no cross-tenant boundary to breach."
+
+[[IgnoredVulns]]
+id = "GHSA-xph7-9rjv-w5fr"  # CVE-2026-45831 — SimpleRBACAuthorizationProvider scope bypass (CVSS 8.8)
+ignoreUntil = 2026-12-01
+reason = "SimpleRBACAuthorizationProvider checks that a user holds a permission but never which tenant, database or collection it applies to. That provider is part of the server's authorization stack, which crewai-custom-tools never instantiates: no server, no auth provider, no network exposure."
