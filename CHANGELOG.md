@@ -4,6 +4,21 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.31.1] - 2026-08-16 — Une parenthèse hiérarchique n'est pas un séparateur
+
+### Fixed
+
+- **`parse_pname` coupait sur la virgule interne d'un suffixe `(Ville, Pays)`** (`geo/places.py`).
+  Sur les entrées Pologne/Brésil récentes, le pays récupérait la parenthèse fermante et la commune
+  une parenthèse ouvrante orpheline. La virgule *à l'intérieur* des parenthèses est le signal qui
+  distingue cette annotation hiérarchique d'un simple suffixe court — `(VD)`, `(NY)` — laissé intact
+  pour `split_canton_suffix`. La parenthèse finale est désormais dépliée avant le split.
+
+### Security
+
+- **`cryptography` 49 -> 50 et `aiohttp` 3.14.1 -> 3.14.3**, en réponse aux avis publiés sur ces deux
+  paquets.
+
 ## [0.31.0] - 2026-07-27 — `Retry-After` est un plancher, pas un remplacement
 
 ### Fixed
