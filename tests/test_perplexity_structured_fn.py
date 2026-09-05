@@ -56,3 +56,23 @@ async def test_missing_key_raises_value_error(monkeypatch):
     monkeypatch.delenv("PPLX_API_KEY", raising=False)
     with pytest.raises(ValueError):
         await perplexity_structured(prompt="q", schema=FactPack)
+
+
+async def test_transport_error_warning_names_the_exception_type(pplx_key, mocker, caplog):
+    """httpx transport exceptions stringify to '' — the warning must still say what happened.
+
+    `RemoteProtocolError('')`, `ReadTimeout('')`, `ConnectError('')` and
+    `TimeoutError()` all have an empty `str()`. A consumer saw 128 lines of
+    "Perplexity transport error for _FactPackRaw: " with nothing after the colon
+    and could not tell a timeout from a reset. `repr()` keeps the type.
+    """
+    import logging
+
+    _client_returning(mocker, exc=httpx.ReadTimeout(""))
+
+    with caplog.at_level(logging.WARNING):
+        assert await perplexity_structured(prompt="q", schema=FactPack) is None
+
+    transport_lines = [r.message for r in caplog.records if "transport error" in r.message]
+    assert transport_lines, "the transport error was not logged at all"
+    assert "ReadTimeout" in transport_lines[0]

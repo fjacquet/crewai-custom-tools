@@ -152,7 +152,10 @@ async def perplexity_structured[T: BaseModel](
         logger.warning(f"Perplexity HTTP {exc.response.status_code} for {schema.__name__}")
         return None
     except (TimeoutError, httpx.HTTPError) as exc:
-        logger.warning(f"Perplexity transport error for {schema.__name__}: {exc}")
+        # repr, not str: httpx transport exceptions stringify to '' and the line
+        # would end at the colon — a timeout, a reset and a refused connection
+        # would all look identical to the consumer trying to tune its retries.
+        logger.warning(f"Perplexity transport error for {schema.__name__}: {exc!r}")
         return None
     except ValueError as exc:
         logger.warning(f"Perplexity returned non-JSON for {schema.__name__}: {exc}")
