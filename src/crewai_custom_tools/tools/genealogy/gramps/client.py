@@ -15,6 +15,7 @@ import json
 import os
 import time
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,21 @@ import httpx
 DEFAULT_TIMEOUT = 15.0
 TOKEN_EXPIRY_SKEW_S = 60  # treat a token as expired this many seconds before its real exp
 FALLBACK_TOKEN_TTL_S = 300  # used when a token's exp claim can't be decoded
+
+
+def _user_agent() -> str:
+    # Reason: https://gramps.discourse.group/t/gramps-web-api-client-authors-please-send-a-user-agent/10006
+    # asks every client to identify itself by tool name and version, so the
+    # server admin can attribute errors and spot problematic usage patterns
+    # instead of seeing an anonymous httpx default. genecrew is the only
+    # consumer of this client (see module docstring); the version reported
+    # is this package's, since genecrew depends on it rather than the other
+    # way around.
+    try:
+        pkg_version = version("crewai-custom-tools")
+    except PackageNotFoundError:
+        pkg_version = "0.0.0-dev"
+    return f"genecrew/crewai-custom-tools-{pkg_version} (+https://github.com/fjacquet/genecrew)"
 
 
 class GrampsConfigError(RuntimeError):
@@ -112,7 +128,10 @@ class GrampsClient:
     ) -> None:
         self._config = config
         self._http = httpx.Client(
-            base_url=config.api_url, timeout=DEFAULT_TIMEOUT, transport=transport
+            base_url=config.api_url,
+            timeout=DEFAULT_TIMEOUT,
+            transport=transport,
+            headers={"User-Agent": _user_agent()},
         )
         # Opt-in: None (the default) preserves the previous login-on-first-request
         # behaviour used by existing callers/tests that don't pass this parameter.

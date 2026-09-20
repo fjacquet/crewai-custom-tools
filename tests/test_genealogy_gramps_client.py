@@ -41,6 +41,28 @@ def test_from_env_missing_variable_raises(mocker):
         GrampsConfig.from_env()
 
 
+def test_every_request_carries_an_identifying_user_agent():
+    """https://gramps.discourse.group/t/gramps-web-api-client-authors-please-send-a-user-agent/10006 -
+    the server admin cannot attribute an error to this tool if every client
+    on the wire looks like a bare httpx default.
+    """
+    seen = []
+
+    def handler(request):
+        seen.append(request.headers.get("User-Agent", ""))
+        if request.url.path == "/api/token/":
+            return _token_response()
+        return httpx.Response(200, json=[{"name": "arbre"}])
+
+    client = GrampsClient(CONFIG, transport=_transport(handler))
+    client.get_json("/trees/")
+
+    assert len(seen) == 2  # token request, then the data request
+    for user_agent in seen:
+        assert user_agent.startswith("genecrew/")
+        assert "python-httpx" not in user_agent
+
+
 def test_get_json_fetches_token_then_data():
     calls = []
 
