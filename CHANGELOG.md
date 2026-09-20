@@ -4,6 +4,18 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.31.2] - 2026-09-20 — Un client anonyme n'aide pas le serveur qu'il interroge
+
+### Fixed
+
+- **`GrampsClient` n'envoyait aucun `User-Agent` identifiable** (`gramps/client.py`), seulement le
+  défaut générique `python-httpx/X.Y` posé par httpx. Les mainteneurs de Gramps Web demandent aux
+  auteurs de clients de s'identifier (voir
+  https://gramps.discourse.group/t/gramps-web-api-client-authors-please-send-a-user-agent/10006) pour
+  distinguer les sources de trafic et diagnostiquer les usages problématiques. Le client envoie
+  désormais `genecrew/crewai-custom-tools-<version> (+https://github.com/fjacquet/genecrew)` sur
+  chaque requête (`fjacquet/genecrew#27`).
+
 ## [0.31.1] - 2026-08-16 — Une parenthèse hiérarchique n'est pas un séparateur
 
 ### Fixed
