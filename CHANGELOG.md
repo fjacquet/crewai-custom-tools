@@ -4,6 +4,21 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.31.3] - 2026-10-03 — Dépendances à jour, scan de sécurité en place
+
+### Security
+
+- **Rafraîchissement complet de `uv.lock`** (`uv lock --upgrade`) : les dépendances transitives
+  sont ramenées à leurs dernières versions publiées. `osv-scanner` ne remonte plus rien hors des
+  advisories chromadb déjà couverts par `osv-scanner.toml`.
+
+### Changed
+
+- **Workflow `security` et cibles Makefile `security` / `vuln` ajoutés** (`.github/workflows/security.yml`),
+  pour que chaque push et chaque PR passe par `osv-scanner`.
+
+---
+
 ## [0.31.2] - 2026-09-20 — Un client anonyme n'aide pas le serveur qu'il interroge
 
 ### Fixed
