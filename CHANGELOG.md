@@ -4,6 +4,23 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.32.0] - 2026-10-18 — Passage à mcp 2
+
+### Security
+
+- **`mcp` passe de 1.28.1 à 2.3.0** pour corriger GHSA-84m7-p3x7-pcfv (corrigé en 1.30.0).
+  crewai fixe `mcp~=1.28.1`, d'où un `override-dependencies` uv sur `mcp>=2.0` dans
+  `pyproject.toml`. Les modules mcp de crewai s'importent sans erreur sous 2.3.0.
+
+### Changed
+
+- **Serveur MCP migré vers l'API mcp 2** (`mcp_server.py`) : `FastMCP` devient `MCPServer`
+  (`mcp.server.mcpserver`). Les outils exposés et leurs schémas ne changent pas.
+- **Workflow `security` planifié chaque lundi** (`23 4 * * 1`), pour qu'une nouvelle advisory
+  remonte même sans push.
+
+---
+
 ## [0.31.3] - 2026-10-03 — Dépendances à jour, scan de sécurité en place
 
 ### Security
