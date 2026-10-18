@@ -44,9 +44,9 @@ def test_slugify_examples():
 def test_no_arg_and_arg_schemas_are_derived():
     tools = {t.name: t for t in asyncio.run(mcp.list_tools())}
     # No-arg tool (FearGreedTool) → no properties.
-    assert not (tools["fear_and_greed_sentiment"].inputSchema or {}).get("properties")
+    assert not (tools["fear_and_greed_sentiment"].input_schema or {}).get("properties")
     # Arg tool (FREDMacroTool) → exposes its `indicator` param.
-    fred_props = tools["fred_macro_indicators_tool"].inputSchema["properties"]
+    fred_props = tools["fred_macro_indicators_tool"].input_schema["properties"]
     assert "indicator" in fred_props
 
 
@@ -56,6 +56,6 @@ def test_invoking_a_tool_returns_the_envelope(monkeypatch):
     result = asyncio.run(
         mcp.call_tool("fred_macro_indicators_tool", {"indicator": "fed_rate"})
     )
-    payload = json.loads(result[0].text)
+    payload = json.loads(result.content[0].text)
     assert payload["success"] is False
     assert "FRED_API_KEY" in payload["error"]

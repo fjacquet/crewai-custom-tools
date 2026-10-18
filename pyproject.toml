@@ -53,7 +53,10 @@ artifacts = ["src/crewai_custom_tools/tools/genealogy/data/*.csv"]
 # (unbounded CPU DoS via circular $ref, only reachable through the schema=
 # kwarg). crewai only calls the plain repair_json(text) form, never schema=,
 # so forcing the patched version is safe.
-override-dependencies = ["json-repair>=0.60.1"]
+override-dependencies = [
+    "json-repair>=0.60.1",
+    "mcp>=2.0",  # crewai pins mcp~=1.28.1; GHSA-84m7-p3x7-pcfv fixed in 1.30.0, server code targets v2
+]
 
 [project.scripts]
 crewai-custom-tools-mcp = "crewai_custom_tools.mcp_server:run"

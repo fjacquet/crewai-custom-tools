@@ -1,6 +1,6 @@
 """Model Context Protocol (MCP) server for crewai-custom-tools.
 
-Every tool exported from ``crewai_custom_tools.__all__`` is registered with the FastMCP
+Every tool exported from ``crewai_custom_tools.__all__`` is registered with the MCPServer
 server automatically, so the MCP surface stays in parity with the library: export a new
 tool once and it shows up here too — no hand-written wrapper per tool.
 
@@ -15,14 +15,14 @@ import re
 from typing import Any
 
 from crewai.tools import BaseTool
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from pydantic import BaseModel
 
 import crewai_custom_tools as _pkg
 
 logger = logging.getLogger("crewai_custom_tools.mcp_server")
 
-mcp = FastMCP("crewai-custom-tools")
+mcp = MCPServer("crewai-custom-tools")
 
 
 def _mcp_name(name: str) -> str:
@@ -65,7 +65,7 @@ def _schema_params(instance: BaseTool) -> list[inspect.Parameter]:
 
 
 def _make_handler(instance: BaseTool, params: list[inspect.Parameter]):
-    """Build a handler with an explicit signature so FastMCP infers the input schema."""
+    """Build a handler with an explicit signature so MCPServer infers the input schema."""
 
     def handler(**kwargs: Any) -> str:
         return instance._run(**kwargs)
@@ -77,7 +77,7 @@ def _make_handler(instance: BaseTool, params: list[inspect.Parameter]):
 
 
 def register_all() -> tuple[int, list[tuple[str, str]]]:
-    """Register every exported tool with the FastMCP server.
+    """Register every exported tool with the MCPServer server.
 
     Returns ``(registered_count, skipped)`` where ``skipped`` is a list of
     ``(class_name, reason)``. A tool that fails to construct or has a duplicate name is
@@ -107,5 +107,5 @@ REGISTERED, SKIPPED = register_all()
 
 
 def run() -> None:
-    """Launch the FastMCP stdio server (configured as a console entrypoint)."""
+    """Launch the MCPServer stdio server (configured as a console entrypoint)."""
     mcp.run()
