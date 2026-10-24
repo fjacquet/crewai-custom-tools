@@ -20,6 +20,7 @@ def test_route_france_uses_fr_resolver(monkeypatch):
 
 def test_route_falls_back_to_world_when_country_resolver_returns_none(monkeypatch):
     monkeypatch.setattr(registry, "resolve_fr", lambda p: None)     # pas d'INSEE utilisable
+    monkeypatch.setattr(registry, "resolve_fr_ex_commune", lambda p: None)  # sinon appel réseau à geo.api.gouv.fr
     monkeypatch.setattr(registry, "resolve_world", lambda p: _rp(0.93))
     out = registry.resolve_place(ParsedPlace(raw="…", commune="X",
                                              insee=None, country="France", shifted=True))
