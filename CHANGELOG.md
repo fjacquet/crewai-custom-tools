@@ -4,6 +4,17 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.32.2] - 2026-10-24
+
+### Security
+
+- **`make vuln` et le workflow Security analysent enfin vraiment.** `uvx osv-scanner` ne se
+  résolvait jamais (osv-scanner est un binaire Go, absent de PyPI) et `|| true` masquait l'échec :
+  aucun run CI n'avait jamais analysé `uv.lock`. `make vuln` lance désormais
+  `osv-scanner scan source --recursive .` et échoue sur une vulnérabilité ; fjacquet/ci v1.6.0
+  installe un binaire épinglé et vérifié par checksum en CI.
+- Rafraîchissement complet `uv lock --upgrade` ; aucune vulnérabilité ouverte.
+
 ## [0.32.1] - 2026-10-24 — Dépendances à jour
 
 ### Security
