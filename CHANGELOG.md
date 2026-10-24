@@ -4,6 +4,15 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.32.1] - 2026-10-24 — Dépendances à jour
+
+### Security
+
+- `certifi` → 2026.10.23 pour GHSA-6q48-6c7w-9gw2 et `uv` 0.11.33 → 0.13.5 pour GHSA-hq85-5cpj-mr62
+  (rafraîchissement complet `uv lock --upgrade`). `pillow` était déjà en 13.0.0 depuis 0.32.0.
+- Ces corrections vivent dans le `uv.lock` du dépôt ; un projet qui installe la bibliothèque résout
+  ses propres versions.
+
 ## [0.32.0] - 2026-10-18 — Passage à mcp 2
 
 ### Security
