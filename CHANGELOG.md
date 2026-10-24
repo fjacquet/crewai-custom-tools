@@ -4,6 +4,14 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.32.1] - 2026-10-24 — Dépendances à jour
+
+### Security
+
+- Rafraîchissement complet `uv lock --upgrade` : `pillow` 12.3.0 → 13.0.0 (41 advisories,
+  dont des débordements de tas critiques dans les décodeurs TIFF/JPEG/FPX), plus `certifi` et
+  `uv` sur leurs versions corrigées. `osv-scanner` récursif : aucun problème.
+
 ## [0.32.0] - 2026-10-18 — Passage à mcp 2
 
 ### Security
