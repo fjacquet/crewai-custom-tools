@@ -13,6 +13,10 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
   `requests.get` envoient l'en-tête de `core/user_agent.py` (nom, version, contact). Un test
   vérifie l'en-tête sur chaque action.
 
+### Security
+
+- `oauthlib` 4.0.0 → 4.0.1 pour GHSA-3jp2-3mrg-2vxc (High).
+
 ## [0.32.2] - 2026-10-24
 
 ### Security
