@@ -4,6 +4,15 @@ All notable changes to the `crewai-custom-tools` project will be documented in t
 
 ---
 
+## [0.32.3] - 2026-11-07 — Wikipedia joignable
+
+### Fixed
+
+- **`WikipediaSearchTool` et `WikipediaArticleTool` (donc `WikipediaProcessingTool`) répondaient
+  403.** Wikimedia refuse désormais l'en-tête `python-requests` par défaut : les quatre appels
+  `requests.get` envoient l'en-tête de `core/user_agent.py` (nom, version, contact). Un test
+  vérifie l'en-tête sur chaque action.
+
 ## [0.32.2] - 2026-10-24
 
 ### Security

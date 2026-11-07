@@ -148,6 +148,22 @@ def test_wikipedia_get_sections_uses_parse_api(mocker):
     assert data["sections"] == ["History", "Syntax", "See also"]
 
 
+def test_wikipedia_tools_send_a_contact_user_agent(mocker):
+    """Wikimedia answers 403 to the default python-requests User-Agent."""
+    mock_response = mocker.MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"query": {"search": [], "pages": {"1": {"extract": ""}}}, "parse": {}}
+    get = mocker.patch("requests.get", return_value=mock_response)
+
+    WikipediaSearchTool()._run(query="AI")
+    for action in ArticleAction:
+        WikipediaArticleTool()._run(title="Python", action=action)
+
+    assert get.call_count == 1 + len(ArticleAction)
+    for call in get.call_args_list:
+        assert "github.com/fjacquet/crewai-custom-tools" in call.kwargs["headers"]["User-Agent"]
+
+
 # 4. RSS / OPML ---------------------------------------------------------------
 
 

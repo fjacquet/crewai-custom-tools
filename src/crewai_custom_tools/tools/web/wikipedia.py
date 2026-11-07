@@ -15,6 +15,9 @@ from crewai_custom_tools.core.user_agent import user_agent
 
 logger = logging.getLogger(__name__)
 
+# Wikimedia answers 403 to the default python-requests User-Agent.
+_HEADERS = {"User-Agent": user_agent("wikipedia")}
+
 
 class ArticleAction(StrEnum):
     """Actions that can be performed on a Wikipedia article."""
@@ -48,7 +51,7 @@ class WikipediaSearchTool(BaseTool):
             "https://en.wikipedia.org/w/api.php?action=query&list=search"
             f"&srsearch={encoded_query}&utf8=&format=json&srlimit={limit}"
         )
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=_HEADERS, timeout=10)
         response.raise_for_status()
         search_results = response.json().get("query", {}).get("search", [])
         return ok([item.get("title") for item in search_results])
@@ -85,7 +88,7 @@ class WikipediaArticleTool(BaseTool):
 
         if action == ArticleAction.GET_SUMMARY:
             url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{encoded_title}"
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, headers=_HEADERS, timeout=10)
             if response.status_code == 404:
                 return err(f"No Wikipedia page found for '{title}'")
             response.raise_for_status()
@@ -98,7 +101,7 @@ class WikipediaArticleTool(BaseTool):
                 "https://en.wikipedia.org/w/api.php?action=parse&prop=sections"
                 f"&page={encoded_title}&format=json"
             )
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, headers=_HEADERS, timeout=10)
             response.raise_for_status()
             data = response.json()
             if "error" in data:
@@ -111,7 +114,7 @@ class WikipediaArticleTool(BaseTool):
             "https://en.wikipedia.org/w/api.php?action=query&prop=extracts"
             f"&explaintext=1&titles={encoded_title}&format=json"
         )
-        response = requests.get(url, timeout=15)
+        response = requests.get(url, headers=_HEADERS, timeout=15)
         response.raise_for_status()
         pages = response.json().get("query", {}).get("pages", {})
         if not pages or "-1" in pages:
